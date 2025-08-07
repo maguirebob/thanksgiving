@@ -4,6 +4,30 @@
     <title>Maguire Thanksgivings</title>
     <meta charset="utf-8">
     <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      h1, h2, h3 {
+        margin-top: 0;
+        text-align: center;
+      }
+      .subtitle {
+        text-align: center;
+      }
+      .header {
+        padding: 1em;
+        text-align: center;
+        padding: 1em;
+      }
+
+      .hero {
+        background-color: #a8d6f7;
+        text-align: center;
+        padding: 1em;
+      }
+
       .grid_container {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(275px, 1fr));
@@ -36,13 +60,34 @@
         width: 15em;
         height: auto;
       }
+
+      .footer {
+        background-color: #ddd;
+        padding: 4em 1em;
+      }
+
     </style>
   </head>
   <body>
+    <header class="header">
+      <div class=""header_content">
+        <h1>Maguire Thanksgivings</h1>
+      </div>
+    </header>
+
+    <section class="hero">
+      <h1 class="hero_title">
+        How this all Started
+      </h1>
+      <div class="hero_content">
+        I can't remember if I was out of college or just at the end in 1987 or 1988.  I remember that Grandma Maguire could no longer host Thanksgiving at her apartment in Amesbury.  I was too much for her.  I remember suggesting to my Father and Linda that they should have it at her house and that I would be willing to go pick her up.  Grandma and I put together a menu from her recipes and ones I could find in Gourmet.  The only thing I definitely remember us making was a deboned turkey from my Cajun cookbook, her Turkey soup that we made from the carcass, and the orange and cranberry relish that my Aunt Emogene liked so well.  After that it just became a tradition and grew into what you see below.
+      </div>
+    </section>
+
     <div class="grid_container">
       <div>
         <h3>Thanksgiving 1994</h3>
-        <img src="images/1994_Menu.jpeg">
+        <img src="images/1994_Menu.png">
       </div>
       <div>
         <h3>Thanksgiving 1997</h3>
@@ -141,5 +186,11 @@
         <img src="images/2024_Menu.jpeg">
       </div>
     </div>
+
+    <footer class="footer">
+      <h3 class="footer_title">
+        Crafted by Chowderhead
+      </h3>
+    </footer>
   </body>
 </html>
