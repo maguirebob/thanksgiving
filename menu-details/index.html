@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Maguire Thanksgivings</title>
+    <meta charset="utf-8">
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      h1, h2, h3 {
+        margin-top: 0;
+        text-align: center;
+      }
+      .subtitle {
+        text-align: center;
+      }
+      .header {
+        padding: 1em;
+        text-align: center;
+        padding: 1em;
+      }
+
+      .hero {
+        background-color: #a8d6f7;
+        text-align: center;
+        padding: 1em;
+      }
+
+      .grid_container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(275px, 1fr));
+        grid-auto-rows: minmax(10em,1fr);
+        grid-gap: 1em;
+        place-items: center;
+      }
+      .grid_container > div {
+        border: 1px solid #000;
+        box-sizing: border-box;
+        position: relative;
+        place-items: center;
+      }
+      .grid-header {
+        background-color: #ccc;
+      }
+      .grid-menu {
+        background-color: #c0c0c0;
+      }
+      .grid-content {
+
+      }
+      .grid-panel {
+        background-color: #eee;
+      }
+      .grid-footer {
+        background-color: #ddd;
+      }
+      img {
+        width: 50em;
+        height: auto;
+      }
+
+      .footer {
+        background-color: #ddd;
+        padding: 2em;
+      }
+
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <div class=""header_content">
+        <h1>1994 Details</h1>
+      </div>
+    </header>
+
+    <section class="hero">
+      <h1 class="hero_title">
+        The First Menu
+      </h1>
+      <div class="hero_content">
+        <p>
+          1994 is the 1st year we have a menu for.
+        </p>
+      </div>
+    </section>
+
+    <div class="grid_container">
+      <div>
+        <img src="/images/1994_Menu.png">
+      </div>
+    </div>
+
+    <footer class="footer">
+      <h3 class="footer_title">
+        Crafted by Chowderhead 2025
+      </h3>
+    </footer>
+  </body>
+</html>
