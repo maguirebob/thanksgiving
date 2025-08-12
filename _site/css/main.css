@@ -139,5 +139,24 @@ img {
 /* FOOTER STYLES */
 .footer {
   background-color: #ddd;
+  text-align: center;
   padding: 2em;
+}
+.footer-nav li {
+  display: inline-block;
+  margin: 2em 1em 0;
+}
+.footer h3 {
+  padding-top: 1.5em;
+}
+
+.nav-links a:hover,
+.nav-links a:active  {
+  color: #ed6e2f;
+}
+.header-nav > li:first-child a {
+  color: #ed6e2f;
+}
+.header-nav > li:first-child a:hover {
+  color: #fff;
 }
