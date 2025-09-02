@@ -3,121 +3,86 @@ const path = require('path');
 const expressLayouts = require('express-ejs-layouts');
 const db = require('./models');
 
+// Import configuration and middleware
+const appConfig = require('./config/app');
+const { errorHandler, notFoundHandler } = require('./src/middleware/errorHandler');
+
+// Import routes
+const menuRoutes = require('./src/routes/menuRoutes');
+const apiRoutes = require('./src/routes/apiRoutes');
+
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = appConfig.port;
+
+// Trust proxy in production
+if (appConfig.trustProxy) {
+  app.set('trust proxy', 1);
+}
 
 // Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public'));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.static(appConfig.staticDirectory));
 
 // Set view engine to EJS and configure layouts
 app.use(expressLayouts);
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-app.set('layout', 'layout');
+app.set('view engine', appConfig.viewEngine);
+app.set('views', path.join(__dirname, appConfig.viewDirectory));
+app.set('layout', appConfig.layoutFile);
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
+});
 
 // Routes
-app.get('/', async (req, res) => {
-  try {
-    // Fetch all events (which contain menu information)
-    const events = await db.Event.findAll({
-      order: [['event_date', 'DESC']]
-    });
-    
-    res.render('index', { 
-      title: 'Thanksgiving Menus Through the Years',
-      events: events 
-    });
-  } catch (error) {
-    console.error('Error fetching events:', error);
-    
-    // Check if it's a table doesn't exist error
-    if (error.name === 'SequelizeDatabaseError' && error.original.code === '42P01') {
-      res.status(500).render('error', { 
-        message: 'Database table not found',
-        error: 'The Events table does not exist. Please run the SQL script in admin/create_tables.sql to create the table and insert sample data.' 
-      });
-    } else {
-      res.status(500).render('error', { 
-        message: 'Error loading menus',
-        error: error.message 
-      });
-    }
-  }
-});
+app.use('/', menuRoutes);
+app.use(appConfig.apiPrefix, apiRoutes);
 
-// Detail route for individual menu
-app.get('/menu/:id', async (req, res) => {
-  try {
-    const eventId = req.params.id;
-    const event = await db.Event.findByPk(eventId);
-    
-    if (!event) {
-      return res.status(404).render('error', { 
-        message: 'Menu not found',
-        error: 'The requested menu could not be found.' 
-      });
-    }
-    
-    res.render('detail', { 
-      title: event.menu_title,
-      event: event 
-    });
-  } catch (error) {
-    console.error('Error fetching event:', error);
-    res.status(500).render('error', { 
-      message: 'Error loading menu',
-      error: error.message 
-    });
-  }
-});
-
-// API route to get all events as JSON
-app.get('/api/events', async (req, res) => {
-  try {
-    const events = await db.Event.findAll({
-      order: [['event_date', 'DESC']]
-    });
-    res.json(events);
-  } catch (error) {
-    console.error('Error fetching events:', error);
-    res.status(500).json({ error: 'Error fetching events' });
-  }
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).render('error', { 
-    message: 'Something went wrong!',
-    error: err.message 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    version: appConfig.version
   });
 });
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).render('error', { 
-    message: 'Page not found',
-    error: 'The page you are looking for does not exist.' 
-  });
-});
+// Error handling middleware (must be last)
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 // Database connection and server start
 async function startServer() {
   try {
     // Test database connection
     await db.sequelize.authenticate();
-    console.log('Database connection has been established successfully.');
+    console.log('✅ Database connection established successfully');
     
     // Start server
     app.listen(PORT, () => {
-      console.log(`Server is running on http://localhost:${PORT}`);
+      console.log(`🚀 Server is running on http://localhost:${PORT}`);
+      console.log(`📊 Environment: ${appConfig.nodeEnv}`);
+      console.log(`📁 Static files: ${appConfig.staticDirectory}`);
+      console.log(`🎨 View engine: ${appConfig.viewEngine}`);
     });
   } catch (error) {
-    console.error('Unable to connect to the database:', error);
+    console.error('❌ Unable to connect to the database:', error.message);
     process.exit(1);
   }
 }
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received, shutting down gracefully');
+  process.exit(0);
+});
 
 startServer();
