@@ -1,68 +1,22 @@
 # Thanksgiving Menu Web Application
 
-A web application that displays a collection of Thanksgiving menus from 1994 to 2005. Available as both a Node.js server application and a static site for GitHub Pages deployment.
+A Node.js web application that displays a collection of Thanksgiving menus from 1994 to 2005 using Express, Sequelize, and PostgreSQL.
 
 ## Features
 
 - Display all Thanksgiving menus on the home page
 - Beautiful, responsive design with Bootstrap
-- Static site version for GitHub Pages
-- Node.js server version with database integration
+- Database integration with Sequelize ORM
+- PostgreSQL database support
 - Menu images display with fallback placeholder
 
-## Deployment Options
-
-### Option 1: GitHub Pages (Static Site) - Recommended for Public Sharing
-
-The static version is ready for GitHub Pages deployment and requires no server setup.
-
-### Option 2: Node.js Server (Local Development)
-
-For local development with database integration.
-
-## Prerequisites (Node.js Version Only)
+## Prerequisites
 
 - Node.js (v14 or higher)
 - PostgreSQL database
 - npm or yarn package manager
 
-## GitHub Pages Deployment (Static Site)
-
-### Quick Setup
-
-1. **Push to GitHub:**
-   ```bash
-   git add .
-   git commit -m "Add static site for GitHub Pages"
-   git push origin main
-   ```
-
-2. **Enable GitHub Pages:**
-   - Go to your repository on GitHub
-   - Click "Settings" → "Pages"
-   - Under "Source", select "Deploy from a branch"
-   - Choose "main" branch and "/docs" folder
-   - Click "Save"
-
-3. **Add Menu Images:**
-   - Place your menu images in the `docs/images/` directory
-   - Make sure filenames match those in `docs/data/events.json`
-
-4. **Access Your Site:**
-   - Your site will be available at: `https://yourusername.github.io/thanksgiving`
-
-### Manual Deployment
-
-If you prefer manual deployment:
-
-1. Copy files from `public/` to `docs/`
-2. Add your menu images to `docs/images/`
-3. Push changes to GitHub
-4. GitHub Pages will automatically deploy from the `docs/` folder
-
-## Local Development (Node.js Server)
-
-### Installation
+## Installation
 
 1. Clone the repository and navigate to the project directory:
    ```bash
@@ -93,14 +47,14 @@ If you prefer manual deployment:
    - Place your menu images in the `public/images/` directory
    - Make sure the filenames match those in your database
 
-### Running the Application
+## Running the Application
 
-#### Development Mode
+### Development Mode
 ```bash
 npm run dev
 ```
 
-#### Production Mode
+### Production Mode
 ```bash
 npm start
 ```
@@ -111,16 +65,6 @@ The application will be available at `http://localhost:3000`
 
 ```
 thanksgiving/
-├── docs/                          # GitHub Pages static site
-│   ├── index.html                 # Main page
-│   ├── data/
-│   │   └── events.json            # Menu data
-│   └── images/                    # Menu images for GitHub Pages
-├── public/                        # Static site files
-│   ├── index.html                 # Main page
-│   ├── data/
-│   │   └── events.json            # Menu data
-│   └── images/                    # Menu images
 ├── admin/
 │   └── create_tables.sql          # Database schema and sample data
 ├── models/
@@ -130,9 +74,8 @@ thanksgiving/
 │   ├── layout.ejs                 # Main layout template
 │   ├── index.ejs                  # Home page template
 │   └── error.ejs                  # Error page template
-├── .github/
-│   └── workflows/
-│       └── deploy.yml             # GitHub Actions deployment
+├── public/
+│   └── images/                    # Menu images directory
 ├── config.js                      # Database configuration
 ├── server.js                      # Express server setup
 ├── package.json                   # Dependencies and scripts
