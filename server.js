@@ -22,7 +22,7 @@ app.get('/', async (req, res) => {
   try {
     // Fetch all events (which contain menu information)
     const events = await db.Event.findAll({
-      order: [['event_date', 'ASC']]
+      order: [['event_date', 'DESC']]
     });
     
     res.render('index', { 
@@ -47,11 +47,37 @@ app.get('/', async (req, res) => {
   }
 });
 
+// Detail route for individual menu
+app.get('/menu/:id', async (req, res) => {
+  try {
+    const eventId = req.params.id;
+    const event = await db.Event.findByPk(eventId);
+    
+    if (!event) {
+      return res.status(404).render('error', { 
+        message: 'Menu not found',
+        error: 'The requested menu could not be found.' 
+      });
+    }
+    
+    res.render('detail', { 
+      title: event.menu_title,
+      event: event 
+    });
+  } catch (error) {
+    console.error('Error fetching event:', error);
+    res.status(500).render('error', { 
+      message: 'Error loading menu',
+      error: error.message 
+    });
+  }
+});
+
 // API route to get all events as JSON
 app.get('/api/events', async (req, res) => {
   try {
     const events = await db.Event.findAll({
-      order: [['event_date', 'ASC']]
+      order: [['event_date', 'DESC']]
     });
     res.json(events);
   } catch (error) {
