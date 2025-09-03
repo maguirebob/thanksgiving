@@ -361,6 +361,15 @@ app.put('/api/v1/events/:id', async (req, res) => {
       }
     }
 
+    // Check if there are any fields to update
+    if (Object.keys(filteredData).length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'No valid fields provided for update',
+        timestamp: new Date().toISOString()
+      });
+    }
+
     // Build the UPDATE query dynamically
     const setClause = Object.keys(filteredData)
       .map((key, index) => `"${key}" = $${index + 2}`)
@@ -368,11 +377,26 @@ app.put('/api/v1/events/:id', async (req, res) => {
     
     const values = [eventId, ...Object.values(filteredData)];
     
-    await queryDatabase(`
-      UPDATE "Events" 
-      SET ${setClause}
-      WHERE event_id = $1
-    `, values);
+    console.log('Update SQL:', `UPDATE "Events" SET ${setClause} WHERE event_id = $1`);
+    console.log('Update values:', values);
+    
+    try {
+      await queryDatabase(`
+        UPDATE "Events" 
+        SET ${setClause}
+        WHERE event_id = $1
+      `, values);
+    } catch (sqlError) {
+      console.error('SQL Update Error:', sqlError);
+      return res.status(500).json({
+        success: false,
+        error: 'Database update failed',
+        message: sqlError.message,
+        sql: `UPDATE "Events" SET ${setClause} WHERE event_id = $1`,
+        values: values,
+        timestamp: new Date().toISOString()
+      });
+    }
 
     // Get the updated event
     const updatedEvents = await queryDatabase(`
