@@ -31,10 +31,10 @@ module.exports = {
       connectionTimeoutMillis: 10000
     },
     pool: {
-      max: 2,
+      max: 1,
       min: 0,
       acquire: 30000,
-      idle: 5000,
+      idle: 10000,
       evict: 1000,
       handleDisconnects: true
     },
