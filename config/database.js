@@ -26,10 +26,32 @@ module.exports = {
     logging: false,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     pool: {
-      max: 20,
-      min: 5,
-      acquire: 30000,
-      idle: 10000
+      max: 5,
+      min: 0,
+      acquire: 60000,
+      idle: 10000,
+      evict: 1000,
+      handleDisconnects: true
+    },
+    retry: {
+      match: [
+        /ETIMEDOUT/,
+        /EHOSTUNREACH/,
+        /ECONNRESET/,
+        /ECONNREFUSED/,
+        /ETIMEDOUT/,
+        /ESOCKETTIMEDOUT/,
+        /EHOSTUNREACH/,
+        /EPIPE/,
+        /EAI_AGAIN/,
+        /SequelizeConnectionError/,
+        /SequelizeConnectionRefusedError/,
+        /SequelizeHostNotFoundError/,
+        /SequelizeHostNotReachableError/,
+        /SequelizeInvalidConnectionError/,
+        /SequelizeConnectionTimedOutError/
+      ],
+      max: 3
     }
   }
 };
