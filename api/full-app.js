@@ -18,14 +18,18 @@ async function initDatabase() {
   try {
     const databaseUrl = process.env.POSTGRES_URL;
     
+    console.log('Starting database initialization...');
+    console.log('Database URL exists:', !!databaseUrl);
+    
     if (!databaseUrl) {
       console.log('No database URL found');
       return false;
     }
 
+    console.log('Creating Sequelize instance...');
     sequelize = new Sequelize(databaseUrl, {
       dialect: 'postgres',
-      logging: false,
+      logging: console.log, // Enable logging for debugging
       dialectOptions: {
         ssl: { rejectUnauthorized: false }
       },
@@ -37,9 +41,11 @@ async function initDatabase() {
       }
     });
 
+    console.log('Attempting to authenticate...');
     await sequelize.authenticate();
     console.log('Database connected successfully');
     
+    console.log('Defining Event model...');
     // Define Event model after successful connection
     Event = sequelize.define('Event', {
       event_id: {
@@ -80,11 +86,13 @@ async function initDatabase() {
       timestamps: false
     });
     
-    dbConnected = true;
     console.log('Event model defined successfully');
+    dbConnected = true;
+    console.log('Database initialization completed successfully');
     return true;
   } catch (error) {
     console.error('Database connection failed:', error.message);
+    console.error('Full error:', error);
     dbConnected = false;
     return false;
   }
@@ -245,18 +253,26 @@ app.get('/health/db', async (req, res) => {
 // Manual database initialization endpoint
 app.get('/init-db', async (req, res) => {
   try {
+    console.log('Manual database initialization requested...');
     const result = await initDatabase();
+    
     res.json({
       success: result,
       message: result ? 'Database initialized successfully' : 'Database initialization failed',
       dbConnected: dbConnected,
       hasEventModel: !!Event,
+      hasSequelize: !!sequelize,
+      hasPostgresUrl: !!process.env.POSTGRES_URL,
+      environment: process.env.NODE_ENV,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
+    console.error('Init-db endpoint error:', error);
     res.status(500).json({
       success: false,
       error: error.message,
+      stack: error.stack,
+      hasPostgresUrl: !!process.env.POSTGRES_URL,
       timestamp: new Date().toISOString()
     });
   }
