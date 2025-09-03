@@ -8,8 +8,7 @@
     "dev": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "echo \"Linting not configured\"",
-    "setup": "node -e \"console.log('Please run the SQL script in admin/create_tables.sql to set up the database')\"",
-    "postinstall": "echo 'Dependencies installed successfully'"
+    "setup": "node -e \"console.log('Please run the SQL script in admin/create_tables.sql to set up the database')\""
   },
   "keywords": [
     "thanksgiving",
