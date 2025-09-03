@@ -323,6 +323,80 @@ app.get('/setup-db', async (req, res) => {
   }
 });
 
+// PUT endpoint for updating events
+app.put('/api/v1/events/:id', async (req, res) => {
+  try {
+    const eventId = req.params.id;
+    const updateData = req.body;
+    
+    // First check if the event exists
+    const existingEvents = await queryDatabase(`
+      SELECT * FROM "Events" 
+      WHERE event_id = $1
+    `, [eventId]);
+
+    if (existingEvents.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Event not found',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Validate required fields
+    const allowedFields = [
+      'event_name',
+      'event_type', 
+      'event_location',
+      'event_date',
+      'event_description',
+      'menu_title',
+      'menu_image_filename'
+    ];
+
+    const filteredData = {};
+    for (const field of allowedFields) {
+      if (updateData[field] !== undefined) {
+        filteredData[field] = updateData[field];
+      }
+    }
+
+    // Build the UPDATE query dynamically
+    const setClause = Object.keys(filteredData)
+      .map((key, index) => `"${key}" = $${index + 2}`)
+      .join(', ');
+    
+    const values = [eventId, ...Object.values(filteredData)];
+    
+    await queryDatabase(`
+      UPDATE "Events" 
+      SET ${setClause}
+      WHERE event_id = $1
+    `, values);
+
+    // Get the updated event
+    const updatedEvents = await queryDatabase(`
+      SELECT * FROM "Events" 
+      WHERE event_id = $1
+    `, [eventId]);
+
+    res.json({
+      success: true,
+      data: updatedEvents[0],
+      message: 'Event updated successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error updating event:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update event',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // DELETE endpoint for removing events
 app.delete('/api/v1/events/:id', async (req, res) => {
   try {
