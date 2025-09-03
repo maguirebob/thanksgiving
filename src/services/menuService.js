@@ -67,6 +67,44 @@ class MenuService {
   }
 
   /**
+   * Update a menu by ID
+   * @param {number} id - Menu ID
+   * @param {Object} updateData - Data to update
+   * @returns {Promise<Object|null>} Updated menu event or null if not found
+   */
+  async updateMenu(id, updateData) {
+    if (!id || isNaN(id)) {
+      throw new Error('Invalid menu ID');
+    }
+
+    const menu = await Event.findByPk(id);
+    if (!menu) {
+      return null;
+    }
+
+    // Validate required fields
+    const allowedFields = [
+      'event_name',
+      'event_type', 
+      'event_location',
+      'event_date',
+      'event_description',
+      'menu_title',
+      'menu_image_filename'
+    ];
+
+    const filteredData = {};
+    for (const field of allowedFields) {
+      if (updateData[field] !== undefined) {
+        filteredData[field] = updateData[field];
+      }
+    }
+
+    await menu.update(filteredData);
+    return menu;
+  }
+
+  /**
    * Get menu statistics
    * @returns {Promise<Object>} Statistics about menus
    */

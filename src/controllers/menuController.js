@@ -122,6 +122,37 @@ class MenuController {
   }
 
   /**
+   * Update a menu
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   * @param {Function} next - Express next function
+   */
+  async updateMenu(req, res, next) {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+      
+      const updatedMenu = await menuService.updateMenu(id, updateData);
+      
+      if (!updatedMenu) {
+        return res.status(404).json({
+          success: false,
+          error: 'Menu not found',
+          message: 'The requested menu could not be found.'
+        });
+      }
+      
+      res.json({
+        success: true,
+        data: updatedMenu,
+        message: 'Menu updated successfully'
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * Get menu statistics (API endpoint)
    * @param {Object} req - Express request object
    * @param {Object} res - Express response object

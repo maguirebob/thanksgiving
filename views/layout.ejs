@@ -213,6 +213,46 @@
             transform: translateY(-2px);
         }
 
+        /* Edit Form Styles */
+        .menu-edit-form {
+            background: var(--white);
+            border: 1px solid var(--border-gray);
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .menu-edit-form .form-label {
+            font-weight: 600;
+            color: var(--primary-black);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .menu-edit-form .form-control {
+            border: 1px solid var(--border-gray);
+            border-radius: 4px;
+            padding: 0.75rem;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .menu-edit-form .form-control:focus {
+            border-color: var(--accent-orange);
+            box-shadow: 0 0 0 0.2rem rgba(210, 105, 30, 0.25);
+        }
+
+        .menu-edit-form textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .menu-edit-form .d-flex.gap-2 {
+            gap: 1rem !important;
+        }
+
         /* Featured Menu */
         .featured-menu {
             grid-column: 1 / -1;

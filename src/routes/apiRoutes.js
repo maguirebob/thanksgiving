@@ -4,6 +4,7 @@ const {
   validateMenuId, 
   validateYear, 
   validateQueryParams, 
+  validateMenuUpdate,
   handleValidationErrors 
 } = require('../middleware/validation');
 
@@ -24,6 +25,13 @@ router.get(`${API_VERSION}/events/:id`,
   validateMenuId, 
   handleValidationErrors, 
   menuController.getMenuByIdAPI
+);
+
+// Update menu API endpoint
+router.put(`${API_VERSION}/events/:id`, 
+  validateMenuUpdate, 
+  handleValidationErrors, 
+  menuController.updateMenu
 );
 
 // Menus by year API endpoint
