@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const { Client } = require('pg');
+const expressLayouts = require('express-ejs-layouts');
 
 const app = express();
 
@@ -8,6 +9,12 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
+app.use(expressLayouts);
+
+// View engine setup
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, '../views'));
+app.set('layout', 'layout');
 
 // Database connection using the working direct pg approach
 let dbConnected = false;
@@ -50,32 +57,36 @@ app.get('/', async (req, res) => {
     `);
 
     if (!tableCheck[0].table_exists) {
-      return res.json({
-        message: 'Thanksgiving Menu App',
-        status: 'Database table not found',
-        error: 'Events table does not exist. Please run database setup.',
-        timestamp: new Date().toISOString()
+      return res.render('error', {
+        title: 'Database Error',
+        message: 'Events table does not exist. Please run database setup.',
+        error: 'Database table not found'
       });
     }
 
     const events = await queryDatabase(`
       SELECT * FROM "Events" 
-      ORDER BY event_date DESC 
-      LIMIT 3
+      ORDER BY event_date DESC
     `);
 
-    res.json({
-      message: 'Thanksgiving Menu App',
-      status: 'OK',
-      eventCount: events.length,
+    // Get stats
+    const stats = {
+      totalEvents: events.length,
+      latestYear: events.length > 0 ? new Date(events[0].event_date).getFullYear() : null,
+      earliestYear: events.length > 0 ? new Date(events[events.length - 1].event_date).getFullYear() : null
+    };
+
+    res.render('index', {
+      title: 'Thanksgiving Menus',
       events: events,
-      timestamp: new Date().toISOString()
+      stats: stats
     });
   } catch (error) {
-    res.status(500).json({
-      error: 'Failed to fetch events',
-      message: error.message,
-      timestamp: new Date().toISOString()
+    console.error('Error fetching events:', error);
+    res.render('error', {
+      title: 'Error',
+      message: 'Failed to fetch events',
+      error: error.message
     });
   }
 });
@@ -99,6 +110,35 @@ app.get('/api/v1/events', async (req, res) => {
       error: 'Failed to fetch events',
       message: error.message,
       timestamp: new Date().toISOString()
+    });
+  }
+});
+
+app.get('/menu/:id', async (req, res) => {
+  try {
+    const events = await queryDatabase(`
+      SELECT * FROM "Events" 
+      WHERE event_id = $1
+    `, [req.params.id]);
+
+    if (events.length === 0) {
+      return res.render('error', {
+        title: 'Menu Not Found',
+        message: 'The requested menu could not be found.',
+        error: 'Event not found'
+      });
+    }
+
+    res.render('detail', {
+      title: events[0].menu_title,
+      event: events[0]
+    });
+  } catch (error) {
+    console.error('Error fetching event:', error);
+    res.render('error', {
+      title: 'Error',
+      message: 'Failed to fetch menu details',
+      error: error.message
     });
   }
 });
@@ -214,14 +254,42 @@ app.get('/setup-db', async (req, res) => {
       const eventCount = parseInt(countResult.rows[0].count);
       
       if (eventCount === 0) {
-        // Insert sample data
-        const sampleData = [
-          ['Thanksgiving Dinner 2024', 'Thanksgiving', 'Middletown, NJ', '2024-11-28', 'This dinner was marked by the death of Tricia\'s Grandmother, Grandman Goodse', 'Thanksgiving 2024', '2024_Menu.jpeg'],
+        // Insert all 26 years of Thanksgiving data
+        const allData = [
+          ['Thanksgiving Dinner 1994', 'Thanksgiving', 'Canajoharie, NY', '1994-11-24', 'First Thanksgiving Dinner that we have menu for at my parents house in Canajoharie, NY', 'Maguire Family Dinner 1994', '1994_Menu.png'],
+          ['Thanksgiving Dinner 1995', 'Thanksgiving', 'Canajoharie, NY', '1995-11-23', 'Thanksgiving at my parents house in Canajoharie, NY', 'Maguire Family Dinner 1995', '1995_Menu.png'],
+          ['Thanksgiving Dinner 1996', 'Thanksgiving', 'Canajoharie, NY', '1996-11-28', 'Thanksgiving at my parents house in Canajoharie, NY', 'Maguire Family Dinner 1996', '1996_Menu.png'],
+          ['Thanksgiving Dinner 1997', 'Thanksgiving', 'Canajoharie, NY', '1997-11-27', 'Thanksgiving at my parents house in Canajoharie, NY', 'Maguire Family Dinner 1997', '1997_Menu.png'],
+          ['Thanksgiving Dinner 1998', 'Thanksgiving', 'Canajoharie, NY', '1998-11-26', 'Thanksgiving at my parents house in Canajoharie, NY', 'Maguire Family Dinner 1998', '1998_Menu.png'],
+          ['Thanksgiving Dinner 1999', 'Thanksgiving', 'Canajoharie, NY', '1999-11-25', 'Thanksgiving at my parents house in Canajoharie, NY', 'Maguire Family Dinner 1999', '1999_Menu.png'],
+          ['Thanksgiving Dinner 2000', 'Thanksgiving', 'Canajoharie, NY', '2000-11-23', 'Thanksgiving at my parents house in Canajoharie, NY', 'Maguire Family Dinner 2000', '2000_Menu.png'],
+          ['Thanksgiving Dinner 2001', 'Thanksgiving', 'Canajoharie, NY', '2001-11-22', 'Thanksgiving at my parents house in Canajoharie, NY', 'Maguire Family Dinner 2001', '2001_Menu.png'],
+          ['Thanksgiving Dinner 2002', 'Thanksgiving', 'Canajoharie, NY', '2002-11-28', 'Thanksgiving at my parents house in Canajoharie, NY', 'Maguire Family Dinner 2002', '2002_Menu.png'],
+          ['Thanksgiving Dinner 2003', 'Thanksgiving', 'Canajoharie, NY', '2003-11-27', 'Thanksgiving at my parents house in Canajoharie, NY', 'Maguire Family Dinner 2003', '2003_Menu.png'],
+          ['Thanksgiving Dinner 2004', 'Thanksgiving', 'Middletown, NJ', '2004-11-25', 'This dinner was at Bob and Tricia\'s house in Middletown, NJ', 'Thanksgiving 2004', '2004_Menu.jpeg'],
+          ['Thanksgiving Dinner 2005', 'Thanksgiving', 'Middletown, NJ', '2005-11-24', 'Thanksgiving at Bob and Tricia\'s house in Middletown, NJ', 'Thanksgiving 2005', '2005_Menu.jpeg'],
+          ['Thanksgiving Dinner 2006', 'Thanksgiving', 'Middletown, NJ', '2006-11-23', 'Thanksgiving at Bob and Tricia\'s house in Middletown, NJ', 'Thanksgiving 2006', '2006_Menu.jpeg'],
+          ['Thanksgiving Dinner 2007', 'Thanksgiving', 'Middletown, NJ', '2007-11-22', 'Thanksgiving at Bob and Tricia\'s house in Middletown, NJ', 'Thanksgiving 2007', '2007_Menu.jpeg'],
+          ['Thanksgiving Dinner 2008', 'Thanksgiving', 'Middletown, NJ', '2008-11-27', 'Thanksgiving at Bob and Tricia\'s house in Middletown, NJ', 'Thanksgiving 2008', '2008_Menu.jpeg'],
+          ['Thanksgiving Dinner 2009', 'Thanksgiving', 'Middletown, NJ', '2009-11-26', 'Thanksgiving at Bob and Tricia\'s house in Middletown, NJ', 'Thanksgiving 2009', '2009_Menu.jpeg'],
+          ['Thanksgiving Dinner 2010', 'Thanksgiving', 'Middletown, NJ', '2010-11-25', 'Thanksgiving at Bob and Tricia\'s house in Middletown, NJ', 'Thanksgiving 2010', '2010_Menu.jpeg'],
+          ['Thanksgiving Dinner 2011', 'Thanksgiving', 'Middletown, NJ', '2011-11-24', 'Thanksgiving at Bob and Tricia\'s house in Middletown, NJ', 'Thanksgiving 2011', '2011_Menu.jpeg'],
+          ['Thanksgiving Dinner 2012', 'Thanksgiving', 'Middletown, NJ', '2012-11-22', 'Thanksgiving at Bob and Tricia\'s house in Middletown, NJ', 'Thanksgiving 2012', '2012_Menu.jpeg'],
+          ['Thanksgiving Dinner 2013', 'Thanksgiving', 'Middletown, NJ', '2013-11-28', 'Thanksgiving at Bob and Tricia\'s house in Middletown, NJ', 'Thanksgiving 2013', '2013_Menu.jpeg'],
+          ['Thanksgiving Dinner 2014', 'Thanksgiving', 'Middletown, NJ', '2014-11-27', 'Thanksgiving at Bob and Tricia\'s house in Middletown, NJ', 'Thanksgiving 2014', '2014_Menu.jpeg'],
+          ['Thanksgiving Dinner 2015', 'Thanksgiving', 'Middletown, NJ', '2015-11-26', 'Thanksgiving at Bob and Tricia\'s house in Middletown, NJ', 'Thanksgiving 2015', '2015_Menu.jpeg'],
+          ['Thanksgiving Dinner 2016', 'Thanksgiving', 'Middletown, NJ', '2016-11-24', 'Thanksgiving at Bob and Tricia\'s house in Middletown, NJ', 'Thanksgiving 2016', '2016_Menu.jpeg'],
+          ['Thanksgiving Dinner 2017', 'Thanksgiving', 'Middletown, NJ', '2017-11-23', 'Thanksgiving at Bob and Tricia\'s house in Middletown, NJ', 'Thanksgiving 2017', '2017_Menu.jpeg'],
+          ['Thanksgiving Dinner 2018', 'Thanksgiving', 'Middletown, NJ', '2018-11-22', 'Thanksgiving at Bob and Tricia\'s house in Middletown, NJ', 'Thanksgiving 2018', '2018_Menu.jpeg'],
+          ['Thanksgiving Dinner 2019', 'Thanksgiving', 'Middletown, NJ', '2019-11-28', 'Thanksgiving at Bob and Tricia\'s house in Middletown, NJ', 'Thanksgiving 2019', '2019_Menu.jpeg'],
+          ['Thanksgiving Dinner 2020', 'Thanksgiving', 'Middletown, NJ', '2020-11-26', 'Thanksgiving at Bob and Tricia\'s house in Middletown, NJ', 'Thanksgiving 2020', '2020_Menu.jpeg'],
+          ['Thanksgiving Dinner 2021', 'Thanksgiving', 'Middletown, NJ', '2021-11-25', 'Thanksgiving at Bob and Tricia\'s house in Middletown, NJ', 'Thanksgiving 2021', '2021_Menu.jpeg'],
+          ['Thanksgiving Dinner 2022', 'Thanksgiving', 'Middletown, NJ', '2022-11-24', 'Thanksgiving at Bob and Tricia\'s house in Middletown, NJ', 'Thanksgiving 2022', '2022_Menu.jpeg'],
           ['Thanksgiving Dinner 2023', 'Thanksgiving', 'Middletown, NJ', '2023-11-23', 'Thanksgiving at Bob and Tricia\'s house in Middletown, NJ', 'Thanksgiving 2023', '2023_Menu.jpeg'],
-          ['Thanksgiving Dinner 2022', 'Thanksgiving', 'Middletown, NJ', '2022-11-24', 'Thanksgiving at Bob and Tricia\'s house in Middletown, NJ', 'Thanksgiving 2022', '2022_Menu.jpeg']
+          ['Thanksgiving Dinner 2024', 'Thanksgiving', 'Middletown, NJ', '2024-11-28', 'This dinner was marked by the death of Tricia\'s Grandmother, Grandman Goodse', 'Thanksgiving 2024', '2024_Menu.jpeg']
         ];
         
-        for (const data of sampleData) {
+        for (const data of allData) {
           await client.query(`
             INSERT INTO "Events" (event_name, event_type, event_location, event_date, event_description, menu_title, menu_image_filename)
             VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -253,7 +321,7 @@ app.get('*', (req, res) => {
   res.json({
     message: 'Route not found',
     path: req.path,
-    availableRoutes: ['/', '/api/v1/events', '/api/v1/events/:id', '/health', '/health/db', '/test-db', '/setup-db']
+    availableRoutes: ['/', '/menu/:id', '/api/v1/events', '/api/v1/events/:id', '/health', '/health/db', '/test-db', '/setup-db']
   });
 });
 
