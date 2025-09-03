@@ -36,6 +36,51 @@ const validateQueryParams = [
 ];
 
 /**
+ * Validation rules for menu updates
+ */
+const validateMenuUpdate = [
+  param('id')
+    .isInt({ min: 1 })
+    .withMessage('Menu ID must be a positive integer')
+    .toInt(),
+  body('event_name')
+    .optional()
+    .isLength({ min: 1, max: 255 })
+    .withMessage('Event name must be between 1 and 255 characters')
+    .trim(),
+  body('event_type')
+    .optional()
+    .isLength({ min: 1, max: 255 })
+    .withMessage('Event type must be between 1 and 255 characters')
+    .trim(),
+  body('event_location')
+    .optional()
+    .isLength({ min: 1, max: 255 })
+    .withMessage('Event location must be between 1 and 255 characters')
+    .trim(),
+  body('event_date')
+    .optional()
+    .isISO8601()
+    .withMessage('Event date must be a valid date (YYYY-MM-DD)')
+    .toDate(),
+  body('event_description')
+    .optional()
+    .isLength({ min: 1, max: 1000 })
+    .withMessage('Event description must be between 1 and 1000 characters')
+    .trim(),
+  body('menu_title')
+    .optional()
+    .isLength({ min: 1, max: 255 })
+    .withMessage('Menu title must be between 1 and 255 characters')
+    .trim(),
+  body('menu_image_filename')
+    .optional()
+    .isLength({ min: 1, max: 255 })
+    .withMessage('Menu image filename must be between 1 and 255 characters')
+    .trim()
+];
+
+/**
  * Middleware to handle validation results
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -71,5 +116,6 @@ module.exports = {
   validateMenuId,
   validateYear,
   validateQueryParams,
+  validateMenuUpdate,
   handleValidationErrors
 };

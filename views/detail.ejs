@@ -59,6 +59,69 @@
             <h2 class="section-title" style="font-size: 2rem; border-bottom: 2px solid var(--accent-orange);">About This Menu</h2>
             <p style="font-size: 1.1rem; line-height: 1.8; color: var(--secondary-gray);"><%= event.event_description %></p>
         </div>
+
+        <!-- Edit Menu Section -->
+        <div class="mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="section-title" style="font-size: 2rem; border-bottom: 2px solid var(--accent-orange); margin-bottom: 0;">Edit Menu</h2>
+                <button class="btn-view-details" onclick="toggleEditForm()" id="editToggleBtn">
+                    <i class="fas fa-edit me-2"></i>
+                    Edit Menu
+                </button>
+            </div>
+            
+            <div id="editForm" style="display: none;">
+                <form id="menuEditForm" class="menu-edit-form">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="event_name" class="form-label">Event Name</label>
+                            <input type="text" class="form-control" id="event_name" name="event_name" value="<%= event.event_name %>" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="event_type" class="form-label">Event Type</label>
+                            <input type="text" class="form-control" id="event_type" name="event_type" value="<%= event.event_type %>" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="event_location" class="form-label">Location</label>
+                            <input type="text" class="form-control" id="event_location" name="event_location" value="<%= event.event_location %>" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="event_date" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="event_date" name="event_date" value="<%= new Date(event.event_date).toISOString().split('T')[0] %>" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="menu_title" class="form-label">Menu Title</label>
+                        <input type="text" class="form-control" id="menu_title" name="menu_title" value="<%= event.menu_title %>" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="menu_image_filename" class="form-label">Image Filename</label>
+                        <input type="text" class="form-control" id="menu_image_filename" name="menu_image_filename" value="<%= event.menu_image_filename %>" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="event_description" class="form-label">Description</label>
+                        <textarea class="form-control" id="event_description" name="event_description" rows="4" required><%= event.event_description %></textarea>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn-view-details">
+                            <i class="fas fa-save me-2"></i>
+                            Save Changes
+                        </button>
+                        <button type="button" class="btn-view-details" style="background-color: var(--secondary-gray);" onclick="cancelEdit()">
+                            <i class="fas fa-times me-2"></i>
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <!-- Sidebar -->
@@ -224,4 +287,133 @@ function adjustImageSize() {
 // Adjust image size on load and resize
 window.addEventListener('load', adjustImageSize);
 window.addEventListener('resize', adjustImageSize);
+
+// Edit form functionality
+function toggleEditForm() {
+    const editForm = document.getElementById('editForm');
+    const editBtn = document.getElementById('editToggleBtn');
+    
+    if (editForm.style.display === 'none' || editForm.style.display === '') {
+        editForm.style.display = 'block';
+        editBtn.innerHTML = '<i class="fas fa-times me-2"></i>Cancel Edit';
+        editBtn.style.backgroundColor = 'var(--secondary-gray)';
+    } else {
+        editForm.style.display = 'none';
+        editBtn.innerHTML = '<i class="fas fa-edit me-2"></i>Edit Menu';
+        editBtn.style.backgroundColor = 'var(--accent-orange)';
+    }
+}
+
+function cancelEdit() {
+    const editForm = document.getElementById('editForm');
+    const editBtn = document.getElementById('editToggleBtn');
+    
+    editForm.style.display = 'none';
+    editBtn.innerHTML = '<i class="fas fa-edit me-2"></i>Edit Menu';
+    editBtn.style.backgroundColor = 'var(--accent-orange)';
+    
+    // Reset form to original values
+    document.getElementById('menuEditForm').reset();
+}
+
+// Handle form submission
+document.getElementById('menuEditForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const updateData = {};
+    
+    // Convert FormData to object
+    for (let [key, value] of formData.entries()) {
+        updateData[key] = value;
+    }
+    
+    try {
+        const response = await fetch(`/api/v1/events/<%= event.event_id %>`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updateData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Show success message
+            showMessage('Menu updated successfully!', 'success');
+            
+            // Update the page content with new data
+            updatePageContent(result.data);
+            
+            // Hide the edit form
+            cancelEdit();
+            
+            // Reload the page after a short delay to show updated content
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showMessage('Error updating menu: ' + (result.error || 'Unknown error'), 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('Error updating menu. Please try again.', 'error');
+    }
+});
+
+function updatePageContent(updatedData) {
+    // Update the page content with the new data
+    document.querySelector('.menu-title').textContent = updatedData.menu_title;
+    document.querySelector('.menu-location').textContent = updatedData.event_location;
+    document.querySelector('.menu-date').textContent = new Date(updatedData.event_date).toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+    
+    // Update description
+    const descriptionElement = document.querySelector('.mb-5 p');
+    if (descriptionElement) {
+        descriptionElement.textContent = updatedData.event_description;
+    }
+    
+    // Update sidebar info
+    const sidebarElements = document.querySelectorAll('.col-lg-4 .menu-card .menu-content div');
+    if (sidebarElements.length >= 4) {
+        sidebarElements[0].nextElementSibling.textContent = updatedData.event_type;
+        sidebarElements[1].nextElementSibling.textContent = new Date(updatedData.event_date).getFullYear();
+        sidebarElements[2].nextElementSibling.textContent = updatedData.event_location;
+        sidebarElements[3].nextElementSibling.textContent = new Date(updatedData.event_date).toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+    }
+}
+
+function showMessage(message, type) {
+    // Create message element
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+    messageDiv.style.position = 'fixed';
+    messageDiv.style.top = '20px';
+    messageDiv.style.right = '20px';
+    messageDiv.style.zIndex = '10000';
+    messageDiv.style.minWidth = '300px';
+    messageDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(messageDiv);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (messageDiv.parentNode) {
+            messageDiv.parentNode.removeChild(messageDiv);
+        }
+    }, 5000);
+}
 </script>
