@@ -6,7 +6,6 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "build": "echo 'No build step required'",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "echo \"Linting not configured\"",
     "setup": "node -e \"console.log('Please run the SQL script in admin/create_tables.sql to set up the database')\"",
