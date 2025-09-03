@@ -1,14 +1,24 @@
 const express = require('express');
 const path = require('path');
-const expressLayouts = require('express-ejs-layouts');
-const { body, param, validationResult } = require('express-validator');
 
-// Import your existing modules
-const db = require('../models');
-const menuController = require('../src/controllers/menuController');
-const menuService = require('../src/services/menuService');
-const { notFoundHandler, errorHandler } = require('../src/middleware/errorHandler');
-const { validateMenuUpdate } = require('../src/middleware/validation');
+// Try to import modules with error handling
+let expressLayouts, validationResult, db, menuController, menuService, notFoundHandler, errorHandler, validateMenuUpdate;
+
+try {
+  expressLayouts = require('express-ejs-layouts');
+  const { body, param, validationResult: vr } = require('express-validator');
+  validationResult = vr;
+  db = require('../models');
+  menuController = require('../src/controllers/menuController');
+  menuService = require('../src/services/menuService');
+  const errorHandlers = require('../src/middleware/errorHandler');
+  notFoundHandler = errorHandlers.notFoundHandler;
+  errorHandler = errorHandlers.errorHandler;
+  const validation = require('../src/middleware/validation');
+  validateMenuUpdate = validation.validateMenuUpdate;
+} catch (error) {
+  console.error('Error importing modules:', error.message);
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -97,12 +107,27 @@ app.get('/health', (req, res) => {
     status: 'OK',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    version: appConfig.version
+    version: appConfig.version,
+    modulesLoaded: {
+      expressLayouts: !!expressLayouts,
+      db: !!db,
+      menuController: !!menuController,
+      errorHandler: !!errorHandler
+    }
   });
 });
 
 app.get('/health/db', async (req, res) => {
   try {
+    if (!db) {
+      return res.status(503).json({
+        status: 'ERROR',
+        database: 'not_loaded',
+        error: 'Database module not loaded',
+        timestamp: new Date().toISOString()
+      });
+    }
+
     await db.sequelize.authenticate();
     
     const eventCount = await db.Event.count();
@@ -125,14 +150,33 @@ app.get('/health/db', async (req, res) => {
       status: 'ERROR',
       database: 'disconnected',
       error: error.message,
+      stack: error.stack,
       timestamp: new Date().toISOString()
     });
   }
 });
 
 // Error handling middleware (must be last)
-app.use(notFoundHandler);
-app.use(errorHandler);
+if (notFoundHandler) {
+  app.use(notFoundHandler);
+} else {
+  app.use((req, res) => {
+    res.status(404).json({ error: 'Not found', path: req.path });
+  });
+}
+
+if (errorHandler) {
+  app.use(errorHandler);
+} else {
+  app.use((error, req, res, next) => {
+    console.error('Unhandled error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error', 
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  });
+}
 
 // Initialize database connection
 async function initializeDatabase() {
