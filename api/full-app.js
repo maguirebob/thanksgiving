@@ -1,0 +1,242 @@
+const express = require('express');
+const path = require('path');
+const { Sequelize } = require('sequelize');
+
+const app = express();
+
+// Basic middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Database connection using the working approach
+let sequelize;
+let dbConnected = false;
+
+async function initDatabase() {
+  try {
+    const databaseUrl = process.env.POSTGRES_URL;
+    
+    if (!databaseUrl) {
+      console.log('No database URL found');
+      return false;
+    }
+
+    sequelize = new Sequelize(databaseUrl, {
+      dialect: 'postgres',
+      logging: false,
+      dialectOptions: {
+        ssl: { rejectUnauthorized: false }
+      },
+      pool: {
+        max: 1,
+        min: 0,
+        acquire: 10000,
+        idle: 5000
+      }
+    });
+
+    await sequelize.authenticate();
+    console.log('Database connected successfully');
+    dbConnected = true;
+    return true;
+  } catch (error) {
+    console.error('Database connection failed:', error.message);
+    dbConnected = false;
+    return false;
+  }
+}
+
+// Initialize database
+initDatabase();
+
+// Define Event model inline (simplified)
+const Event = sequelize ? sequelize.define('Event', {
+  event_id: {
+    type: Sequelize.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  event_name: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  event_type: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  event_location: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  event_date: {
+    type: Sequelize.DATE,
+    allowNull: false
+  },
+  event_description: {
+    type: Sequelize.TEXT,
+    allowNull: true
+  },
+  menu_title: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  menu_image_filename: {
+    type: Sequelize.STRING,
+    allowNull: false
+  }
+}, {
+  tableName: 'Events',
+  timestamps: false
+}) : null;
+
+// Routes
+app.get('/', async (req, res) => {
+  try {
+    if (!dbConnected || !Event) {
+      return res.json({
+        message: 'Thanksgiving Menu App',
+        status: 'Database not connected',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const events = await Event.findAll({
+      order: [['event_date', 'DESC']]
+    });
+
+    res.json({
+      message: 'Thanksgiving Menu App',
+      status: 'OK',
+      eventCount: events.length,
+      events: events.slice(0, 3), // Show first 3 events
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Failed to fetch events',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+app.get('/api/v1/events', async (req, res) => {
+  try {
+    if (!dbConnected || !Event) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database not connected',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const events = await Event.findAll({
+      order: [['event_date', 'DESC']]
+    });
+
+    res.json({
+      success: true,
+      data: events,
+      count: events.length,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch events',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+app.get('/api/v1/events/:id', async (req, res) => {
+  try {
+    if (!dbConnected || !Event) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database not connected',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const event = await Event.findByPk(req.params.id);
+
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        error: 'Event not found',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    res.json({
+      success: true,
+      data: event,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch event',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Health check endpoints
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    version: '1.0.0',
+    environment: process.env.NODE_ENV || 'development',
+    database: dbConnected ? 'connected' : 'disconnected'
+  });
+});
+
+app.get('/health/db', async (req, res) => {
+  try {
+    if (!sequelize) {
+      return res.status(503).json({
+        status: 'ERROR',
+        database: 'not_initialized',
+        error: 'Database not initialized',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    await sequelize.authenticate();
+    
+    // Test a simple query
+    const [results] = await sequelize.query('SELECT NOW() as current_time');
+    
+    res.json({
+      status: 'OK',
+      database: 'connected',
+      currentTime: results[0].current_time,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: 'ERROR',
+      database: 'disconnected',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Catch-all for other routes
+app.get('*', (req, res) => {
+  res.json({
+    message: 'Route not found',
+    path: req.path,
+    availableRoutes: ['/', '/api/v1/events', '/api/v1/events/:id', '/health', '/health/db']
+  });
+});
+
+module.exports = app;
