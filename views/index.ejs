@@ -1,85 +1,118 @@
+<!-- Hero Section -->
 <div class="text-center mb-5">
-    <h1 class="main-title display-4 fw-bold">
-        <i class="fas fa-turkey me-3"></i>
+    <h1 class="main-title">
         <%= typeof title !== 'undefined' ? title : 'Thanksgiving Menus Through the Years' %>
     </h1>
-    <p class="lead text-white-50">A collection of Thanksgiving menus from 1994 to 2005</p>
+    <p class="lead text-muted">A collection of Thanksgiving menus from 1994 to today</p>
 </div>
 
-<% if (events && events.length > 0) { %>
-    <div class="row g-4">
-        <% events.forEach(function(event) { %>
-            <div class="col-lg-6 col-xl-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <h5 class="card-title fw-bold text-primary">
-                                <%= event.menu_title %>
-                            </h5>
-                            <span class="year-badge">
-                                <%= new Date(event.event_date).getFullYear() %>
-                            </span>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <img src="/images/<%= event.menu_image_filename %>" 
-                                 alt="<%= event.menu_title %>" 
-                                 class="menu-image"
-                                 onerror="this.src='/images/placeholder-menu.jpg'">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <h6 class="text-muted mb-1">
-                                <i class="fas fa-calendar-alt me-2"></i>
-                                <%= new Date(event.event_date).toLocaleDateString('en-US', { 
-                                    weekday: 'long', 
-                                    year: 'numeric', 
-                                    month: 'long', 
-                                    day: 'numeric' 
-                                }) %>
-                            </h6>
-                            <p class="location-text mb-2">
-                                <i class="fas fa-map-marker-alt me-2"></i>
-                                <%= event.event_location %>
-                            </p>
-                            <span class="badge bg-secondary">
-                                <%= event.event_type %>
-                            </span>
-                        </div>
-                        
-                        <p class="description-text">
-                            <%= event.event_description %>
-                        </p>
-                    </div>
-                    
-                    <div class="card-footer bg-transparent border-0">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted">
-                                <i class="fas fa-clock me-1"></i>
-                                Added to collection
-                            </small>
-                                                                    <a href="/menu/<%= event.event_id %>" class="btn btn-outline-primary btn-sm">
-                                            <i class="fas fa-eye me-1"></i>
-                                            View Details
-                                        </a>
-                        </div>
-                    </div>
-                </div>
+<!-- Stats Section -->
+<div class="stats-section">
+    <div class="container">
+        <h2 class="section-title text-center">Collection Overview</h2>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="stat-number"><%= events ? events.length : 0 %></span>
+                <div class="stat-label">Total Menus</div>
             </div>
-        <% }); %>
+            <div class="stat-item">
+                <span class="stat-number"><%= events && events.length > 0 ? new Date(events[events.length - 1].event_date).getFullYear() : 'N/A' %></span>
+                <div class="stat-label">Earliest Year</div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number"><%= events && events.length > 0 ? new Date(events[0].event_date).getFullYear() : 'N/A' %></span>
+                <div class="stat-label">Latest Year</div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number"><%= events && events.length > 0 ? (new Date(events[0].event_date).getFullYear() - new Date(events[events.length - 1].event_date).getFullYear() + 1) : 0 %></span>
+                <div class="stat-label">Years Spanned</div>
+            </div>
+        </div>
     </div>
-<% } else { %>
-    <div class="text-center py-5">
-        <div class="card">
-            <div class="card-body">
-                <i class="fas fa-utensils fa-3x text-muted mb-3"></i>
-                <h3 class="text-muted">No menus found</h3>
-                <p class="text-muted">There are no Thanksgiving menus in the collection yet.</p>
-            </div>
+</div>
+
+<!-- Featured Menu (Latest) -->
+<% if (events && events.length > 0) { %>
+    <div class="featured-menu">
+        <div class="menu-image-container">
+            <img src="/images/<%= events[0].menu_image_filename %>" 
+                 alt="<%= events[0].menu_title %>" 
+                 class="menu-image"
+                 onerror="this.src='/images/placeholder-menu.jpg'">
+        </div>
+        <div class="menu-content">
+            <div class="menu-date"><%= new Date(events[0].event_date).toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            }) %></div>
+            <h2 class="menu-title"><%= events[0].menu_title %></h2>
+            <div class="menu-location"><%= events[0].event_location %></div>
+            <p class="menu-description"><%= events[0].event_description %></p>
+            <a href="/menu/<%= events[0].event_id %>" class="btn-view-details">
+                View Full Menu
+            </a>
         </div>
     </div>
 <% } %>
 
-<script>
-// Removed viewMenu function since we now use direct links
-</script>
+<!-- All Menus Grid -->
+<% if (events && events.length > 0) { %>
+    <h2 class="section-title">All Thanksgiving Menus</h2>
+    <div class="menu-grid">
+        <% events.forEach(function(event, index) { %>
+            <% if (index > 0) { %> <!-- Skip first item as it's featured above -->
+                <div class="menu-card">
+                    <div class="menu-image-container">
+                        <img src="/images/<%= event.menu_image_filename %>" 
+                             alt="<%= event.menu_title %>" 
+                             class="menu-image"
+                             onerror="this.src='/images/placeholder-menu.jpg'">
+                    </div>
+                    <div class="menu-content">
+                        <div class="menu-date"><%= new Date(event.event_date).toLocaleDateString('en-US', { 
+                            weekday: 'long', 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        }) %></div>
+                        <h3 class="menu-title"><%= event.menu_title %></h3>
+                        <div class="menu-location"><%= event.event_location %></div>
+                        <p class="menu-description"><%= event.event_description %></p>
+                        <a href="/menu/<%= event.event_id %>" class="btn-view-details">
+                            View Details
+                        </a>
+                    </div>
+                </div>
+            <% } %>
+        <% }); %>
+    </div>
+<% } else { %>
+    <div class="error-container">
+        <div class="error-card">
+            <div class="error-icon">
+                <i class="fas fa-utensils"></i>
+            </div>
+            <h2 class="error-title">No Menus Found</h2>
+            <p class="error-message">There are no Thanksgiving menus in the collection yet.</p>
+        </div>
+    </div>
+<% } %>
+
+<!-- Newsletter Signup Section (LA Times style) -->
+<div class="stats-section">
+    <div class="container text-center">
+        <h2 class="section-title">Stay Updated</h2>
+        <p class="lead text-muted mb-4">Get notified when new menus are added to the collection</p>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="email" class="form-control" placeholder="Enter your email address" aria-label="Email address">
+                    <button class="btn btn-dark" type="button">Subscribe</button>
+                </div>
+                <small class="text-muted mt-2 d-block">We'll never share your email with anyone else.</small>
+            </div>
+        </div>
+    </div>
+</div>
