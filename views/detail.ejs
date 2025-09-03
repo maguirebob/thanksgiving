@@ -334,6 +334,9 @@ document.getElementById('menuEditForm').addEventListener('submit', async functio
         updateData[key] = value;
     }
     
+    console.log('Sending update data:', updateData);
+    console.log('Update URL:', `/api/v1/events/<%= event.event_id %>`);
+    
     try {
         const response = await fetch(`/api/v1/events/<%= event.event_id %>`, {
             method: 'PUT',
@@ -342,6 +345,10 @@ document.getElementById('menuEditForm').addEventListener('submit', async functio
             },
             body: JSON.stringify(updateData)
         });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
         
         const result = await response.json();
         
@@ -360,11 +367,12 @@ document.getElementById('menuEditForm').addEventListener('submit', async functio
                 window.location.reload();
             }, 1500);
         } else {
-            showMessage('Error updating menu: ' + (result.error || 'Unknown error'), 'error');
+            console.error('API Error Response:', result);
+            showMessage('Error updating menu: ' + (result.error || result.message || 'Unknown error'), 'error');
         }
     } catch (error) {
-        console.error('Error:', error);
-        showMessage('Error updating menu. Please try again.', 'error');
+        console.error('Network/Request Error:', error);
+        showMessage('Error updating menu: ' + error.message, 'error');
     }
 });
 
