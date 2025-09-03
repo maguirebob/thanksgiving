@@ -12,6 +12,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 // Database connection using the working approach
 let sequelize;
 let dbConnected = false;
+let Event = null;
 
 async function initDatabase() {
   try {
@@ -38,7 +39,49 @@ async function initDatabase() {
 
     await sequelize.authenticate();
     console.log('Database connected successfully');
+    
+    // Define Event model after successful connection
+    Event = sequelize.define('Event', {
+      event_id: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+      },
+      event_name: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      event_type: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      event_location: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      event_date: {
+        type: Sequelize.DATE,
+        allowNull: false
+      },
+      event_description: {
+        type: Sequelize.TEXT,
+        allowNull: true
+      },
+      menu_title: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      menu_image_filename: {
+        type: Sequelize.STRING,
+        allowNull: false
+      }
+    }, {
+      tableName: 'Events',
+      timestamps: false
+    });
+    
     dbConnected = true;
+    console.log('Event model defined successfully');
     return true;
   } catch (error) {
     console.error('Database connection failed:', error.message);
@@ -49,46 +92,6 @@ async function initDatabase() {
 
 // Initialize database
 initDatabase();
-
-// Define Event model inline (simplified)
-const Event = sequelize ? sequelize.define('Event', {
-  event_id: {
-    type: Sequelize.INTEGER,
-    primaryKey: true,
-    autoIncrement: true
-  },
-  event_name: {
-    type: Sequelize.STRING,
-    allowNull: false
-  },
-  event_type: {
-    type: Sequelize.STRING,
-    allowNull: false
-  },
-  event_location: {
-    type: Sequelize.STRING,
-    allowNull: false
-  },
-  event_date: {
-    type: Sequelize.DATE,
-    allowNull: false
-  },
-  event_description: {
-    type: Sequelize.TEXT,
-    allowNull: true
-  },
-  menu_title: {
-    type: Sequelize.STRING,
-    allowNull: false
-  },
-  menu_image_filename: {
-    type: Sequelize.STRING,
-    allowNull: false
-  }
-}, {
-  tableName: 'Events',
-  timestamps: false
-}) : null;
 
 // Routes
 app.get('/', async (req, res) => {
@@ -200,11 +203,18 @@ app.get('/health', (req, res) => {
 
 app.get('/health/db', async (req, res) => {
   try {
+    // Try to initialize database if not connected
+    if (!dbConnected) {
+      console.log('Attempting to initialize database...');
+      await initDatabase();
+    }
+
     if (!sequelize) {
       return res.status(503).json({
         status: 'ERROR',
         database: 'not_initialized',
         error: 'Database not initialized',
+        hasPostgresUrl: !!process.env.POSTGRES_URL,
         timestamp: new Date().toISOString()
       });
     }
@@ -218,12 +228,34 @@ app.get('/health/db', async (req, res) => {
       status: 'OK',
       database: 'connected',
       currentTime: results[0].current_time,
+      hasEventModel: !!Event,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
     res.status(503).json({
       status: 'ERROR',
       database: 'disconnected',
+      error: error.message,
+      hasPostgresUrl: !!process.env.POSTGRES_URL,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Manual database initialization endpoint
+app.get('/init-db', async (req, res) => {
+  try {
+    const result = await initDatabase();
+    res.json({
+      success: result,
+      message: result ? 'Database initialized successfully' : 'Database initialization failed',
+      dbConnected: dbConnected,
+      hasEventModel: !!Event,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
       error: error.message,
       timestamp: new Date().toISOString()
     });
@@ -235,7 +267,7 @@ app.get('*', (req, res) => {
   res.json({
     message: 'Route not found',
     path: req.path,
-    availableRoutes: ['/', '/api/v1/events', '/api/v1/events/:id', '/health', '/health/db']
+    availableRoutes: ['/', '/api/v1/events', '/api/v1/events/:id', '/health', '/health/db', '/init-db']
   });
 });
 
