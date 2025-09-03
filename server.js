@@ -40,7 +40,7 @@ app.use((req, res, next) => {
 app.use('/', menuRoutes);
 app.use(appConfig.apiPrefix, apiRoutes);
 
-// Health check endpoint
+// Health check endpoint (no database required)
 app.get('/health', (req, res) => {
   res.json({
     status: 'OK',
@@ -50,35 +50,74 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Database health check endpoint
+app.get('/health/db', async (req, res) => {
+  try {
+    await db.sequelize.authenticate();
+    res.json({
+      status: 'OK',
+      database: 'connected',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: 'ERROR',
+      database: 'disconnected',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Error handling middleware (must be last)
 app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Database connection and server start
 async function startServer() {
-  try {
-    // Test database connection
-    await db.sequelize.authenticate();
-    console.log('✅ Database connection established successfully');
-    
-    // Sync database models (create tables if they don't exist)
-    if (process.env.NODE_ENV === 'production') {
-      console.log('🔄 Syncing database models...');
-      await db.sequelize.sync({ alter: false });
-      console.log('✅ Database models synced');
+  const maxRetries = 3;
+  let retryCount = 0;
+  
+  while (retryCount < maxRetries) {
+    try {
+      // Test database connection with timeout
+      console.log(`🔄 Attempting database connection (attempt ${retryCount + 1}/${maxRetries})...`);
+      await db.sequelize.authenticate();
+      console.log('✅ Database connection established successfully');
+      
+      // Sync database models (create tables if they don't exist)
+      if (process.env.NODE_ENV === 'production') {
+        console.log('🔄 Syncing database models...');
+        await db.sequelize.sync({ alter: false });
+        console.log('✅ Database models synced');
+      }
+      
+      // Start server
+      app.listen(PORT, '0.0.0.0', () => {
+        console.log(`🚀 Server is running on port ${PORT}`);
+        console.log(`📊 Environment: ${appConfig.nodeEnv}`);
+        console.log(`📁 Static files: ${appConfig.staticDirectory}`);
+        console.log(`🎨 View engine: ${appConfig.viewEngine}`);
+        console.log(`🌐 Access URL: http://localhost:${PORT}`);
+      });
+      
+      // If we get here, everything is working
+      break;
+      
+    } catch (error) {
+      retryCount++;
+      console.error(`❌ Database connection failed (attempt ${retryCount}/${maxRetries}):`, error.message);
+      
+      if (retryCount >= maxRetries) {
+        console.error('❌ Max retries reached. Unable to connect to database.');
+        process.exit(1);
+      }
+      
+      // Wait before retrying (exponential backoff)
+      const waitTime = Math.pow(2, retryCount) * 1000;
+      console.log(`⏳ Waiting ${waitTime}ms before retry...`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
     }
-    
-    // Start server
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Server is running on port ${PORT}`);
-      console.log(`📊 Environment: ${appConfig.nodeEnv}`);
-      console.log(`📁 Static files: ${appConfig.staticDirectory}`);
-      console.log(`🎨 View engine: ${appConfig.viewEngine}`);
-      console.log(`🌐 Access URL: http://localhost:${PORT}`);
-    });
-  } catch (error) {
-    console.error('❌ Unable to connect to the database:', error.message);
-    process.exit(1);
   }
 }
 
