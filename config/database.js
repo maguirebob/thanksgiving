@@ -25,11 +25,16 @@ module.exports = {
     dialect: 'postgres',
     logging: false,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    dialectOptions: {
+      connectTimeout: 10000,
+      requestTimeout: 30000,
+      connectionTimeoutMillis: 10000
+    },
     pool: {
-      max: 5,
+      max: 2,
       min: 0,
-      acquire: 60000,
-      idle: 10000,
+      acquire: 30000,
+      idle: 5000,
       evict: 1000,
       handleDisconnects: true
     },
