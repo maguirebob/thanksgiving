@@ -17,14 +17,14 @@ module.exports = {
     }
   },
   production: {
-    url: process.env.DATABASE_URL,
+    url: process.env.POSTGRES_URL || process.env.DATABASE_URL,
     dialect: 'postgres',
     logging: false,
     dialectOptions: {
       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
     },
     pool: {
-      max: 5,
+      max: 1,
       min: 0,
       acquire: 30000,
       idle: 10000
