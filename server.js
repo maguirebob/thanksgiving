@@ -61,12 +61,20 @@ async function startServer() {
     await db.sequelize.authenticate();
     console.log('✅ Database connection established successfully');
     
+    // Sync database models (create tables if they don't exist)
+    if (process.env.NODE_ENV === 'production') {
+      console.log('🔄 Syncing database models...');
+      await db.sequelize.sync({ alter: false });
+      console.log('✅ Database models synced');
+    }
+    
     // Start server
-    app.listen(PORT, () => {
-      console.log(`🚀 Server is running on http://localhost:${PORT}`);
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Server is running on port ${PORT}`);
       console.log(`📊 Environment: ${appConfig.nodeEnv}`);
       console.log(`📁 Static files: ${appConfig.staticDirectory}`);
       console.log(`🎨 View engine: ${appConfig.viewEngine}`);
+      console.log(`🌐 Access URL: http://localhost:${PORT}`);
     });
   } catch (error) {
     console.error('❌ Unable to connect to the database:', error.message);
