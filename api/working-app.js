@@ -323,6 +323,48 @@ app.get('/setup-db', async (req, res) => {
   }
 });
 
+// DELETE endpoint for removing events
+app.delete('/api/v1/events/:id', async (req, res) => {
+  try {
+    const eventId = req.params.id;
+    
+    // First check if the event exists
+    const existingEvents = await queryDatabase(`
+      SELECT * FROM "Events" 
+      WHERE event_id = $1
+    `, [eventId]);
+
+    if (existingEvents.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Event not found',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Delete the event
+    await queryDatabase(`
+      DELETE FROM "Events" 
+      WHERE event_id = $1
+    `, [eventId]);
+
+    res.json({
+      success: true,
+      message: 'Event deleted successfully',
+      deletedEvent: existingEvents[0],
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error deleting event:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete event',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Catch-all for other routes
 app.get('*', (req, res) => {
   res.json({
