@@ -24,11 +24,33 @@
 
         <!-- Menu Image -->
         <div class="mb-5">
-            <div class="menu-image-container" style="height: 500px; border-radius: 8px;">
+            <div class="menu-image-container" style="height: 600px; border-radius: 8px; background-color: #f8f9fa; border: 1px solid #e5e5e5; display: flex; align-items: center; justify-content: center; padding: 2rem; position: relative; overflow: hidden;">
                 <img src="/images/<%= event.menu_image_filename %>" 
                      alt="<%= event.menu_title %>" 
-                     class="menu-image"
-                     onerror="this.src='/images/placeholder-menu.jpg'">
+                     id="menuImage"
+                     style="max-width: 100%; max-height: 100%; object-fit: contain; object-position: center; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); cursor: zoom-in; transition: transform 0.3s ease;"
+                     onerror="this.src='/images/placeholder-menu.jpg'"
+                     onclick="toggleZoom()">
+                
+                <!-- Zoom overlay -->
+                <div id="zoomOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); z-index: 9999; display: none; align-items: center; justify-content: center; cursor: zoom-out;" onclick="toggleZoom()">
+                    <img src="/images/<%= event.menu_image_filename %>" 
+                         alt="<%= event.menu_title %>" 
+                         style="max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 8px;"
+                         onerror="this.src='/images/placeholder-menu.jpg'">
+                </div>
+            </div>
+            
+            <!-- Image controls -->
+            <div class="text-center mt-3">
+                <button class="btn-view-details" onclick="toggleZoom()" style="margin-right: 1rem;">
+                    <i class="fas fa-search-plus me-2"></i>
+                    Zoom Image
+                </button>
+                <button class="btn-view-details" onclick="downloadImage()" style="background-color: var(--secondary-gray);">
+                    <i class="fas fa-download me-2"></i>
+                    Download
+                </button>
             </div>
         </div>
 
@@ -145,3 +167,61 @@
         View All Menus
     </a>
 </div>
+
+<script>
+// Image zoom functionality
+function toggleZoom() {
+    const overlay = document.getElementById('zoomOverlay');
+    const body = document.body;
+    
+    if (overlay.style.display === 'none' || overlay.style.display === '') {
+        overlay.style.display = 'flex';
+        body.style.overflow = 'hidden'; // Prevent background scrolling
+    } else {
+        overlay.style.display = 'none';
+        body.style.overflow = 'auto'; // Restore scrolling
+    }
+}
+
+// Download image functionality
+function downloadImage() {
+    const img = document.getElementById('menuImage');
+    const link = document.createElement('a');
+    link.href = img.src;
+    link.download = '<%= event.menu_title.replace(/[^a-z0-9]/gi, "_").toLowerCase() %>_menu.jpg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Close zoom overlay with Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        const overlay = document.getElementById('zoomOverlay');
+        if (overlay.style.display === 'flex') {
+            toggleZoom();
+        }
+    }
+});
+
+// Responsive image sizing
+function adjustImageSize() {
+    const container = document.querySelector('.menu-image-container');
+    const img = document.getElementById('menuImage');
+    
+    if (window.innerWidth < 768) {
+        container.style.height = '400px';
+        container.style.padding = '1rem';
+    } else if (window.innerWidth < 1024) {
+        container.style.height = '500px';
+        container.style.padding = '1.5rem';
+    } else {
+        container.style.height = '600px';
+        container.style.padding = '2rem';
+    }
+}
+
+// Adjust image size on load and resize
+window.addEventListener('load', adjustImageSize);
+window.addEventListener('resize', adjustImageSize);
+</script>
