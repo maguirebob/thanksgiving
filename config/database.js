@@ -17,18 +17,14 @@ module.exports = {
     }
   },
   production: {
-    username: process.env.PGUSER || process.env.DB_USER,
-    password: process.env.PGPASSWORD || process.env.DB_PASSWORD,
-    database: process.env.PGDATABASE || process.env.DB_NAME,
-    host: process.env.PGHOST || process.env.DB_HOST,
-    port: process.env.PGPORT || process.env.DB_PORT || 5432,
+    url: process.env.DATABASE_URL,
     dialect: 'postgres',
     logging: false,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     dialectOptions: {
-      connectTimeout: 10000,
-      requestTimeout: 30000,
-      connectionTimeoutMillis: 10000
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
     },
     pool: {
       max: 1,
