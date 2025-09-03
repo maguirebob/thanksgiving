@@ -1,0 +1,13 @@
+{
+  "name": "thanksgiving-menu-app",
+  "version": "1.0.0",
+  "description": "A web application to display Thanksgiving menus",
+  "main": "api/hello.js",
+  "scripts": {
+    "start": "node api/hello.js",
+    "build": "echo 'No build step required'"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
