@@ -26,3 +26,11 @@ September 2025
 * PoestgreSQL  
 * Backend Design: I asked cursor to analyze the original website and make recommendations to make it better.  Here was its response:
 [This is an external link to the AI Back End Architecture Design](https://docs.google.com/document/d/1Ob_zSfFxB5Ff2qCy2m9Ei32RCNG2brzI_oKGzjW4-iM/edit?usp=sharing)
+
+🔧 Technical Details:
+Platform: Railway.com
+Database: PostgreSQL with SSL
+Framework: Node.js + Express + Sequelize
+Frontend: EJS templates with Bootstrap
+Styling: LA Times Food section inspired design
+Images: All menu images properly referenced
