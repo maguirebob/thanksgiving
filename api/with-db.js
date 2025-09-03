@@ -10,42 +10,59 @@ app.use(express.urlencoded({ extended: true }));
 // Simple database connection (without complex models)
 let sequelize;
 let dbConnected = false;
+let dbInitializing = false;
+let dbError = null;
 
 async function initDatabase() {
+  if (dbInitializing) {
+    return false;
+  }
+  
+  dbInitializing = true;
+  
   try {
     const databaseUrl = process.env.POSTGRES_URL || process.env.DATABASE_URL;
     
+    console.log('Database URL exists:', !!databaseUrl);
+    console.log('Environment:', process.env.NODE_ENV);
+    
     if (!databaseUrl) {
+      dbError = 'No database URL found in environment variables';
       console.log('No database URL found');
       return false;
     }
 
     sequelize = new Sequelize(databaseUrl, {
       dialect: 'postgres',
-      logging: false,
+      logging: console.log, // Enable logging for debugging
       dialectOptions: {
         ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
       },
       pool: {
         max: 1,
         min: 0,
-        acquire: 30000,
-        idle: 10000
+        acquire: 10000,
+        idle: 5000
       }
     });
 
     await sequelize.authenticate();
     console.log('Database connected successfully');
     dbConnected = true;
+    dbError = null;
     return true;
   } catch (error) {
     console.error('Database connection failed:', error.message);
+    console.error('Full error:', error);
     dbConnected = false;
+    dbError = error.message;
     return false;
+  } finally {
+    dbInitializing = false;
   }
 }
 
-// Initialize database
+// Initialize database on startup
 initDatabase();
 
 // Routes
@@ -72,11 +89,20 @@ app.get('/health', (req, res) => {
 
 app.get('/health/db', async (req, res) => {
   try {
+    // Try to initialize database if not connected
+    if (!dbConnected && !dbInitializing) {
+      console.log('Attempting to initialize database...');
+      await initDatabase();
+    }
+
     if (!sequelize) {
       return res.status(503).json({
         status: 'ERROR',
         database: 'not_initialized',
-        error: 'Database not initialized',
+        error: dbError || 'Database not initialized',
+        hasPostgresUrl: !!process.env.POSTGRES_URL,
+        hasDatabaseUrl: !!process.env.DATABASE_URL,
+        environment: process.env.NODE_ENV,
         timestamp: new Date().toISOString()
       });
     }
@@ -97,6 +123,10 @@ app.get('/health/db', async (req, res) => {
       status: 'ERROR',
       database: 'disconnected',
       error: error.message,
+      dbError: dbError,
+      hasPostgresUrl: !!process.env.POSTGRES_URL,
+      hasDatabaseUrl: !!process.env.DATABASE_URL,
+      environment: process.env.NODE_ENV,
       timestamp: new Date().toISOString()
     });
   }
@@ -109,7 +139,12 @@ app.get('/test', (req, res) => {
     hasPostgresUrl: !!process.env.POSTGRES_URL,
     hasDatabaseUrl: !!process.env.DATABASE_URL,
     nodeVersion: process.version,
-    database: dbConnected ? 'connected' : 'disconnected'
+    database: dbConnected ? 'connected' : 'disconnected',
+    dbError: dbError,
+    environment: process.env.NODE_ENV,
+    allEnvVars: Object.keys(process.env).filter(key => 
+      key.includes('POSTGRES') || key.includes('DATABASE') || key.includes('NODE')
+    )
   });
 });
 
