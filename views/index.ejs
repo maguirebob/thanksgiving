@@ -6,26 +6,29 @@
     <p class="lead text-muted">A collection of Thanksgiving menus from 1994 to today</p>
 </div>
 
-<!-- Stats Section -->
+<!-- Overview Section -->
 <div class="stats-section">
     <div class="container">
-        <h2 class="section-title text-center">Collection Overview</h2>
-        <div class="stats-grid">
-            <div class="stat-item">
-                <span class="stat-number"><%= events ? events.length : 0 %></span>
-                <div class="stat-label">Total Menus</div>
+        <h2 class="section-title text-center">The Story Behind the Tradition</h2>
+        <div class="row align-items-center">
+            <div class="col-lg-4 text-center mb-4 mb-lg-0">
+                <img src="/photos/Grandma80s.jpg" 
+                     alt="Grandma Maguire in her 80s" 
+                     class="img-fluid rounded shadow"
+                     style="max-width: 300px; height: auto; object-fit: cover;">
             </div>
-            <div class="stat-item">
-                <span class="stat-number"><%= events && events.length > 0 ? new Date(events[events.length - 1].event_date).getFullYear() : 'N/A' %></span>
-                <div class="stat-label">Earliest Year</div>
-            </div>
-            <div class="stat-item">
-                <span class="stat-number"><%= events && events.length > 0 ? new Date(events[0].event_date).getFullYear() : 'N/A' %></span>
-                <div class="stat-label">Latest Year</div>
-            </div>
-            <div class="stat-item">
-                <span class="stat-number"><%= events && events.length > 0 ? (new Date(events[0].event_date).getFullYear() - new Date(events[events.length - 1].event_date).getFullYear() + 1) : 0 %></span>
-                <div class="stat-label">Years Spanned</div>
+            <div class="col-lg-8">
+                <div class="overview-text" style="font-size: 1.1rem; line-height: 1.8; color: var(--secondary-gray);">
+                    <p>
+                        I can't remember if I was out of either just out of college or I was still attending RIT. I remember that Grandma Maguire could no longer host Thanksgiving at her apartment in Amesbury, Mass, it was too much for her. I remember suggesting to my Father and Linda that they should have it at their house and that I would be willing to go pick her up.
+                    </p>
+                    <p>
+                        Grandma Maguire loved Thanksgiving. It was her favorite holiday because it was a day of serving others and the family gathering together. This is a picture of her when she was in her 80s, she was born in 1906 and passed away in 1998.
+                    </p>
+                    <p>
+                        Grandma and I put together a menu from her recipes, Gourmet, and my cookbooks. The only thing I definitely remember us making was a deboned turkey from my Cajun cookbook, her Turkey soup that we made from the carcass, and the orange and cranberry relish that my Aunt Emogene was so fond of. After that it just became a tradition and grew into what you see below.
+                    </p>
+                </div>
             </div>
         </div>
     </div>
