@@ -54,9 +54,21 @@ app.get('/health', (req, res) => {
 app.get('/health/db', async (req, res) => {
   try {
     await db.sequelize.authenticate();
+    
+    // Get additional database info
+    const eventCount = await db.Event.count();
+    const sampleEvent = await db.Event.findOne({
+      order: [['event_date', 'DESC']]
+    });
+    
     res.json({
       status: 'OK',
       database: 'connected',
+      eventCount: eventCount,
+      latestEvent: sampleEvent ? {
+        name: sampleEvent.event_name,
+        date: sampleEvent.event_date
+      } : null,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
