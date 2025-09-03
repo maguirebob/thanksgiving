@@ -2,14 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/with-db.js",
+      "src": "api/test-direct-pg.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "api/with-db.js"
+      "dest": "api/test-direct-pg.js"
     }
   ],
   "env": {
