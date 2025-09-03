@@ -253,7 +253,8 @@ app.get('/setup-db', async (req, res) => {
       const countResult = await client.query('SELECT COUNT(*) as count FROM "Events"');
       const eventCount = parseInt(countResult.rows[0].count);
       
-      if (eventCount === 0) {
+      // Always insert all data to ensure we have the complete set
+      if (eventCount < 26) {
         // Insert all 26 years of Thanksgiving data
         const allData = [
           ['Thanksgiving Dinner 1994', 'Thanksgiving', 'Canajoharie, NY', '1994-11-24', 'First Thanksgiving Dinner that we have menu for at my parents house in Canajoharie, NY', 'Maguire Family Dinner 1994', '1994_Menu.png'],
@@ -297,11 +298,17 @@ app.get('/setup-db', async (req, res) => {
         }
       }
       
+      // Get final count after insertion
+      const finalCountResult = await client.query('SELECT COUNT(*) as count FROM "Events"');
+      const finalEventCount = parseInt(finalCountResult.rows[0].count);
+      
       res.json({
         success: true,
         message: 'Database setup completed successfully',
         tableCreated: true,
-        eventCount: eventCount,
+        initialEventCount: eventCount,
+        finalEventCount: finalEventCount,
+        recordsAdded: finalEventCount - eventCount,
         timestamp: new Date().toISOString()
       });
     } finally {
