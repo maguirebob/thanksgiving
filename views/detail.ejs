@@ -854,6 +854,7 @@ function closeCamera() {
 
 async function startCamera() {
     try {
+        console.log('Starting camera...');
         currentStream = await navigator.mediaDevices.getUserMedia({ 
             video: { 
                 width: { ideal: 1280 },
@@ -861,11 +862,23 @@ async function startCamera() {
             } 
         });
         
+        console.log('Camera stream obtained:', currentStream);
+        
         const video = document.getElementById('cameraVideo');
         video.srcObject = currentStream;
         
+        // Wait for video to load
+        video.onloadedmetadata = function() {
+            console.log('Video metadata loaded:', {
+                videoWidth: video.videoWidth,
+                videoHeight: video.videoHeight
+            });
+        };
+        
         document.getElementById('startCameraBtn').style.display = 'none';
         document.getElementById('captureBtn').style.display = 'inline-block';
+        
+        console.log('Camera started successfully');
     } catch (error) {
         console.error('Error accessing camera:', error);
         showMessage('Error accessing camera. Please check permissions.', 'error');
@@ -908,15 +921,29 @@ async function saveCapturedPhoto() {
     const description = document.getElementById('captureDescription').value;
     const caption = document.getElementById('captureCaption').value;
     
+    console.log('Starting saveCapturedPhoto:', {
+        hasCapturedData: !!capturedImageData,
+        dataLength: capturedImageData ? capturedImageData.length : 0,
+        description: description,
+        caption: caption
+    });
+    
     try {
+        if (!capturedImageData) {
+            throw new Error('No captured image data available');
+        }
+        
         // Convert data URL to blob
+        console.log('Converting data URL to blob...');
         const response = await fetch(capturedImageData);
         const blob = await response.blob();
+        console.log('Blob created:', { size: blob.size, type: blob.type });
         
         // Create a File object from the blob
         const file = new File([blob], `camera_capture_${Date.now()}.jpg`, {
             type: 'image/jpeg'
         });
+        console.log('File created:', { name: file.name, size: file.size, type: file.type });
         
         // Create FormData for multipart upload
         const formData = new FormData();
@@ -924,20 +951,21 @@ async function saveCapturedPhoto() {
         formData.append('description', description);
         formData.append('caption', caption);
         
-        console.log('Saving captured photo:', {
-            filename: file.name,
-            size: file.size,
-            type: file.type,
-            description: description,
-            caption: caption
-        });
+        console.log('FormData created, sending to API...');
         
         const apiResponse = await fetch(`/api/v1/events/<%= event.event_id %>/photos`, {
             method: 'POST',
             body: formData // Don't set Content-Type header, let browser set it with boundary
         });
         
+        console.log('API response received:', {
+            status: apiResponse.status,
+            statusText: apiResponse.statusText,
+            ok: apiResponse.ok
+        });
+        
         const result = await apiResponse.json();
+        console.log('API result:', result);
         
         if (result.success) {
             showMessage('Photo captured and saved!', 'success');
@@ -949,7 +977,7 @@ async function saveCapturedPhoto() {
         }
     } catch (error) {
         console.error('Error saving captured photo:', error);
-        showMessage('Error saving photo. Please try again.', 'error');
+        showMessage('Error saving photo: ' + error.message, 'error');
     }
 }
 
