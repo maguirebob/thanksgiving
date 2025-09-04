@@ -891,6 +891,13 @@ function capturePhoto() {
     
     capturedImageData = canvas.toDataURL('image/jpeg', 0.8);
     
+    console.log('Photo captured:', {
+        width: canvas.width,
+        height: canvas.height,
+        dataLength: capturedImageData.length,
+        dataStart: capturedImageData.substring(0, 50) + '...'
+    });
+    
     document.getElementById('captureBtn').style.display = 'none';
     document.getElementById('saveBtn').style.display = 'inline-block';
     
@@ -906,23 +913,28 @@ async function saveCapturedPhoto() {
         const response = await fetch(capturedImageData);
         const blob = await response.blob();
         
-        // Create mock photo data
-        const mockPhoto = {
-            filename: `capture_${Date.now()}.jpg`,
-            original_filename: `camera_capture_${Date.now()}.jpg`,
+        // Create a File object from the blob
+        const file = new File([blob], `camera_capture_${Date.now()}.jpg`, {
+            type: 'image/jpeg'
+        });
+        
+        // Create FormData for multipart upload
+        const formData = new FormData();
+        formData.append('photo', file);
+        formData.append('description', description);
+        formData.append('caption', caption);
+        
+        console.log('Saving captured photo:', {
+            filename: file.name,
+            size: file.size,
+            type: file.type,
             description: description,
-            caption: caption,
-            mime_type: 'image/jpeg',
-            file_size: blob.size,
-            taken_date: new Date().toISOString()
-        };
+            caption: caption
+        });
         
         const apiResponse = await fetch(`/api/v1/events/<%= event.event_id %>/photos`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(mockPhoto)
+            body: formData // Don't set Content-Type header, let browser set it with boundary
         });
         
         const result = await apiResponse.json();
@@ -932,7 +944,8 @@ async function saveCapturedPhoto() {
             closeCamera();
             loadPhotos(); // Reload photos
         } else {
-            showMessage('Error saving photo: ' + (result.error || 'Unknown error'), 'error');
+            console.error('Photo save error:', result);
+            showMessage('Error saving photo: ' + (result.error || result.message || 'Unknown error'), 'error');
         }
     } catch (error) {
         console.error('Error saving captured photo:', error);
