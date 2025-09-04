@@ -757,7 +757,8 @@ document.getElementById('photoUploadForm').addEventListener('submit', async func
             closePhotoUpload();
             loadPhotos(); // Reload photos
         } else {
-            showMessage('Error uploading photo: ' + (result.error || 'Unknown error'), 'error');
+            console.error('Photo upload error:', result);
+            showMessage('Error uploading photo: ' + (result.error || result.message || 'Unknown error'), 'error');
         }
     } catch (error) {
         console.error('Error uploading photo:', error);
