@@ -667,6 +667,13 @@ function displayPhotos(photos) {
     const photosGrid = document.getElementById('photosGrid');
     const noPhotosMessage = document.getElementById('noPhotosMessage');
     
+    console.log('Displaying photos:', photos.map(p => ({
+        photo_id: p.photo_id,
+        filename: p.filename,
+        hasFileData: !!p.file_data,
+        fileDataLength: p.file_data ? p.file_data.length : 0
+    })));
+    
     if (photos.length === 0) {
         photosGrid.innerHTML = '';
         noPhotosMessage.style.display = 'block';
@@ -682,7 +689,7 @@ function displayPhotos(photos) {
                          alt="${photo.caption || 'Photo'}" 
                          class="card-img-top" 
                          style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;"
-                         onclick="viewPhoto('${photo.file_data || ''}', '${photo.description || ''}', '${photo.caption || ''}')">
+                         onclick="viewPhoto('${photo.file_data || '/images/placeholder-menu.jpg'}', '${photo.description || ''}', '${photo.caption || ''}')">
                     <div style="position: absolute; top: 10px; right: 10px;">
                         <button class="btn btn-sm btn-light" onclick="editPhoto(${photo.photo_id}, '${photo.description || ''}', '${photo.caption || ''}')" title="Edit">
                             <i class="fas fa-edit"></i>
@@ -871,6 +878,12 @@ async function saveCapturedPhoto() {
 
 // Photo Management Functions
 function viewPhoto(fileData, description, caption) {
+    // Check if fileData is valid
+    if (!fileData || fileData === '' || fileData === 'undefined') {
+        showMessage('Photo data not available for viewing', 'error');
+        return;
+    }
+    
     // Create a simple photo viewer modal
     const modal = document.createElement('div');
     modal.style.cssText = `
@@ -883,7 +896,9 @@ function viewPhoto(fileData, description, caption) {
     
     modal.innerHTML = `
         <div style="max-width: 90%; max-height: 90%; text-align: center;">
-            <img src="${fileData}" style="max-width: 100%; max-height: 80%; object-fit: contain; border-radius: 8px;">
+            <img src="${fileData}" 
+                 style="max-width: 100%; max-height: 80%; object-fit: contain; border-radius: 8px;"
+                 onerror="this.src='/images/placeholder-menu.jpg'">
             <div style="color: white; margin-top: 1rem;">
                 <h4>${caption || 'Untitled'}</h4>
                 <p>${description || 'No description'}</p>
