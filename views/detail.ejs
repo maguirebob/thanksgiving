@@ -271,10 +271,11 @@
             Take Photo
         </h3>
         
-        <div class="mb-3">
-            <video id="cameraVideo" autoplay style="width: 100%; max-height: 400px; border-radius: 8px; background: #000;"></video>
-            <canvas id="cameraCanvas" style="display: none;"></canvas>
-        </div>
+                    <div class="mb-3">
+                <video id="cameraVideo" autoplay style="width: 100%; max-height: 400px; border-radius: 8px; background: #000;"></video>
+                <canvas id="cameraCanvas" style="display: none;"></canvas>
+                <img id="capturedImagePreview" style="display: none; width: 100%; max-height: 400px; border-radius: 8px; object-fit: cover;" alt="Captured photo">
+            </div>
         
         <div class="mb-3">
             <label for="captureDescription" class="form-label">Description</label>
@@ -850,6 +851,16 @@ function closeCamera() {
     document.getElementById('startCameraBtn').style.display = 'inline-block';
     document.getElementById('captureBtn').style.display = 'none';
     document.getElementById('saveBtn').style.display = 'none';
+    
+    // Reset video and preview display
+    const video = document.getElementById('cameraVideo');
+    const preview = document.getElementById('capturedImagePreview');
+    video.style.display = 'block';
+    preview.style.display = 'none';
+    preview.src = '';
+    
+    // Clear captured data
+    capturedImageData = null;
 }
 
 async function startCamera() {
@@ -865,6 +876,12 @@ async function startCamera() {
         console.log('Camera stream obtained:', currentStream);
         
         const video = document.getElementById('cameraVideo');
+        const preview = document.getElementById('capturedImagePreview');
+        
+        // Ensure video is visible and preview is hidden
+        video.style.display = 'block';
+        preview.style.display = 'none';
+        
         video.srcObject = currentStream;
         
         // Wait for video to load
@@ -895,6 +912,7 @@ function stopCamera() {
 function capturePhoto() {
     const video = document.getElementById('cameraVideo');
     const canvas = document.getElementById('cameraCanvas');
+    const preview = document.getElementById('capturedImagePreview');
     const ctx = canvas.getContext('2d');
     
     canvas.width = video.videoWidth;
@@ -910,6 +928,11 @@ function capturePhoto() {
         dataLength: capturedImageData.length,
         dataStart: capturedImageData.substring(0, 50) + '...'
     });
+    
+    // Show captured image preview and hide video
+    video.style.display = 'none';
+    preview.src = capturedImageData;
+    preview.style.display = 'block';
     
     document.getElementById('captureBtn').style.display = 'none';
     document.getElementById('saveBtn').style.display = 'inline-block';
