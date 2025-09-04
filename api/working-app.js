@@ -249,6 +249,23 @@ app.get('/setup-db', async (req, res) => {
         )
       `);
       
+      // Create Photos table
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS "Photos" (
+          photo_id SERIAL PRIMARY KEY,
+          event_id INTEGER REFERENCES "Events"(event_id) ON DELETE CASCADE,
+          filename VARCHAR(255) NOT NULL,
+          original_filename VARCHAR(255),
+          description TEXT,
+          caption TEXT,
+          taken_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          file_size INTEGER,
+          mime_type VARCHAR(100),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      
       // Check if table has data
       const countResult = await client.query('SELECT COUNT(*) as count FROM "Events"');
       const eventCount = parseInt(countResult.rows[0].count);
@@ -463,12 +480,164 @@ app.delete('/api/v1/events/:id', async (req, res) => {
   }
 });
 
+// Photo management API endpoints
+
+// Get photos for a specific event
+app.get('/api/v1/events/:id/photos', async (req, res) => {
+  try {
+    const eventId = req.params.id;
+    
+    const photos = await queryDatabase(`
+      SELECT * FROM "Photos" 
+      WHERE event_id = $1 
+      ORDER BY taken_date DESC, created_at DESC
+    `, [eventId]);
+
+    res.json({
+      success: true,
+      data: photos,
+      count: photos.length,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error fetching photos:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch photos',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Add a new photo
+app.post('/api/v1/events/:id/photos', async (req, res) => {
+  try {
+    const eventId = req.params.id;
+    const { filename, original_filename, description, caption, mime_type, file_size } = req.body;
+    
+    // Check if event exists
+    const events = await queryDatabase(`
+      SELECT * FROM "Events" 
+      WHERE event_id = $1
+    `, [eventId]);
+
+    if (events.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Event not found',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    const newPhoto = await queryDatabase(`
+      INSERT INTO "Photos" (event_id, filename, original_filename, description, caption, mime_type, file_size)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING *
+    `, [eventId, filename, original_filename, description, caption, mime_type, file_size]);
+
+    res.json({
+      success: true,
+      data: newPhoto[0],
+      message: 'Photo added successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error adding photo:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to add photo',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Update photo details
+app.put('/api/v1/photos/:photoId', async (req, res) => {
+  try {
+    const photoId = req.params.photoId;
+    const { description, caption } = req.body;
+    
+    const updatedPhoto = await queryDatabase(`
+      UPDATE "Photos" 
+      SET description = $1, caption = $2, updated_at = CURRENT_TIMESTAMP
+      WHERE photo_id = $3
+      RETURNING *
+    `, [description, caption, photoId]);
+
+    if (updatedPhoto.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Photo not found',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    res.json({
+      success: true,
+      data: updatedPhoto[0],
+      message: 'Photo updated successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error updating photo:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update photo',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Delete a photo
+app.delete('/api/v1/photos/:photoId', async (req, res) => {
+  try {
+    const photoId = req.params.photoId;
+    
+    // Get photo details before deletion
+    const existingPhotos = await queryDatabase(`
+      SELECT * FROM "Photos" 
+      WHERE photo_id = $1
+    `, [photoId]);
+
+    if (existingPhotos.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Photo not found',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    await queryDatabase(`
+      DELETE FROM "Photos" 
+      WHERE photo_id = $1
+    `, [photoId]);
+
+    res.json({
+      success: true,
+      message: 'Photo deleted successfully',
+      deletedPhoto: existingPhotos[0],
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error deleting photo:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete photo',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Catch-all for other routes
 app.get('*', (req, res) => {
   res.json({
     message: 'Route not found',
     path: req.path,
-    availableRoutes: ['/', '/menu/:id', '/api/v1/events', '/api/v1/events/:id', '/health', '/health/db', '/test-db', '/setup-db']
+    availableRoutes: ['/', '/menu/:id', '/api/v1/events', '/api/v1/events/:id', '/api/v1/events/:id/photos', '/api/v1/photos/:photoId', '/health', '/health/db', '/test-db', '/setup-db']
   });
 });
 
