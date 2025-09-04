@@ -12,20 +12,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(expressLayouts);
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '../public/photos'))
-  },
-  filename: function (req, file, cb) {
-    // Generate unique filename with timestamp
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'photo_' + uniqueSuffix + path.extname(file.originalname))
-  }
-});
-
+// Configure multer for file uploads (memory storage for Vercel compatibility)
 const upload = multer({ 
-  storage: storage,
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 10 * 1024 * 1024 // 10MB limit
   },
@@ -289,6 +278,7 @@ app.get('/setup-db', async (req, res) => {
           taken_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           file_size INTEGER,
           mime_type VARCHAR(100),
+          file_data TEXT,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -544,6 +534,18 @@ app.post('/api/v1/events/:id/photos', upload.single('photo'), async (req, res) =
     const eventId = req.params.id;
     const { description, caption } = req.body;
     
+    console.log('Photo upload request:', {
+      eventId,
+      description,
+      caption,
+      hasFile: !!req.file,
+      fileInfo: req.file ? {
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size
+      } : null
+    });
+    
     // Check if event exists
     const events = await queryDatabase(`
       SELECT * FROM "Events" 
@@ -566,11 +568,19 @@ app.post('/api/v1/events/:id/photos', upload.single('photo'), async (req, res) =
       });
     }
 
+    // Generate unique filename
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const filename = 'photo_' + uniqueSuffix + path.extname(req.file.originalname);
+    
+    // Convert file buffer to base64 for storage (Vercel-compatible approach)
+    const base64Data = req.file.buffer.toString('base64');
+    const dataUrl = `data:${req.file.mimetype};base64,${base64Data}`;
+
     const newPhoto = await queryDatabase(`
-      INSERT INTO "Photos" (event_id, filename, original_filename, description, caption, mime_type, file_size)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO "Photos" (event_id, filename, original_filename, description, caption, mime_type, file_size, file_data)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *
-    `, [eventId, req.file.filename, req.file.originalname, description, caption, req.file.mimetype, req.file.size]);
+    `, [eventId, filename, req.file.originalname, description, caption, req.file.mimetype, req.file.size, dataUrl]);
 
     res.json({
       success: true,
