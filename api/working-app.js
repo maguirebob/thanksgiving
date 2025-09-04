@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const { Client } = require('pg');
 const expressLayouts = require('express-ejs-layouts');
+const multer = require('multer');
 
 const app = express();
 
@@ -10,6 +11,33 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(expressLayouts);
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, '../public/photos'))
+  },
+  filename: function (req, file, cb) {
+    // Generate unique filename with timestamp
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'photo_' + uniqueSuffix + path.extname(file.originalname))
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  },
+  fileFilter: function (req, file, cb) {
+    // Check if file is an image
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+});
 
 // View engine setup
 app.set('view engine', 'ejs');
@@ -510,11 +538,11 @@ app.get('/api/v1/events/:id/photos', async (req, res) => {
   }
 });
 
-// Add a new photo
-app.post('/api/v1/events/:id/photos', async (req, res) => {
+// Add a new photo with file upload
+app.post('/api/v1/events/:id/photos', upload.single('photo'), async (req, res) => {
   try {
     const eventId = req.params.id;
-    const { filename, original_filename, description, caption, mime_type, file_size } = req.body;
+    const { description, caption } = req.body;
     
     // Check if event exists
     const events = await queryDatabase(`
@@ -530,16 +558,24 @@ app.post('/api/v1/events/:id/photos', async (req, res) => {
       });
     }
 
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        error: 'No photo file provided',
+        timestamp: new Date().toISOString()
+      });
+    }
+
     const newPhoto = await queryDatabase(`
       INSERT INTO "Photos" (event_id, filename, original_filename, description, caption, mime_type, file_size)
       VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
-    `, [eventId, filename, original_filename, description, caption, mime_type, file_size]);
+    `, [eventId, req.file.filename, req.file.originalname, description, caption, req.file.mimetype, req.file.size]);
 
     res.json({
       success: true,
       data: newPhoto[0],
-      message: 'Photo added successfully',
+      message: 'Photo uploaded successfully',
       timestamp: new Date().toISOString()
     });
   } catch (error) {
