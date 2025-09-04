@@ -356,9 +356,6 @@ document.getElementById('menuEditForm').addEventListener('submit', async functio
             // Show success message
             showMessage('Menu updated successfully!', 'success');
             
-            // Update the page content with new data
-            updatePageContent(result.data);
-            
             // Hide the edit form
             cancelEdit();
             
@@ -377,34 +374,71 @@ document.getElementById('menuEditForm').addEventListener('submit', async functio
 });
 
 function updatePageContent(updatedData) {
-    // Update the page content with the new data
-    document.querySelector('.menu-title').textContent = updatedData.menu_title;
-    document.querySelector('.menu-location').textContent = updatedData.event_location;
-    document.querySelector('.menu-date').textContent = new Date(updatedData.event_date).toLocaleDateString('en-US', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-    });
+    console.log('Updating page content with:', updatedData);
     
-    // Update description
+    // Update the main title
+    const titleElement = document.querySelector('.menu-title');
+    if (titleElement) {
+        titleElement.textContent = updatedData.menu_title;
+    } else {
+        console.warn('Could not find .menu-title element');
+    }
+    
+    // Update the location
+    const locationElement = document.querySelector('.menu-location');
+    if (locationElement) {
+        locationElement.textContent = updatedData.event_location;
+    } else {
+        console.warn('Could not find .menu-location element');
+    }
+    
+    // Update the date
+    const dateElement = document.querySelector('.menu-date');
+    if (dateElement) {
+        dateElement.textContent = new Date(updatedData.event_date).toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+    } else {
+        console.warn('Could not find .menu-date element');
+    }
+    
+    // Update description - look for the paragraph in the About This Menu section
     const descriptionElement = document.querySelector('.mb-5 p');
     if (descriptionElement) {
         descriptionElement.textContent = updatedData.event_description;
+    } else {
+        console.warn('Could not find description element');
     }
     
-    // Update sidebar info
-    const sidebarElements = document.querySelectorAll('.col-lg-4 .menu-card .menu-content div');
-    if (sidebarElements.length >= 4) {
-        sidebarElements[0].nextElementSibling.textContent = updatedData.event_type;
-        sidebarElements[1].nextElementSibling.textContent = new Date(updatedData.event_date).getFullYear();
-        sidebarElements[2].nextElementSibling.textContent = updatedData.event_location;
-        sidebarElements[3].nextElementSibling.textContent = new Date(updatedData.event_date).toLocaleDateString('en-US', { 
+    // Update sidebar info - be more specific with selectors
+    const eventTypeElement = document.querySelector('.col-lg-4 .menu-card .menu-content div:nth-child(2)');
+    if (eventTypeElement) {
+        eventTypeElement.textContent = updatedData.event_type;
+    }
+    
+    const yearElement = document.querySelector('.col-lg-4 .menu-card .menu-content div:nth-child(4)');
+    if (yearElement) {
+        yearElement.textContent = new Date(updatedData.event_date).getFullYear();
+    }
+    
+    const sidebarLocationElement = document.querySelector('.col-lg-4 .menu-card .menu-content div:nth-child(6)');
+    if (sidebarLocationElement) {
+        sidebarLocationElement.textContent = updatedData.event_location;
+    }
+    
+    const sidebarDateElement = document.querySelector('.col-lg-4 .menu-card .menu-content div:nth-child(8)');
+    if (sidebarDateElement) {
+        sidebarDateElement.textContent = new Date(updatedData.event_date).toLocaleDateString('en-US', { 
             year: 'numeric', 
             month: 'long', 
             day: 'numeric' 
         });
     }
+    
+    console.log('Page content update completed');
 }
 
 function showMessage(message, type) {
