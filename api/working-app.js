@@ -576,11 +576,41 @@ app.post('/api/v1/events/:id/photos', upload.single('photo'), async (req, res) =
     const base64Data = req.file.buffer.toString('base64');
     const dataUrl = `data:${req.file.mimetype};base64,${base64Data}`;
 
+    // Check if Photos table exists, create if not
+    try {
+      await queryDatabase(`
+        CREATE TABLE IF NOT EXISTS "Photos" (
+          photo_id SERIAL PRIMARY KEY,
+          event_id INTEGER REFERENCES "Events"(event_id) ON DELETE CASCADE,
+          filename VARCHAR(255) NOT NULL,
+          original_filename VARCHAR(255),
+          description TEXT,
+          caption TEXT,
+          taken_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          file_size INTEGER,
+          mime_type VARCHAR(100),
+          file_data TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+    } catch (tableError) {
+      console.log('Photos table already exists or creation failed:', tableError.message);
+    }
+
+    // Limit base64 data size to prevent database issues
+    const maxDataSize = 1000000; // 1MB limit for base64 data
+    let finalDataUrl = dataUrl;
+    if (dataUrl.length > maxDataSize) {
+      console.log('Base64 data too large, truncating...');
+      finalDataUrl = dataUrl.substring(0, maxDataSize);
+    }
+
     const newPhoto = await queryDatabase(`
       INSERT INTO "Photos" (event_id, filename, original_filename, description, caption, mime_type, file_size, file_data)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *
-    `, [eventId, filename, req.file.originalname, description, caption, req.file.mimetype, req.file.size, dataUrl]);
+    `, [eventId, filename, req.file.originalname, description, caption, req.file.mimetype, req.file.size, finalDataUrl]);
 
     res.json({
       success: true,
@@ -594,6 +624,7 @@ app.post('/api/v1/events/:id/photos', upload.single('photo'), async (req, res) =
       success: false,
       error: 'Failed to add photo',
       message: error.message,
+      details: error.toString(),
       timestamp: new Date().toISOString()
     });
   }
