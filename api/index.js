@@ -1,16 +1,91 @@
 const express = require('express');
 const path = require('path');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const multer = require('multer');
 
 // Create Express app
 const app = express();
 
 // Basic middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// JWT secret
+const JWT_SECRET = process.env.JWT_SECRET || 'thanksgiving-menu-jwt-secret-key-change-in-production';
+
+// Multer configuration for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'), false);
+    }
+  }
+});
+
+// Make upload middleware available to routes
+app.use((req, res, next) => {
+  req.upload = upload;
+  next();
+});
 
 // Serve static files from public directory
 app.use('/images', express.static(path.join(__dirname, '../public/images')));
 app.use('/photos', express.static(path.join(__dirname, '../public/photos')));
+
+// JWT Authentication middleware
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      error: 'Access token required',
+      message: 'Please provide a valid access token'
+    });
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({
+        success: false,
+        error: 'Invalid token',
+        message: 'Access token is invalid or expired'
+      });
+    }
+    req.user = user;
+    next();
+  });
+};
+
+const requireAuth = authenticateToken;
+
+const requireAdmin = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    return next();
+  } else {
+    return res.status(403).json({
+      success: false,
+      error: 'Admin access required',
+      message: 'This resource requires administrator privileges'
+    });
+  }
+};
+
+// Add user to response locals (for compatibility)
+app.use((req, res, next) => {
+  res.locals.user = req.user || null;
+  res.locals.isAuthenticated = !!req.user;
+  res.locals.isAdmin = !!(req.user && req.user.role === 'admin');
+  next();
+});
 
 // Simple test endpoint (no database required)
 app.get('/api/test', (req, res) => {
@@ -203,6 +278,392 @@ app.post('/setup-db', async (req, res) => {
       error: 'Database setup failed',
       message: error.message,
       timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Authentication routes
+// User registration
+app.post('/auth/register', async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+    
+    if (!username || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields',
+        message: 'Username, email, and password are required'
+      });
+    }
+    
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        error: 'Password too short',
+        message: 'Password must be at least 6 characters long'
+      });
+    }
+    
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+    
+    await client.connect();
+    
+    // Check if user already exists
+    const existingUser = await client.query(
+      'SELECT id FROM "Users" WHERE username = $1 OR email = $2',
+      [username, email]
+    );
+    
+    if (existingUser.rows.length > 0) {
+      await client.end();
+      return res.status(400).json({
+        success: false,
+        error: 'User already exists',
+        message: 'Username or email already registered'
+      });
+    }
+    
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Create user
+    const result = await client.query(
+      `INSERT INTO "Users" (username, email, password_hash, role) 
+       VALUES ($1, $2, $3, 'user') 
+       RETURNING id, username, email, role, created_at`,
+      [username, email, hashedPassword]
+    );
+    
+    await client.end();
+    
+    const user = result.rows[0];
+    
+    res.json({
+      success: true,
+      message: 'User registered successfully',
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        created_at: user.created_at
+      }
+    });
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Registration failed',
+      message: error.message
+    });
+  }
+});
+
+// User login
+app.post('/auth/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing credentials',
+        message: 'Username and password are required'
+      });
+    }
+    
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+    
+    await client.connect();
+    
+    // Find user
+    const result = await client.query(
+      'SELECT id, username, email, password_hash, role FROM "Users" WHERE username = $1',
+      [username]
+    );
+    
+    await client.end();
+    
+    if (result.rows.length === 0) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid credentials',
+        message: 'Username or password is incorrect'
+      });
+    }
+    
+    const user = result.rows[0];
+    
+    // Check password
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    
+    if (!isValidPassword) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid credentials',
+        message: 'Username or password is incorrect'
+      });
+    }
+    
+    // Create JWT token
+    const token = jwt.sign(
+      {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    
+    res.json({
+      success: true,
+      message: 'Login successful',
+      token: token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Login failed',
+      message: error.message
+    });
+  }
+});
+
+// User logout (JWT is stateless, so logout is handled client-side)
+app.post('/auth/logout', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Logout successful - please remove the token from client storage'
+  });
+});
+
+// Get current user
+app.get('/auth/me', requireAuth, (req, res) => {
+  res.json({
+    success: true,
+    user: req.user
+  });
+});
+
+// Admin routes
+// Get all users (admin only)
+app.get('/admin/users', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+    
+    await client.connect();
+    
+    const result = await client.query(
+      'SELECT id, username, email, role, created_at FROM "Users" ORDER BY created_at DESC'
+    );
+    
+    await client.end();
+    
+    res.json({
+      success: true,
+      users: result.rows
+    });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch users',
+      message: error.message
+    });
+  }
+});
+
+// Update user role (admin only)
+app.put('/admin/users/:id/role', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+    
+    if (!role || !['user', 'admin'].includes(role)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid role',
+        message: 'Role must be either "user" or "admin"'
+      });
+    }
+    
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+    
+    await client.connect();
+    
+    const result = await client.query(
+      'UPDATE "Users" SET role = $1 WHERE id = $2 RETURNING id, username, email, role',
+      [role, id]
+    );
+    
+    await client.end();
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found',
+        message: 'User with the specified ID does not exist'
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: 'User role updated successfully',
+      user: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error updating user role:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update user role',
+      message: error.message
+    });
+  }
+});
+
+// Delete user (admin only)
+app.delete('/admin/users/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Prevent admin from deleting themselves
+    if (parseInt(id) === req.user.id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot delete self',
+        message: 'You cannot delete your own account'
+      });
+    }
+    
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+    
+    await client.connect();
+    
+    const result = await client.query(
+      'DELETE FROM "Users" WHERE id = $1 RETURNING id, username, email',
+      [id]
+    );
+    
+    await client.end();
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found',
+        message: 'User with the specified ID does not exist'
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: 'User deleted successfully',
+      user: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete user',
+      message: error.message
+    });
+  }
+});
+
+// Make user admin (setup endpoint)
+app.post('/make-admin/:username', async (req, res) => {
+  try {
+    const { username } = req.params;
+    const setupKey = req.headers['x-setup-key'] || req.body?.setupKey;
+    const expectedKey = process.env.SETUP_KEY || 'thanksgiving-setup-2024';
+    
+    if (setupKey !== expectedKey) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid setup key'
+      });
+    }
+    
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+    
+    await client.connect();
+    
+    const result = await client.query(
+      'UPDATE "Users" SET role = $1 WHERE username = $2 RETURNING id, username, email, role',
+      ['admin', username]
+    );
+    
+    await client.end();
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found',
+        message: 'User with the specified username does not exist'
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: 'User role updated to admin successfully',
+      user: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error making user admin:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update user role',
+      message: error.message
     });
   }
 });
@@ -414,6 +875,154 @@ app.get('/api/v1/events/:id', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch event',
+      message: error.message
+    });
+  }
+});
+
+// Create new event (authenticated users only)
+app.post('/api/v1/events', requireAuth, async (req, res) => {
+  try {
+    const { event_name, event_date, description, menu_image_url } = req.body;
+    
+    if (!event_name || !event_date) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields',
+        message: 'Event name and date are required'
+      });
+    }
+    
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+    
+    await client.connect();
+    
+    const result = await client.query(
+      `INSERT INTO "Events" (event_name, event_date, description, menu_image_url) 
+       VALUES ($1, $2, $3, $4) 
+       RETURNING *`,
+      [event_name, event_date, description || null, menu_image_url || null]
+    );
+    
+    await client.end();
+    
+    res.status(201).json({
+      success: true,
+      message: 'Event created successfully',
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error creating event:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create event',
+      message: error.message
+    });
+  }
+});
+
+// Update event (authenticated users only)
+app.put('/api/v1/events/:id', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { event_name, event_date, description, menu_image_url } = req.body;
+    
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+    
+    await client.connect();
+    
+    const result = await client.query(
+      `UPDATE "Events" 
+       SET event_name = COALESCE($1, event_name),
+           event_date = COALESCE($2, event_date),
+           description = COALESCE($3, description),
+           menu_image_url = COALESCE($4, menu_image_url),
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $5 
+       RETURNING *`,
+      [event_name, event_date, description, menu_image_url, id]
+    );
+    
+    await client.end();
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Event not found',
+        message: 'Event with the specified ID does not exist'
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: 'Event updated successfully',
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error updating event:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update event',
+      message: error.message
+    });
+  }
+});
+
+// Delete event (admin only)
+app.delete('/api/v1/events/:id', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+    
+    await client.connect();
+    
+    const result = await client.query(
+      'DELETE FROM "Events" WHERE id = $1 RETURNING id, event_name',
+      [id]
+    );
+    
+    await client.end();
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Event not found',
+        message: 'Event with the specified ID does not exist'
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: 'Event deleted successfully',
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error deleting event:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete event',
       message: error.message
     });
   }
@@ -1360,7 +1969,21 @@ app.get('*', (req, res) => {
   res.status(404).json({
     error: 'Route not found',
     path: req.path,
-    availableRoutes: ['/', '/api/test', '/api/pg-test', '/api/db-test', '/api/v1/events', '/health', '/setup-db', '/load-all-menus'],
+    availableRoutes: [
+      '/', 
+      '/api/test', 
+      '/api/pg-test', 
+      '/api/db-test', 
+      '/api/v1/events', 
+      '/health', 
+      '/setup-db', 
+      '/load-all-menus',
+      '/auth/register',
+      '/auth/login',
+      '/auth/logout',
+      '/auth/me',
+      '/admin/users'
+    ],
     timestamp: new Date().toISOString()
   });
 });

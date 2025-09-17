@@ -23,19 +23,30 @@ September 2025
 * Node.JS  
 * Express (Web Server)  
 * Sequelizer  
-* PoestgreSQL  
+* PostgreSQL  
 * Backend Design: I asked cursor to analyze the original website and make recommendations to make it better.  Here was its response:
 [This is an external link to the AI Back End Architecture Design](https://docs.google.com/document/d/1Ob_zSfFxB5Ff2qCy2m9Ei32RCNG2brzI_oKGzjW4-iM/edit?usp=sharing)
 
 🔧 Technical Details:
-Platform: Railway.com
-Database: PostgreSQL with SSL
-Framework: Node.js + Express + Sequelize
-Frontend: EJS templates with Bootstrap
-Styling: LA Times Food section inspired design
-Images: All menu images properly referenced
+**Development Environment:**
+- Platform: Local development with Railway.com
+- Database: PostgreSQL with SSL
+- Framework: Node.js + Express + Sequelize
+- Frontend: EJS templates with Bootstrap
+- Authentication: Express sessions with connect-session-sequelize
 
-# Security:
+**Production Environment (Vercel):**
+- Platform: Vercel serverless functions
+- Database: Vercel Postgres with SSL
+- Framework: Node.js + Express (serverless)
+- Frontend: Server-side HTML generation
+- Authentication: JWT tokens (stateless)
+- Entry Point: `api/index.js`
+
+**Styling:** LA Times Food section inspired design  
+**Images:** All menu images properly referenced (26 menus: 1994-2024)
+
+# Security & Authentication
 ## What's Been Created:
 ### Database Tables:
 * Users table with username, email, password_hash, role, and profile fields
@@ -87,6 +98,48 @@ Images: All menu images properly referenced
 * Easy login/logout functionality
 * The authentication system is now fully functional and ready for use! Users can register, login, and access role-appropriate features, while admins have full control over user management.
 
+## Production Environment (Vercel) - NEW FEATURES:
+
+### JWT Authentication System:
+* **Stateless Authentication** using JSON Web Tokens
+* **Serverless-Compatible** - perfect for Vercel functions
+* **Token-based Access Control** with Bearer token authorization
+* **24-hour Token Expiration** for security
+
+### API Endpoints (Production):
+**Authentication:**
+- `POST /auth/register` - User registration
+- `POST /auth/login` - User login (returns JWT token)
+- `POST /auth/logout` - Logout (client-side token removal)
+- `GET /auth/me` - Get current user info
+
+**Admin Management:**
+- `GET /admin/users` - List all users (admin only)
+- `PUT /admin/users/:id/role` - Update user role (admin only)
+- `DELETE /admin/users/:id` - Delete user (admin only)
+- `POST /make-admin/:username` - Promote user to admin (setup)
+
+**Menu Management:**
+- `GET /api/v1/events` - List all events (public)
+- `GET /api/v1/events/:id` - Get single event (public)
+- `POST /api/v1/events` - Create event (authenticated)
+- `PUT /api/v1/events/:id` - Update event (authenticated)
+- `DELETE /api/v1/events/:id` - Delete event (admin only)
+
+### Production Features:
+* **26 Thanksgiving Menus** loaded (1994-2024)
+* **Server-side HTML Generation** for fast loading
+* **Static File Serving** for images and photos
+* **Database Setup Endpoints** for easy deployment
+* **Comprehensive Error Handling** with proper HTTP status codes
+
+### Deployment Information:
+* **Platform**: Vercel serverless functions
+* **Database**: Vercel Postgres with SSL
+* **Entry Point**: `api/index.js`
+* **Current URL**: https://thanksgiving-dzmdhr4xu-maguirebobs-projects.vercel.app
+* **Auto-deploy**: Disabled (manual deployments only)
+
 # Testing
 ## Testing Recommendations
 1. API Testing - Postman (Recommended)
@@ -129,6 +182,29 @@ curl -X POST -F "photo=@public/photos/Grandma80s.jpg" http://localhost:3000/api/
 
 My Recommendation:
 Start with Postman for manual API testing, then add Jest + Supertest for automated testing. This gives you both immediate testing capabilities and long-term test automation.
+
+## JWT Authentication Testing (Production):
+### Quick curl Tests:
+```bash
+# Register user
+curl -X POST https://thanksgiving-dzmdhr4xu-maguirebobs-projects.vercel.app/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username": "testuser", "email": "test@example.com", "password": "password123"}'
+
+# Login and get token
+curl -X POST https://thanksgiving-dzmdhr4xu-maguirebobs-projects.vercel.app/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "testuser", "password": "password123"}'
+
+# Use token for authenticated requests
+curl -X GET https://thanksgiving-dzmdhr4xu-maguirebobs-projects.vercel.app/auth/me \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
+
+# Test admin functionality
+curl -X GET https://thanksgiving-dzmdhr4xu-maguirebobs-projects.vercel.app/admin/users \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
+```
+
 Would you like me to help you set up any of these testing frameworks?
 
 ## Testing Configuration
@@ -149,3 +225,35 @@ npm run test:coverage
 
 Watch mode for development
 npm run test:watch
+
+# Current Status & Next Steps
+
+## ✅ Completed Features:
+- **Authentication System**: JWT-based for production, session-based for development
+- **Admin Panel**: User management, role updates, user deletion
+- **Menu CRUD**: Create, read, update, delete Thanksgiving events
+- **Database Setup**: 26 Thanksgiving menus (1994-2024) loaded
+- **API Endpoints**: Complete REST API for all operations
+- **Security**: Password hashing, role-based access control, input validation
+- **Deployment**: Vercel production deployment with serverless functions
+
+## 🚧 In Progress:
+- **Photo Management**: Upload and manage photos for events
+- **EJS Templates**: Convert production to use EJS templating system
+
+## 📋 Future Enhancements:
+- **Photo Upload**: Complete Multer integration for photo management
+- **Search Functionality**: Search menus by year, content, or keywords
+- **Export Features**: Export menu data to PDF or other formats
+- **Mobile App**: React Native or PWA for mobile access
+- **Analytics**: Track menu views and user interactions
+
+## 🔗 Current URLs:
+- **Development**: http://localhost:3000 (EJS templates, session auth)
+- **Production**: https://thanksgiving-dzmdhr4xu-maguirebobs-projects.vercel.app (HTML generation, JWT auth)
+
+## 📊 Database Status:
+- **Events**: 26 Thanksgiving menus (1994-2024)
+- **Users**: Admin and test users created
+- **Photos**: Ready for photo upload functionality
+- **Sessions**: Development session storage configured
