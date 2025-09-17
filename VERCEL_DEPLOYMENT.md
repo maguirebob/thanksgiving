@@ -29,6 +29,7 @@ This guide will help you deploy your Thanksgiving Menu App to Vercel.
 4. **Environment Variables**: Add these in the Vercel dashboard:
    - `NODE_ENV` = `production`
    - `POSTGRES_URL` = (will be set automatically when you add Vercel Postgres)
+   - `SETUP_KEY` = `thanksgiving-setup-2024` (for database setup security)
 
 ### 3. Add Vercel Postgres Database
 
@@ -44,11 +45,31 @@ This guide will help you deploy your Thanksgiving Menu App to Vercel.
 
 ### 4. Deploy
 
-1. **Click "Deploy"** - Vercel will:
+**Note**: Auto-deploy is disabled by default. You'll need to deploy manually.
+
+#### Option A: Manual Deploy via Vercel CLI (Recommended)
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Login to Vercel
+vercel login
+
+# Deploy to production
+vercel --prod
+```
+
+**Note**: The app uses `api/index.js` as the entry point, which imports from `server.js`. This is the correct structure for Vercel serverless functions.
+
+#### Option B: Deploy via Vercel Dashboard
+1. **Click "Deploy"** in your Vercel project dashboard
+2. Vercel will:
    - Install dependencies
    - Build your application
    - Deploy to a global CDN
    - Provide you with a URL like `https://thanksgiving-xxx.vercel.app`
+
+**For more deployment control options, see [VERCEL_DEPLOYMENT_CONTROL.md](./VERCEL_DEPLOYMENT_CONTROL.md)**
 
 ### 5. Initialize Database
 
@@ -71,29 +92,33 @@ vercel env pull .env.local
 node scripts/setup-vercel-db.js
 ```
 
-#### Option B: Using Vercel Functions
+#### Option B: Using Vercel Functions (Recommended)
 
-Create a one-time setup function by adding this to your project:
+The setup function is already created at `api/setup-db.js`. After deployment:
 
-```javascript
-// api/setup-db.js
-const { setupVercelDatabase } = require('../scripts/setup-vercel-db');
-
-module.exports = async (req, res) => {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-  
-  try {
-    await setupVercelDatabase();
-    res.json({ success: true, message: 'Database setup completed' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+1. **Make a POST request** to setup the database:
+```bash
+curl -X POST https://your-app.vercel.app/setup-db \
+  -H "Content-Type: application/json" \
+  -H "x-setup-key: thanksgiving-setup-2024" \
+  -d '{"setupKey": "thanksgiving-setup-2024"}'
 ```
 
-Then visit: `https://your-app.vercel.app/api/setup-db` (POST request)
+
+2. **Or use a tool like Postman**:
+   - Method: POST
+   - URL: `https://your-app.vercel.app/setup-db`
+   - Headers: `x-setup-key: thanksgiving-setup-2024`
+   - Body: `{"setupKey": "thanksgiving-setup-2024"}`
+
+3. **Expected Response**:
+```json
+{
+  "success": true,
+  "message": "Database setup completed successfully",
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}
+```
 
 ### 6. Test Your Deployment
 

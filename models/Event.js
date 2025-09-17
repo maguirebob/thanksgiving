@@ -34,8 +34,8 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     }
   }, {
-    tableName: 'Events',
-    timestamps: false // Since we're not using created_at/updated_at
+    tableName: 'events',
+    timestamps: false
   });
 
   return Event;

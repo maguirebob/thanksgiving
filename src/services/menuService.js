@@ -10,21 +10,37 @@ class MenuService {
    * @returns {Promise<Array>} Array of menu events
    */
   async getAllMenus(options = {}) {
-    const { sort = 'desc', limit } = options;
+    const { sort = 'desc', limit, year, offset } = options;
     
     const queryOptions = {
       order: [['event_date', sort.toUpperCase()]],
       attributes: [
         'event_id', 
-        'event_name', 
+        'event_name',
         'event_type', 
         'event_location', 
         'event_date', 
         'event_description', 
-        'menu_title', 
+        'menu_title',
         'menu_image_filename'
       ]
     };
+
+    // Add year filtering
+    if (year) {
+      const yearStart = `${year}-01-01`;
+      const yearEnd = `${year}-12-31`;
+      queryOptions.where = {
+        event_date: {
+          [Op.between]: [yearStart, yearEnd]
+        }
+      };
+    }
+
+    // Add pagination
+    if (offset && offset > 0) {
+      queryOptions.offset = parseInt(offset);
+    }
 
     if (limit && limit > 0) {
       queryOptions.limit = parseInt(limit);
@@ -56,10 +72,12 @@ class MenuService {
       throw new Error('Invalid year');
     }
 
+    const yearStart = `${year}-01-01`;
+    const yearEnd = `${year}-12-31`;
     return await Event.findAll({
       where: {
         event_date: {
-          [Op.between]: [`${year}-01-01`, `${year}-12-31`]
+          [Op.between]: [yearStart, yearEnd]
         }
       },
       order: [['event_date', 'DESC']]
@@ -84,13 +102,13 @@ class MenuService {
 
     // Validate required fields
     const allowedFields = [
-      'event_name',
-      'event_type', 
-      'event_location',
-      'event_date',
-      'event_description',
-      'menu_title',
-      'menu_image_filename'
+      'year',
+      'title',
+      'description',
+      'date',
+      'location',
+      'host',
+      'menu_items'
     ];
 
     const filteredData = {};
@@ -126,6 +144,33 @@ class MenuService {
       earliestYear: earliestMenu ? new Date(earliestMenu.event_date).getFullYear() : null,
       latestYear: latestMenu ? new Date(latestMenu.event_date).getFullYear() : null
     };
+  }
+
+  /**
+   * Create a new menu
+   * @param {Object} menuData - Menu data
+   * @returns {Promise<Object>} Created menu
+   */
+  async createMenu(menuData) {
+    const newMenu = await Event.create(menuData);
+    return newMenu;
+  }
+
+  /**
+   * Delete a menu by ID
+   * @param {number} id - Menu ID
+   * @returns {Promise<boolean>} True if deleted, false if not found
+   */
+  async deleteMenu(id) {
+    if (!id || isNaN(id)) {
+      throw new Error('Invalid menu ID');
+    }
+    
+    const deleted = await Event.destroy({
+      where: { event_id: id }
+    });
+    
+    return deleted > 0;
   }
 }
 

@@ -18,14 +18,24 @@ const sequelize = new Sequelize(
 
 // Import models
 const Event = require('./Event')(sequelize, Sequelize.DataTypes);
+const User = require('./User')(sequelize, Sequelize.DataTypes);
+const Session = require('./Session')(sequelize, Sequelize.DataTypes);
+const Photo = require('./Photo')(sequelize, Sequelize.DataTypes);
 
-// Define associations (if any)
-// Currently no associations since we simplified to one table
+// Define associations
+User.hasMany(Session, { foreignKey: 'user_id', onDelete: 'CASCADE' });
+Session.belongsTo(User, { foreignKey: 'user_id' });
+
+Event.hasMany(Photo, { foreignKey: 'event_id', onDelete: 'CASCADE' });
+Photo.belongsTo(Event, { foreignKey: 'event_id' });
 
 const db = {
   sequelize,
   Sequelize,
-  Event
+  Event,
+  User,
+  Session,
+  Photo
 };
 
 module.exports = db;
