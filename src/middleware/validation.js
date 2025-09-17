@@ -36,6 +36,43 @@ const validateQueryParams = [
 ];
 
 /**
+ * Validation rules for menu creation
+ */
+const validateMenuCreate = [
+  body('year')
+    .isInt({ min: 1900, max: 2100 })
+    .withMessage('Year must be between 1900 and 2100')
+    .toInt(),
+  body('title')
+    .isLength({ min: 1, max: 255 })
+    .withMessage('Title must be between 1 and 255 characters')
+    .trim(),
+  body('description')
+    .optional()
+    .isLength({ min: 1, max: 1000 })
+    .withMessage('Description must be between 1 and 1000 characters')
+    .trim(),
+  body('date')
+    .isISO8601()
+    .withMessage('Date must be a valid date (YYYY-MM-DD)')
+    .toDate(),
+  body('location')
+    .optional()
+    .isLength({ min: 1, max: 255 })
+    .withMessage('Location must be between 1 and 255 characters')
+    .trim(),
+  body('host')
+    .optional()
+    .isLength({ min: 1, max: 255 })
+    .withMessage('Host must be between 1 and 255 characters')
+    .trim(),
+  body('menu_items')
+    .optional()
+    .isArray()
+    .withMessage('Menu items must be an array')
+];
+
+/**
  * Validation rules for menu updates
  */
 const validateMenuUpdate = [
@@ -43,41 +80,40 @@ const validateMenuUpdate = [
     .isInt({ min: 1 })
     .withMessage('Menu ID must be a positive integer')
     .toInt(),
-  body('event_name')
+  body('year')
+    .optional()
+    .isInt({ min: 1900, max: 2100 })
+    .withMessage('Year must be between 1900 and 2100')
+    .toInt(),
+  body('title')
     .optional()
     .isLength({ min: 1, max: 255 })
-    .withMessage('Event name must be between 1 and 255 characters')
+    .withMessage('Title must be between 1 and 255 characters')
     .trim(),
-  body('event_type')
-    .optional()
-    .isLength({ min: 1, max: 255 })
-    .withMessage('Event type must be between 1 and 255 characters')
-    .trim(),
-  body('event_location')
-    .optional()
-    .isLength({ min: 1, max: 255 })
-    .withMessage('Event location must be between 1 and 255 characters')
-    .trim(),
-  body('event_date')
-    .optional()
-    .isISO8601()
-    .withMessage('Event date must be a valid date (YYYY-MM-DD)')
-    .toDate(),
-  body('event_description')
+  body('description')
     .optional()
     .isLength({ min: 1, max: 1000 })
-    .withMessage('Event description must be between 1 and 1000 characters')
+    .withMessage('Description must be between 1 and 1000 characters')
     .trim(),
-  body('menu_title')
+  body('date')
+    .optional()
+    .isISO8601()
+    .withMessage('Date must be a valid date (YYYY-MM-DD)')
+    .toDate(),
+  body('location')
     .optional()
     .isLength({ min: 1, max: 255 })
-    .withMessage('Menu title must be between 1 and 255 characters')
+    .withMessage('Location must be between 1 and 255 characters')
     .trim(),
-  body('menu_image_filename')
+  body('host')
     .optional()
     .isLength({ min: 1, max: 255 })
-    .withMessage('Menu image filename must be between 1 and 255 characters')
-    .trim()
+    .withMessage('Host must be between 1 and 255 characters')
+    .trim(),
+  body('menu_items')
+    .optional()
+    .isArray()
+    .withMessage('Menu items must be an array')
 ];
 
 /**
@@ -93,7 +129,7 @@ const handleValidationErrors = (req, res, next) => {
     const errorMessages = errors.array().map(error => error.msg);
     
     // For API routes, return JSON error
-    if (req.path.startsWith('/api/')) {
+    if (req.path.startsWith('/api/') || req.originalUrl.startsWith('/api/')) {
       return res.status(400).json({
         success: false,
         error: 'Validation failed',
@@ -116,6 +152,7 @@ module.exports = {
   validateMenuId,
   validateYear,
   validateQueryParams,
+  validateMenuCreate,
   validateMenuUpdate,
   handleValidationErrors
 };

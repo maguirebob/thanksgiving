@@ -1,0 +1,217 @@
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>User Management</h1>
+        <a href="/admin" class="btn btn-secondary">
+          <i class="fas fa-arrow-left me-2"></i>
+          Back to Dashboard
+        </a>
+      </div>
+
+      <!-- Users Table -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">All Users</h5>
+        </div>
+        <div class="card-body">
+          <% if (users && users.length > 0) { %>
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% users.forEach(user => { %>
+                    <tr>
+                      <td><%= user.username %></td>
+                      <td><%= user.email %></td>
+                      <td><%= user.first_name %> <%= user.last_name %></td>
+                      <td>
+                        <span class="badge <%= user.role === 'admin' ? 'bg-danger' : 'bg-primary' %>">
+                          <%= user.role %>
+                        </span>
+                      </td>
+                      <td><%= new Date(user.created_at).toLocaleDateString() %></td>
+                      <td>
+                        <div class="btn-group" role="group">
+                          <!-- Role Toggle Button -->
+                          <button 
+                            class="btn btn-sm <%= user.role === 'admin' ? 'btn-warning' : 'btn-success' %>"
+                            onclick="toggleUserRole(<%= user.user_id %>, '<%= user.role %>')"
+                            <%= user.user_id === user.user_id ? 'disabled' : '' %>
+                          >
+                            <i class="fas fa-user-<%= user.role === 'admin' ? 'minus' : 'plus' %> me-1"></i>
+                            <%= user.role === 'admin' ? 'Make User' : 'Make Admin' %>
+                          </button>
+                          
+                          <!-- Delete Button -->
+                          <button 
+                            class="btn btn-sm btn-danger"
+                            onclick="deleteUser(<%= user.user_id %>, '<%= user.username %>')"
+                            <%= user.user_id === user.user_id ? 'disabled' : '' %>
+                          >
+                            <i class="fas fa-trash me-1"></i>
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <p class="text-muted">No users found.</p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmModalTitle">Confirm Action</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="confirmModalBody">
+        <!-- Dynamic content will be inserted here -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmModalButton">Confirm</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Toggle user role
+function toggleUserRole(userId, currentRole) {
+  const newRole = currentRole === 'admin' ? 'user' : 'admin';
+  const action = newRole === 'admin' ? 'promote to admin' : 'demote to user';
+  
+  showConfirmModal(
+    `Change User Role`,
+    `Are you sure you want to ${action}?`,
+    () => {
+      updateUserRole(userId, newRole);
+    }
+  );
+}
+
+// Update user role via API
+async function updateUserRole(userId, newRole) {
+  try {
+    const response = await fetch(`/admin/users/${userId}/role`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ role: newRole })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      showAlert('User role updated successfully!', 'success');
+      // Reload the page to show updated data
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } else {
+      showAlert('Error: ' + result.error, 'danger');
+    }
+  } catch (error) {
+    console.error('Error updating user role:', error);
+    showAlert('Error updating user role. Please try again.', 'danger');
+  }
+}
+
+// Delete user
+function deleteUser(userId, username) {
+  showConfirmModal(
+    `Delete User`,
+    `Are you sure you want to delete user "${username}"? This action cannot be undone.`,
+    () => {
+      performDeleteUser(userId);
+    }
+  );
+}
+
+// Perform user deletion via API
+async function performDeleteUser(userId) {
+  try {
+    const response = await fetch(`/admin/users/${userId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      showAlert('User deleted successfully!', 'success');
+      // Reload the page to show updated data
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } else {
+      showAlert('Error: ' + result.error, 'danger');
+    }
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    showAlert('Error deleting user. Please try again.', 'danger');
+  }
+}
+
+// Show confirmation modal
+function showConfirmModal(title, message, onConfirm) {
+  document.getElementById('confirmModalTitle').textContent = title;
+  document.getElementById('confirmModalBody').textContent = message;
+  
+  const confirmButton = document.getElementById('confirmModalButton');
+  confirmButton.onclick = () => {
+    onConfirm();
+    bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+  };
+  
+  new bootstrap.Modal(document.getElementById('confirmModal')).show();
+}
+
+// Show alert message
+function showAlert(message, type) {
+  const alertDiv = document.createElement('div');
+  alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+  alertDiv.style.position = 'fixed';
+  alertDiv.style.top = '20px';
+  alertDiv.style.right = '20px';
+  alertDiv.style.zIndex = '9999';
+  alertDiv.style.minWidth = '300px';
+  alertDiv.innerHTML = `
+    ${message}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  `;
+  
+  document.body.appendChild(alertDiv);
+  
+  // Auto-remove after 5 seconds
+  setTimeout(() => {
+    if (alertDiv.parentNode) {
+      alertDiv.parentNode.removeChild(alertDiv);
+    }
+  }, 5000);
+}
+</script>

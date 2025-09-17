@@ -1,27 +1,30 @@
--- create table Users
-CREATE TABLE IF NOT EXISTS Users (
+-- Create enum for user roles
+CREATE TYPE enum_Users_role AS ENUM ('user', 'admin');
+
+-- Create table Users (uppercase)
+CREATE TABLE IF NOT EXISTS "Users" (
   user_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   username VARCHAR(255) UNIQUE NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
-  role VARCHAR(50) NOT NULL DEFAULT 'user',
+  role enum_Users_role NOT NULL DEFAULT 'user',
   first_name VARCHAR(255),
   last_name VARCHAR(255),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- create table Sessions
-CREATE TABLE IF NOT EXISTS Sessions (
+-- Create table Sessions (uppercase)
+CREATE TABLE IF NOT EXISTS "Sessions" (
   session_id VARCHAR(128) PRIMARY KEY,
-  user_id INT REFERENCES Users(user_id) ON DELETE CASCADE,
-  expires TIMESTAMP NOT NULL,
+  user_id INT REFERENCES "Users"(user_id) ON DELETE CASCADE,
+  expires TIMESTAMP WITH TIME ZONE NOT NULL,
   data TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- create table Events
-CREATE TABLE IF NOT EXISTS Events (
+-- Create table events (lowercase)
+CREATE TABLE IF NOT EXISTS events (
   event_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   event_name VARCHAR(255) NOT NULL,
   event_type VARCHAR(255) NOT NULL,
@@ -32,8 +35,25 @@ CREATE TABLE IF NOT EXISTS Events (
   menu_image_filename VARCHAR(255) NOT NULL
 );
 
--- Insert sample data into Events table
-INSERT INTO Events (event_name, event_type, event_location, event_date, event_description, menu_title, menu_image_filename) VALUES
+-- Create table Photos (uppercase)
+CREATE TABLE IF NOT EXISTS "Photos" (
+  photo_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  event_id INT NOT NULL,
+  filename VARCHAR(255) NOT NULL,
+  original_filename VARCHAR(255),
+  description TEXT,
+  caption TEXT,
+  taken_date TIMESTAMP WITH TIME ZONE NOT NULL,
+  file_size INT,
+  mime_type VARCHAR(100),
+  file_data TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (event_id) REFERENCES events(event_id) ON DELETE CASCADE
+);
+
+-- Insert sample data into events table
+INSERT INTO events (event_name, event_type, event_location, event_date, event_description, menu_title, menu_image_filename) VALUES
 ('Thanksgiving Dinner 1994', 'Thanksgiving', 'Canajoharie, NY', '1994-11-24',  'First Thanksgiving Dinner that we have menu for at my parents house in Canajoharie, NY', 'Maguire Family Dinner 1994', '1994_Menu.png'),
 ('Thanksgiving Dinner 1997', 'Thanksgiving', 'Canajoharie, NY','1997-11-27',  'This dinner was at my parents house in Canajoharie, NY', 'Thanksgiving 1997', '1997_Menu.jpeg'),
 ('Thanksgiving Dinner 1999', 'Thanksgiving', 'Canajoharie, NY','1999-11-25',  'This dinner was at my parents house in Canajoharie, NY', 'Thanksgiving 1999', '1999_Menu.jpeg'),
@@ -62,10 +82,8 @@ INSERT INTO Events (event_name, event_type, event_location, event_date, event_de
 ('Thanksgiving Dinner 2024', 'Thanksgiving', 'Middletown, NJ','2024-11-28',  'This dinner was marked by the death of Tricia''s Grandmother, Grandman Goodse', 'Thanksgiving 2024', '2024_Menu.jpeg');
 
 -- Insert sample users (password is 'password123' for both)
-INSERT INTO Users (username, email, password_hash, role, first_name, last_name) VALUES
+INSERT INTO "Users" (username, email, password_hash, role, first_name, last_name) VALUES
 ('admin', 'admin@thanksgiving.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'Admin', 'User'),
 ('bob', 'bob@thanksgiving.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'Bob', 'Maguire');
-
-
 
 
