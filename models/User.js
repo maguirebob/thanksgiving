@@ -16,6 +16,15 @@ module.exports = (sequelize, DataTypes) => {
         notEmpty: true
       }
     },
+    username_lower: {
+      type: DataTypes.STRING(255),
+      allowNull: false,
+      unique: true,
+      validate: {
+        len: [3, 255],
+        notEmpty: true
+      }
+    },
     email: {
       type: DataTypes.STRING(255),
       allowNull: false,
@@ -58,7 +67,16 @@ module.exports = (sequelize, DataTypes) => {
     createdAt: 'created_at',
     updatedAt: 'updated_at',
     hooks: {
+      beforeCreate: (user) => {
+        if (user.username && !user.username_lower) {
+          user.username_lower = user.username.toLowerCase();
+        }
+        user.updated_at = new Date();
+      },
       beforeUpdate: (user) => {
+        if (user.changed('username') && user.username) {
+          user.username_lower = user.username.toLowerCase();
+        }
         user.updated_at = new Date();
       }
     }
@@ -89,7 +107,7 @@ module.exports = (sequelize, DataTypes) => {
   User.findByCredentials = async function(username, password) {
     const user = await User.findOne({
       where: {
-        username: username
+        username_lower: username.toLowerCase()
       }
     });
 
@@ -103,6 +121,19 @@ module.exports = (sequelize, DataTypes) => {
     }
 
     return user;
+  };
+
+  User.findByUsername = async function(username) {
+    return await User.findOne({
+      where: {
+        username_lower: username.toLowerCase()
+      }
+    });
+  };
+
+  User.usernameExists = async function(username) {
+    const user = await User.findByUsername(username);
+    return !!user;
   };
 
   return User;
