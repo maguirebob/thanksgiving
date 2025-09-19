@@ -18,15 +18,15 @@
                 month: 'long', 
                 day: 'numeric' 
             }) %></div>
-            <h1 class="menu-title" style="font-size: 3rem; margin-bottom: 1rem;"><%= event.menu_title %></h1>
+            <h1 class="menu-title" style="font-size: 3rem; margin-bottom: 1rem;"><%= event.event_name %></h1>
             <div class="menu-location" style="font-size: 1.1rem; margin-bottom: 2rem;"><%= event.event_location %></div>
         </div>
 
         <!-- Menu Image -->
         <div class="mb-5">
             <div class="menu-image-container" style="height: 600px; border-radius: 8px; background-color: #f8f9fa; border: 1px solid #e5e5e5; display: flex; align-items: center; justify-content: center; padding: 2rem; position: relative; overflow: hidden;">
-                <img src="/images/<%= event.menu_image_filename %>" 
-                     alt="<%= event.menu_title %>" 
+                <img src="<%= event.menu_image_url %>" 
+                     alt="<%= event.event_name %>" 
                      id="menuImage"
                      style="max-width: 100%; max-height: 100%; object-fit: contain; object-position: center; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); cursor: zoom-in; transition: transform 0.3s ease;"
                      onerror="this.src='/images/placeholder-menu.jpg'"
@@ -34,8 +34,8 @@
                 
                 <!-- Zoom overlay -->
                 <div id="zoomOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); z-index: 9999; display: none; align-items: center; justify-content: center; cursor: zoom-out;" onclick="toggleZoom()">
-                    <img src="/images/<%= event.menu_image_filename %>" 
-                         alt="<%= event.menu_title %>" 
+                    <img src="<%= event.menu_image_url %>" 
+                         alt="<%= event.event_name %>" 
                          style="max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 8px;"
                          onerror="this.src='/images/placeholder-menu.jpg'">
                 </div>
@@ -57,7 +57,7 @@
         <!-- Description -->
         <div class="mb-5">
             <h2 class="section-title" style="font-size: 2rem; border-bottom: 2px solid var(--accent-orange);">About This Menu</h2>
-            <p style="font-size: 1.1rem; line-height: 1.8; color: var(--secondary-gray);"><%= event.event_description %></p>
+            <p style="font-size: 1.1rem; line-height: 1.8; color: var(--secondary-gray);"><%= event.description %></p>
         </div>
 
         <!-- Edit Menu Section -->
@@ -85,7 +85,7 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="event_type" class="form-label">Event Type</label>
-                            <input type="text" class="form-control" id="event_type" name="event_type" value="<%= event.event_type %>" required>
+                            <input type="text" class="form-control" id="event_type" name="event_type" value="<%= event.event_type || 'Thanksgiving' %>" required>
                         </div>
                     </div>
                     
@@ -102,17 +102,17 @@
                     
                     <div class="mb-3">
                         <label for="menu_title" class="form-label">Menu Title</label>
-                        <input type="text" class="form-control" id="menu_title" name="menu_title" value="<%= event.menu_title %>" required>
+                        <input type="text" class="form-control" id="menu_title" name="menu_title" value="<%= event.event_name %>" required>
                     </div>
                     
                     <div class="mb-3">
                         <label for="menu_image_filename" class="form-label">Image Filename</label>
-                        <input type="text" class="form-control" id="menu_image_filename" name="menu_image_filename" value="<%= event.menu_image_filename %>" required>
+                        <input type="text" class="form-control" id="menu_image_filename" name="menu_image_filename" value="<%= event.menu_image_url %>" required>
                     </div>
                     
                     <div class="mb-3">
                         <label for="event_description" class="form-label">Description</label>
-                        <textarea class="form-control" id="event_description" name="event_description" rows="4" required><%= event.event_description %></textarea>
+                        <textarea class="form-control" id="event_description" name="event_description" rows="4" required><%= event.description %></textarea>
                     </div>
                     
                     <div class="d-flex gap-2">
@@ -140,7 +140,7 @@
                     
                     <div style="margin-bottom: 1.5rem;">
                         <div style="color: var(--secondary-gray); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Event Type</div>
-                        <div style="font-weight: 600; color: var(--primary-black);"><%= event.event_type %></div>
+                        <div style="font-weight: 600; color: var(--primary-black);"><%= event.event_type || 'Thanksgiving' %></div>
                     </div>
 
                     <div style="margin-bottom: 1.5rem;">
@@ -201,11 +201,11 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="section-title" style="font-size: 2rem; border-bottom: 2px solid var(--accent-orange); margin-bottom: 0;">Photos</h2>
         <div class="d-flex gap-2">
-            <button class="btn-view-details" onclick="openPhotoUpload()" id="uploadPhotoBtn">
+            <button class="btn-view-details" onclick="if(window.photoManager) window.photoManager.openUploadModal(); else console.error('PhotoManager not initialized')" id="uploadPhotoBtn">
                 <i class="fas fa-upload me-2"></i>
                 Upload Photo
             </button>
-            <button class="btn-view-details" onclick="openCameraCapture()" id="capturePhotoBtn" style="background-color: var(--secondary-gray);">
+            <button class="btn-view-details" onclick="if(window.photoManager) window.photoManager.openCameraModal(); else console.error('PhotoManager not initialized')" id="capturePhotoBtn" style="background-color: var(--secondary-gray);">
                 <i class="fas fa-camera me-2"></i>
                 Take Photo
             </button>
@@ -292,11 +292,11 @@
                 <i class="fas fa-video me-2"></i>
                 Start Camera
             </button>
-            <button type="button" class="btn-view-details" onclick="capturePhoto()" id="captureBtn" style="display: none;">
+            <button type="button" class="btn-view-details" onclick="if(window.photoManager && window.photoManager.uiController) window.photoManager.uiController.capturePhoto()" id="captureBtn" style="display: none;">
                 <i class="fas fa-camera me-2"></i>
                 Capture
             </button>
-            <button type="button" class="btn-view-details" onclick="saveCapturedPhoto()" id="saveBtn" style="display: none;">
+            <button type="button" class="btn-view-details" onclick="if(window.photoManager && window.photoManager.uiController) window.photoManager.uiController.saveCapturedPhoto()" id="saveBtn" style="display: none;">
                 <i class="fas fa-save me-2"></i>
                 Save Photo
             </button>
@@ -336,7 +336,7 @@ function downloadImage() {
     const img = document.getElementById('menuImage');
     const link = document.createElement('a');
     link.href = img.src;
-    link.download = '<%= event.menu_title.replace(/[^a-z0-9]/gi, "_").toLowerCase() %>_menu.jpg';
+    link.download = '<%= event.event_name.replace(/[^a-z0-9]/gi, "_").toLowerCase() %>_menu.jpg';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -414,10 +414,10 @@ document.getElementById('menuEditForm').addEventListener('submit', async functio
     }
     
     console.log('Sending update data:', updateData);
-    console.log('Update URL:', `/api/v1/events/<%= event.event_id %>`);
+    console.log('Update URL:', `/api/v1/events/<%= event.id %>`);
     
     try {
-        const response = await fetch(`/api/v1/events/<%= event.event_id %>`, {
+        const response = await fetch(`/api/v1/events/<%= event.id %>`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -564,7 +564,7 @@ function createDeleteModal() {
                     Delete Menu
                 </h3>
                 <p style="margin-bottom: 1.5rem; color: var(--secondary-gray);">
-                    Are you sure you want to delete "<strong><%= event.menu_title %></strong>"? 
+                    Are you sure you want to delete "<strong><%= event.event_name %></strong>"? 
                     This action cannot be undone and will permanently remove this menu from the database.
                 </p>
                 <div style="display: flex; gap: 1rem; justify-content: flex-end;">
@@ -594,7 +594,7 @@ function hideDeleteConfirmation() {
 
 async function confirmDelete() {
     try {
-        const response = await fetch(`/api/v1/events/<%= event.event_id %>`, {
+        const response = await fetch(`/api/v1/events/<%= event.id %>`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -644,135 +644,74 @@ document.addEventListener('keydown', function(event) {
 let currentStream = null;
 let capturedImageData = null;
 
-// Load photos when page loads
+// Get the auth token from localStorage or cookies
+function getAuthToken() {
+    return localStorage.getItem('authToken') || getCookie('authToken');
+}
+
+// Helper function to get cookie value
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+
+// Initialize Photo System
+let photoManager;
+
+// Make photoManager globally accessible
+window.photoManager = null;
+
 document.addEventListener('DOMContentLoaded', function() {
-    loadPhotos();
+    try {
+        console.log('DOM loaded, initializing PhotoManager...');
+        
+        // Check if required elements exist
+        const photosGrid = document.getElementById('photosGrid');
+        const noPhotosMessage = document.getElementById('noPhotosMessage');
+        console.log('Required elements found:', {
+            photosGrid: !!photosGrid,
+            noPhotosMessage: !!noPhotosMessage
+        });
+        
+        // Get auth token
+        const authToken = getAuthToken();
+        console.log('Auth token found:', !!authToken);
+        
+        // Check if PhotoManager class is available
+        if (typeof PhotoManager === 'undefined') {
+            console.error('PhotoManager class not found. Check if scripts are loading correctly.');
+            return;
+        }
+        
+        // Initialize photo manager
+        photoManager = new PhotoManager(<%= event.id %>, authToken);
+        window.photoManager = photoManager; // Make it globally accessible
+        
+        console.log('PhotoManager created:', photoManager);
+        
+        // Initialize UI
+        photoManager.initializeUI();
+        
+        console.log('UI initialized, loading photos...');
+        
+        // Load photos
+        photoManager.loadPhotos();
+        
+        // Setup event listeners
+        setupPhotoEventListeners();
+        
+        console.log('PhotoManager initialized successfully:', photoManager);
+    } catch (error) {
+        console.error('Error initializing PhotoManager:', error);
+        console.error('Error stack:', error.stack);
+    }
 });
 
-async function loadPhotos() {
-    try {
-        const response = await fetch(`/api/v1/events/<%= event.event_id %>/photos`);
-        const result = await response.json();
-        
-        if (result.success) {
-            displayPhotos(result.data);
-        } else {
-            console.error('Error loading photos:', result.error);
-        }
-    } catch (error) {
-        console.error('Error loading photos:', error);
-    }
-}
+// Photo loading is now handled by PhotoManager.loadPhotos()
 
-function displayPhotos(photos) {
-    const photosGrid = document.getElementById('photosGrid');
-    const noPhotosMessage = document.getElementById('noPhotosMessage');
-    
-    console.log('Displaying photos:', photos.map(p => ({
-        photo_id: p.photo_id,
-        filename: p.filename,
-        hasFileData: !!p.file_data,
-        fileDataLength: p.file_data ? p.file_data.length : 0
-    })));
-    
-    if (photos.length === 0) {
-        photosGrid.innerHTML = '';
-        noPhotosMessage.style.display = 'block';
-        return;
-    }
-    
-    noPhotosMessage.style.display = 'none';
-    // Clear existing content
-    photosGrid.innerHTML = '';
-    
-    // Create photo elements using pure DOM methods to avoid any template literal issues
-    photos.forEach(photo => {
-        const photoDiv = document.createElement('div');
-        photoDiv.className = 'col-md-4 col-lg-3 mb-4';
-        
-        const fileData = photo.file_data || '/images/placeholder-menu.jpg';
-        const caption = photo.caption || 'Photo';
-        const description = photo.description || '';
-        const photoId = photo.photo_id;
-        const takenDate = new Date(photo.taken_date).toLocaleDateString();
-        
-        // Create card container
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.style.height = '100%';
-        
-        // Create image container
-        const imgContainer = document.createElement('div');
-        imgContainer.style.cssText = 'height: 200px; overflow: hidden; position: relative;';
-        
-        // Create image
-        const img = document.createElement('img');
-        img.src = fileData;
-        img.alt = caption;
-        img.className = 'card-img-top photo-view-trigger';
-        img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; cursor: pointer;';
-        img.setAttribute('data-file-data', fileData);
-        img.setAttribute('data-description', description);
-        img.setAttribute('data-caption', caption);
-        
-        // Create button container
-        const buttonContainer = document.createElement('div');
-        buttonContainer.style.cssText = 'position: absolute; top: 10px; right: 10px;';
-        
-        // Create edit button
-        const editBtn = document.createElement('button');
-        editBtn.className = 'btn btn-sm btn-light photo-edit-trigger';
-        editBtn.setAttribute('data-photo-id', photoId);
-        editBtn.setAttribute('data-description', description);
-        editBtn.setAttribute('data-caption', caption);
-        editBtn.setAttribute('title', 'Edit');
-        editBtn.innerHTML = '<i class="fas fa-edit"></i>';
-        
-        // Create delete button
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'btn btn-sm btn-danger photo-delete-trigger';
-        deleteBtn.setAttribute('data-photo-id', photoId);
-        deleteBtn.setAttribute('title', 'Delete');
-        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-        
-        // Create card body
-        const cardBody = document.createElement('div');
-        cardBody.className = 'card-body';
-        
-        // Create title
-        const title = document.createElement('h6');
-        title.className = 'card-title';
-        title.textContent = caption;
-        
-        // Create description
-        const desc = document.createElement('p');
-        desc.className = 'card-text small text-muted';
-        desc.textContent = description;
-        
-        // Create date
-        const date = document.createElement('small');
-        date.className = 'text-muted';
-        date.textContent = takenDate;
-        
-        // Assemble the elements
-        buttonContainer.appendChild(editBtn);
-        buttonContainer.appendChild(deleteBtn);
-        imgContainer.appendChild(img);
-        imgContainer.appendChild(buttonContainer);
-        
-        cardBody.appendChild(title);
-        cardBody.appendChild(desc);
-        cardBody.appendChild(date);
-        
-        card.appendChild(imgContainer);
-        card.appendChild(cardBody);
-        photoDiv.appendChild(card);
-        photosGrid.appendChild(photoDiv);
-    });
-    
-    // Add event listeners after HTML is inserted
-    addPhotoEventListeners();
-}
+// Photo display is now handled by PhotoUIController.displayPhotos()
 
 // Photo Upload Functions
 function openPhotoUpload() {
@@ -784,59 +723,7 @@ function closePhotoUpload() {
     document.getElementById('photoUploadForm').reset();
 }
 
-// Handle photo upload form submission
-document.getElementById('photoUploadForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const fileInput = document.getElementById('photoFile');
-    const description = document.getElementById('photoDescription').value;
-    const caption = document.getElementById('photoCaption').value;
-    
-    if (!fileInput.files[0]) {
-        showMessage('Please select a photo to upload', 'error');
-        return;
-    }
-    
-    const file = fileInput.files[0];
-    
-    // Validate file size (10MB limit)
-    if (file.size > 10 * 1024 * 1024) {
-        showMessage('File size must be less than 10MB', 'error');
-        return;
-    }
-    
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-        showMessage('Please select an image file', 'error');
-        return;
-    }
-    
-    const formData = new FormData();
-    formData.append('photo', file);
-    formData.append('description', description);
-    formData.append('caption', caption);
-    
-    try {
-        const response = await fetch(`/api/v1/events/<%= event.event_id %>/photos`, {
-            method: 'POST',
-            body: formData // Don't set Content-Type header, let browser set it with boundary
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showMessage('Photo uploaded successfully!', 'success');
-            closePhotoUpload();
-            loadPhotos(); // Reload photos
-        } else {
-            console.error('Photo upload error:', result);
-            showMessage('Error uploading photo: ' + (result.error || result.message || 'Unknown error'), 'error');
-        }
-    } catch (error) {
-        console.error('Error uploading photo:', error);
-        showMessage('Error uploading photo. Please try again.', 'error');
-    }
-});
+// Photo upload form submission is now handled by PhotoManager in setupPhotoEventListeners()
 
 // Camera Functions
 function openCameraCapture() {
@@ -940,69 +827,7 @@ function capturePhoto() {
     stopCamera();
 }
 
-async function saveCapturedPhoto() {
-    const description = document.getElementById('captureDescription').value;
-    const caption = document.getElementById('captureCaption').value;
-    
-    console.log('Starting saveCapturedPhoto:', {
-        hasCapturedData: !!capturedImageData,
-        dataLength: capturedImageData ? capturedImageData.length : 0,
-        description: description,
-        caption: caption
-    });
-    
-    try {
-        if (!capturedImageData) {
-            throw new Error('No captured image data available');
-        }
-        
-        // Convert data URL to blob
-        console.log('Converting data URL to blob...');
-        const response = await fetch(capturedImageData);
-        const blob = await response.blob();
-        console.log('Blob created:', { size: blob.size, type: blob.type });
-        
-        // Create a File object from the blob
-        const file = new File([blob], `camera_capture_${Date.now()}.jpg`, {
-            type: 'image/jpeg'
-        });
-        console.log('File created:', { name: file.name, size: file.size, type: file.type });
-        
-        // Create FormData for multipart upload
-        const formData = new FormData();
-        formData.append('photo', file);
-        formData.append('description', description);
-        formData.append('caption', caption);
-        
-        console.log('FormData created, sending to API...');
-        
-        const apiResponse = await fetch(`/api/v1/events/<%= event.event_id %>/photos`, {
-            method: 'POST',
-            body: formData // Don't set Content-Type header, let browser set it with boundary
-        });
-        
-        console.log('API response received:', {
-            status: apiResponse.status,
-            statusText: apiResponse.statusText,
-            ok: apiResponse.ok
-        });
-        
-        const result = await apiResponse.json();
-        console.log('API result:', result);
-        
-        if (result.success) {
-            showMessage('Photo captured and saved!', 'success');
-            closeCamera();
-            loadPhotos(); // Reload photos
-        } else {
-            console.error('Photo save error:', result);
-            showMessage('Error saving photo: ' + (result.error || result.message || 'Unknown error'), 'error');
-        }
-    } catch (error) {
-        console.error('Error saving captured photo:', error);
-        showMessage('Error saving photo: ' + error.message, 'error');
-    }
-}
+// Camera photo saving is now handled by PhotoManager in setupPhotoEventListeners()
 
 // Add event listeners for photo interactions
 function addPhotoEventListeners() {
@@ -1068,62 +893,7 @@ function viewPhoto(fileData, description, caption) {
     document.body.appendChild(modal);
 }
 
-function editPhoto(photoId, currentDescription, currentCaption) {
-    const newDescription = prompt('Edit description:', currentDescription);
-    const newCaption = prompt('Edit caption:', currentCaption);
-    
-    if (newDescription !== null || newCaption !== null) {
-        updatePhoto(photoId, newDescription, newCaption);
-    }
-}
-
-async function updatePhoto(photoId, description, caption) {
-    try {
-        const response = await fetch(`/api/v1/photos/${photoId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ description, caption })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showMessage('Photo updated successfully!', 'success');
-            loadPhotos(); // Reload photos
-        } else {
-            showMessage('Error updating photo: ' + (result.error || 'Unknown error'), 'error');
-        }
-    } catch (error) {
-        console.error('Error updating photo:', error);
-        showMessage('Error updating photo. Please try again.', 'error');
-    }
-}
-
-async function deletePhoto(photoId) {
-    if (!confirm('Are you sure you want to delete this photo? This action cannot be undone.')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/api/v1/photos/${photoId}`, {
-            method: 'DELETE'
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showMessage('Photo deleted successfully!', 'success');
-            loadPhotos(); // Reload photos
-        } else {
-            showMessage('Error deleting photo: ' + (result.error || 'Unknown error'), 'error');
-        }
-    } catch (error) {
-        console.error('Error deleting photo:', error);
-        showMessage('Error deleting photo. Please try again.', 'error');
-    }
-}
+// Photo management functions are now handled by PhotoManager and PhotoUIController
 
 // Close modals when clicking outside
 document.addEventListener('click', function(event) {
@@ -1137,4 +907,36 @@ document.addEventListener('click', function(event) {
         closeCamera();
     }
 });
+
+// Import JavaScript modules
+</script>
+
+<!-- Scripts -->
+<script src="/javascript/photoApiClient.js"></script>
+<script src="/javascript/fileUtils.js"></script>
+<script src="/javascript/errorHandler.js"></script>
+<script src="/javascript/photoUIController.js"></script>
+<script src="/javascript/photoManager.js"></script>
+
+<script>
+// Setup event listeners for forms
+function setupPhotoEventListeners() {
+    // Photo upload form
+    const uploadForm = document.getElementById('photoUploadForm');
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await photoManager.handleFileUpload(e);
+        });
+    }
+
+    // Photo edit form
+    const editForm = document.getElementById('photoEditForm');
+    if (editForm) {
+        editForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await photoManager.handlePhotoEdit(e);
+        });
+    }
+}
 </script>

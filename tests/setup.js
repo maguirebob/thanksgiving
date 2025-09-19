@@ -4,6 +4,9 @@ require('dotenv').config();
 // Set test environment
 process.env.NODE_ENV = 'test';
 
+// Import browser API mocks
+require('./mocks/browserAPIs');
+
 // Mock console methods to reduce noise during tests
 global.console = {
   ...console,

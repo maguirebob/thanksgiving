@@ -1,5 +1,5 @@
 module.exports = {
-  testEnvironment: 'node',
+  testEnvironment: 'jsdom',
   testMatch: ['**/tests/**/*.test.js'],
   collectCoverageFrom: [
     'src/**/*.js',
@@ -11,5 +11,14 @@ module.exports = {
   coverageReporters: ['text', 'lcov', 'html'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
   testTimeout: 10000,
-  maxWorkers: 1
+  maxWorkers: 1,
+  // Browser API mocks
+  globals: {
+    FileReader: true,
+    File: true,
+    Blob: true,
+    URL: true,
+    Image: true,
+    alert: true
+  }
 };

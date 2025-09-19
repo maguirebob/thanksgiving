@@ -50,6 +50,9 @@ app.use((req, res, next) => {
 app.use('/images', express.static(path.join(__dirname, '../public/images')));
 app.use('/photos', express.static(path.join(__dirname, '../public/photos')));
 
+// Serve JavaScript modules
+app.use('/javascript', express.static(path.join(__dirname, '../public/javascript')));
+
 // JWT Authentication middleware
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -91,7 +94,7 @@ const redirectToLogin = (req, res, next) => {
     // For API requests, return 401
     if (req.path.startsWith('/api/')) {
       return res.status(401).json({
-        success: false,
+      success: false,
         error: 'Access token required',
         message: 'Please provide a valid access token'
       });
@@ -113,7 +116,7 @@ const redirectToLogin = (req, res, next) => {
       return res.redirect('/auth/login');
     }
     req.user = user;
-    next();
+  next();
   });
 };
 
@@ -500,7 +503,7 @@ app.post('/auth/login', async (req, res) => {
                  role: user.role
                }
              });
-  } catch (error) {
+    } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({
       success: false,
@@ -569,7 +572,7 @@ app.put('/admin/users/:id/role', requireAuth, requireAdmin, async (req, res) => 
       });
     }
     
-    res.json({
+  res.json({
       success: true,
       message: 'User role updated successfully',
       user: result.rows[0]
@@ -1054,433 +1057,6 @@ app.delete('/api/v1/events/:id', requireAuth, requireAdmin, async (req, res) => 
   }
 });
 
-// Menu detail page
-app.get('/menu/:id', async (req, res) => {
-  try {
-    const { Client } = require('pg');
-    const client = new Client({
-      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
-      ssl: {
-        require: true,
-        rejectUnauthorized: false
-      }
-    });
-    
-    await client.connect();
-    const result = await client.query('SELECT * FROM "Events" WHERE id = $1', [req.params.id]);
-    await client.end();
-    
-    if (result.rows.length === 0) {
-      return res.status(404).send(`
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Menu Not Found - Thanksgiving Menu App</title>
-            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-        </head>
-        <body>
-            <div class="container mt-5">
-                <div class="row">
-                    <div class="col-md-6 mx-auto text-center">
-                        <h1 class="display-1 text-muted">404</h1>
-                        <h2>Menu Not Found</h2>
-                        <p class="lead">The menu you're looking for doesn't exist.</p>
-                        <a href="/" class="btn btn-primary">← Back to Home</a>
-                    </div>
-                </div>
-            </div>
-        </body>
-        </html>
-      `);
-    }
-    
-    const menu = result.rows[0];
-    
-    res.send(`
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>${menu.event_name} - Thanksgiving Menus</title>
-          <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-          <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+Pro:wght@300;400;600&display=swap" rel="stylesheet">
-          <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-          <style>
-              :root {
-                  --primary-black: #000000;
-                  --secondary-gray: #666666;
-                  --light-gray: #f5f5f5;
-                  --border-gray: #e5e5e5;
-                  --accent-orange: #d2691e;
-                  --white: #ffffff;
-              }
-
-              * {
-                  box-sizing: border-box;
-              }
-
-              body {
-                  font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                  line-height: 1.6;
-                  color: var(--primary-black);
-                  background-color: var(--white);
-                  margin: 0;
-                  padding: 0;
-              }
-
-              /* Typography */
-              h1, h2, h3, h4, h5, h6 {
-                  font-family: 'Playfair Display', Georgia, serif;
-                  font-weight: 600;
-                  line-height: 1.2;
-                  margin-bottom: 1rem;
-              }
-
-              .section-title {
-                  font-size: 2.5rem;
-                  font-weight: 600;
-                  color: var(--primary-black);
-                  margin-bottom: 2rem;
-                  border-bottom: 3px solid var(--accent-orange);
-                  padding-bottom: 0.5rem;
-              }
-
-              /* Header */
-              .site-header {
-                  background-color: var(--white);
-                  border-bottom: 1px solid var(--border-gray);
-                  padding: 1rem 0;
-                  position: sticky;
-                  top: 0;
-                  z-index: 1000;
-                  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-              }
-
-              .site-header .container {
-                  display: flex;
-                  justify-content: space-between;
-                  align-items: center;
-              }
-
-              .site-logo {
-                  font-family: 'Playfair Display', Georgia, serif;
-                  font-size: 2rem;
-                  font-weight: 700;
-                  color: var(--primary-black);
-                  text-decoration: none;
-                  display: flex;
-                  align-items: center;
-                  gap: 0.5rem;
-              }
-
-              .site-logo:hover {
-                  color: var(--accent-orange);
-                  text-decoration: none;
-              }
-
-              .site-nav {
-                  display: flex;
-                  gap: 2rem;
-                  list-style: none;
-                  margin: 0;
-                  padding: 0;
-              }
-
-              .site-nav a {
-                  color: var(--secondary-gray);
-                  text-decoration: none;
-                  font-weight: 400;
-                  font-size: 1rem;
-                  transition: color 0.3s ease;
-              }
-
-              .site-nav a:hover {
-                  color: var(--primary-black);
-              }
-
-              .btn-view-details {
-                  background-color: var(--primary-black);
-                  color: var(--white);
-                  border: none;
-                  padding: 0.75rem 1.5rem;
-                  border-radius: 4px;
-                  font-weight: 600;
-                  text-decoration: none;
-                  display: inline-block;
-                  transition: all 0.3s ease;
-                  font-size: 0.9rem;
-                  text-transform: uppercase;
-                  letter-spacing: 0.5px;
-              }
-
-              .btn-view-details:hover {
-                  background-color: var(--accent-orange);
-                  color: var(--white);
-                  text-decoration: none;
-                  transform: translateY(-2px);
-              }
-
-              .menu-title {
-                  font-family: 'Playfair Display', Georgia, serif;
-                  font-size: 3rem;
-                  font-weight: 600;
-                  color: var(--primary-black);
-                  margin-bottom: 1rem;
-                  line-height: 1.3;
-              }
-
-              .menu-date {
-                  color: var(--secondary-gray);
-                  font-size: 1.1rem;
-                  font-weight: 400;
-                  margin-bottom: 2rem;
-                  text-transform: uppercase;
-                  letter-spacing: 0.5px;
-              }
-
-              .menu-image-container {
-                  height: 600px;
-                  border-radius: 8px;
-                  background-color: #f8f9fa;
-                  border: 1px solid #e5e5e5;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  padding: 2rem;
-                  position: relative;
-                  overflow: hidden;
-                  margin-bottom: 2rem;
-              }
-
-              .menu-image {
-                  max-width: 100%;
-                  max-height: 100%;
-                  object-fit: contain;
-                  object-position: center;
-                  border-radius: 4px;
-                  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                  cursor: zoom-in;
-                  transition: transform 0.3s ease;
-              }
-
-              .menu-image:hover {
-                  transform: scale(1.02);
-              }
-
-              .menu-card {
-                  background: var(--white);
-                  border: 1px solid var(--border-gray);
-                  border-radius: 8px;
-                  overflow: hidden;
-                  transition: all 0.3s ease;
-                  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                  margin-bottom: 2rem;
-              }
-
-              .menu-card .menu-content {
-                  padding: 1.5rem;
-              }
-
-              /* Footer */
-              .site-footer {
-                  background-color: var(--primary-black);
-                  color: var(--white);
-                  padding: 3rem 0 2rem;
-                  margin-top: 4rem;
-              }
-
-              .footer-content {
-                  text-align: center;
-              }
-
-              .footer-logo {
-                  font-family: 'Playfair Display', Georgia, serif;
-                  font-size: 1.5rem;
-                  font-weight: 600;
-                  margin-bottom: 1rem;
-              }
-
-              .footer-text {
-                  color: #cccccc;
-                  font-size: 0.9rem;
-              }
-
-              /* Responsive Design */
-              @media (max-width: 768px) {
-                  .menu-title {
-                      font-size: 2rem;
-                  }
-
-                  .menu-image-container {
-                      height: 400px;
-                      padding: 1rem;
-                  }
-
-                  .site-nav {
-                      gap: 1rem;
-                  }
-
-                  .site-logo {
-                      font-size: 1.5rem;
-                  }
-              }
-
-              @media (max-width: 480px) {
-                  .menu-title {
-                      font-size: 1.8rem;
-                  }
-
-                  .menu-image-container {
-                      height: 350px;
-                      padding: 0.5rem;
-                  }
-              }
-          </style>
-      </head>
-      <body>
-          <header class="site-header">
-              <div class="container">
-                  <a href="/" class="site-logo">
-                      <i class="fas fa-turkey"></i>
-                      Thanksgiving Menus
-                  </a>
-                  <nav>
-                      <ul class="site-nav">
-                          <li><a href="/">Home</a></li>
-                          <li><a href="/api/v1/events">API</a></li>
-                      </ul>
-                  </nav>
-              </div>
-          </header>
-
-          <main class="container">
-              <!-- Back Navigation -->
-              <div class="mb-4">
-                  <a href="/" class="btn-view-details" style="background-color: var(--secondary-gray);">
-                      <i class="fas fa-arrow-left me-2"></i>
-                      Back to All Menus
-                  </a>
-              </div>
-
-              <!-- Menu Detail Layout -->
-              <div class="row">
-                  <!-- Main Content -->
-                  <div class="col-lg-8">
-                      <!-- Menu Header -->
-                      <div class="mb-4">
-                          <div class="menu-date">${new Date(menu.event_date).toLocaleDateString('en-US', { 
-                              weekday: 'long', 
-                              year: 'numeric', 
-                              month: 'long', 
-                              day: 'numeric' 
-                          })}</div>
-                          <h1 class="menu-title">${menu.event_name}</h1>
-                      </div>
-
-                      <!-- Menu Image -->
-                      <div class="mb-5">
-                          <div class="menu-image-container">
-                              <img src="${menu.menu_image_url || '/images/placeholder-menu.jpg'}" 
-                                   alt="${menu.event_name} Menu"
-                                   class="menu-image"
-                                   onerror="this.src='/images/placeholder-menu.jpg'">
-                          </div>
-                      </div>
-
-                      <!-- Description -->
-                      <div class="mb-5">
-                          <h2 class="section-title" style="font-size: 2rem; border-bottom: 2px solid var(--accent-orange);">About This Menu</h2>
-                          <p style="font-size: 1.1rem; line-height: 1.8; color: var(--secondary-gray);">${menu.description || 'A wonderful Thanksgiving celebration with family and friends.'}</p>
-                      </div>
-                  </div>
-
-                  <!-- Sidebar -->
-                  <div class="col-lg-4">
-                      <div class="sticky-top" style="top: 100px;">
-                          <!-- Menu Info Card -->
-                          <div class="menu-card">
-                              <div class="menu-content">
-                                  <h3 style="font-family: 'Playfair Display', Georgia, serif; font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--primary-black);">Menu Details</h3>
-                                  
-                                  <div style="margin-bottom: 1.5rem;">
-                                      <div style="color: var(--secondary-gray); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Year</div>
-                                      <div style="font-weight: 600; color: var(--primary-black); font-size: 1.2rem;">${new Date(menu.event_date).getFullYear()}</div>
-                                  </div>
-
-                                  <div style="margin-bottom: 1.5rem;">
-                                      <div style="color: var(--secondary-gray); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Date</div>
-                                      <div style="font-weight: 600; color: var(--primary-black);">${new Date(menu.event_date).toLocaleDateString('en-US', { 
-                                          year: 'numeric', 
-                                          month: 'long', 
-                                          day: 'numeric' 
-                                      })}</div>
-                                  </div>
-
-                                  <div style="margin-bottom: 1.5rem;">
-                                      <div style="color: var(--secondary-gray); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Created</div>
-                                      <div style="font-weight: 600; color: var(--primary-black);">${new Date(menu.created_at).toLocaleDateString('en-US', { 
-                                          year: 'numeric', 
-                                          month: 'long', 
-                                          day: 'numeric' 
-                                      })}</div>
-                                  </div>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-
-              <!-- Navigation Footer -->
-              <div class="text-center mt-5">
-                  <a href="/" class="btn-view-details" style="padding: 1rem 2rem; font-size: 1.1rem;">
-                      <i class="fas fa-home me-2"></i>
-                      View All Menus
-                  </a>
-              </div>
-          </main>
-
-          <footer class="site-footer">
-              <div class="container">
-                  <div class="footer-content">
-                      <div class="footer-logo">Thanksgiving Menus</div>
-                      <p class="footer-text">Celebrating family traditions through the years</p>
-                  </div>
-              </div>
-          </footer>
-
-          <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-      </body>
-      </html>
-    `);
-  } catch (error) {
-    console.error('Error fetching menu:', error);
-    res.status(500).send(`
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Error - Thanksgiving Menu App</title>
-          <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-      </head>
-      <body>
-          <div class="container mt-5">
-              <div class="row">
-                  <div class="col-md-6 mx-auto text-center">
-                      <h1 class="text-danger">Error</h1>
-                      <p class="lead">Something went wrong while loading the menu.</p>
-                      <a href="/" class="btn btn-primary">← Back to Home</a>
-                  </div>
-              </div>
-          </div>
-      </body>
-      </html>
-    `);
-  }
-});
 
 // Homepage with EJS templating (requires authentication)
 app.get('/', redirectToLogin, async (req, res) => {
@@ -1700,7 +1276,7 @@ app.get('/admin/users', redirectToLogin, requireAdmin, async (req, res) => {
           </tbody>
         </table>
       `;
-    } else {
+} else {
       usersTable = '<p class="text-muted">No users found.</p>';
     }
 
@@ -1785,7 +1361,7 @@ app.get('/admin/users', redirectToLogin, requireAdmin, async (req, res) => {
               .then(data => {
                 if (data.success) {
                   location.reload();
-                } else {
+} else {
                   alert('Error: ' + data.message);
                 }
               })
@@ -1934,6 +1510,891 @@ app.delete('/admin/users/:userId', requireAuth, requireAdmin, async (req, res) =
     res.status(500).json({ 
       success: false, 
       message: 'Error deleting user' 
+    });
+  }
+});
+
+// Debug endpoint to test menu detail data
+app.get('/api/debug/menu/:id', async (req, res) => {
+  try {
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+    
+    await client.connect();
+    const result = await client.query('SELECT * FROM "Events" WHERE id = $1', [req.params.id]);
+    await client.end();
+    
+    res.json({
+      success: true,
+      event: result.rows[0] || null,
+      rowCount: result.rows.length
+    });
+  } catch (error) {
+    console.error('Debug error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Test Photos table
+app.get('/api/test-photos-table', async (req, res) => {
+  try {
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+    
+    await client.connect();
+    
+    // Check if Photos table exists
+    const tableCheck = await client.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'Photos'
+      );
+    `);
+    
+    // Try to query Photos table
+    let photosResult;
+    try {
+      photosResult = await client.query('SELECT COUNT(*) as count FROM "Photos"');
+    } catch (err) {
+      photosResult = { error: err.message };
+    }
+    
+    await client.end();
+    
+    res.json({
+      success: true,
+      tableExists: tableCheck.rows[0].exists,
+      photosQuery: photosResult
+    });
+  } catch (error) {
+    console.error('Photos table test error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Check Photos table structure
+app.get('/api/check-photos-structure', async (req, res) => {
+  try {
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+    
+    await client.connect();
+    
+    // Get column information
+    const columns = await client.query(`
+      SELECT column_name, data_type, is_nullable
+      FROM information_schema.columns 
+      WHERE table_name = 'Photos' 
+      ORDER BY ordinal_position;
+    `);
+    
+    await client.end();
+    
+    res.json({
+      success: true,
+      columns: columns.rows
+    });
+  } catch (error) {
+    console.error('Photos structure check error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Debug endpoint to check specific photo data
+app.get('/api/debug-photo/:photoId', async (req, res) => {
+  try {
+    const { photoId } = req.params;
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+
+    await client.connect();
+    const result = await client.query(
+      'SELECT id, filename, original_name, file_size, mime_type, description, caption, created_at, LENGTH(file_path) as file_path_length, LEFT(file_path, 100) as file_path_preview FROM "Photos" WHERE id = $1',
+      [photoId]
+    );
+    await client.end();
+
+    if (result.rows.length === 0) {
+      return res.json({
+        success: false,
+        message: 'Photo not found'
+      });
+    }
+
+    const photo = result.rows[0];
+    res.json({
+      success: true,
+      photo: {
+        id: photo.id,
+        filename: photo.filename,
+        original_name: photo.original_name,
+        file_size: photo.file_size,
+        mime_type: photo.mime_type,
+        description: photo.description,
+        caption: photo.caption,
+        created_at: photo.created_at,
+        file_path_length: photo.file_path_length,
+        file_path_preview: photo.file_path_preview
+      }
+    });
+  } catch (error) {
+    console.error('Debug photo error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Create Photos table endpoint for Vercel test environment
+app.post('/api/create-photos-table', async (req, res) => {
+  try {
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+
+    await client.connect();
+    
+    // Check if Photos table already exists
+    const tableExists = await client.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'Photos'
+      );
+    `);
+
+    if (tableExists.rows[0].exists) {
+      // Get current table structure for verification
+      const columns = await client.query(`
+        SELECT column_name, data_type, is_nullable, column_default
+        FROM information_schema.columns 
+        WHERE table_name = 'Photos' 
+        ORDER BY ordinal_position;
+      `);
+      
+      // Check foreign key constraints
+      const fkCheck = await client.query(`
+        SELECT 
+          tc.constraint_name, 
+          kcu.column_name, 
+          ccu.table_name AS foreign_table_name,
+          ccu.column_name AS foreign_column_name 
+        FROM 
+          information_schema.table_constraints AS tc 
+          JOIN information_schema.key_column_usage AS kcu
+            ON tc.constraint_name = kcu.constraint_name
+            AND tc.table_schema = kcu.table_schema
+          JOIN information_schema.constraint_column_usage AS ccu
+            ON ccu.constraint_name = tc.constraint_name
+            AND ccu.table_schema = tc.table_schema
+        WHERE tc.constraint_type = 'FOREIGN KEY' 
+          AND tc.table_name='Photos';
+      `);
+      
+      await client.end();
+      return res.json({
+        success: true,
+        message: 'Photos table already exists',
+        action: 'skipped',
+        structure: columns.rows,
+        foreignKey: fkCheck.rows[0] || null
+      });
+    }
+
+    // Create Photos table with correct schema
+    console.log('Creating Photos table...');
+    await client.query(`
+      CREATE TABLE "Photos" (
+        id SERIAL PRIMARY KEY,
+        event_id INTEGER NOT NULL REFERENCES "Events"(id) ON DELETE CASCADE,
+        filename VARCHAR(255) NOT NULL,
+        original_name VARCHAR(255) NOT NULL,
+        file_path TEXT NOT NULL,
+        file_size INTEGER,
+        mime_type VARCHAR(100),
+        description TEXT,
+        caption TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    // Create indexes for better performance
+    console.log('Creating indexes...');
+    await client.query(`CREATE INDEX idx_photos_event_id ON "Photos"(event_id);`);
+    await client.query(`CREATE INDEX idx_photos_created_at ON "Photos"(created_at);`);
+    
+    // Verify table structure
+    const columns = await client.query(`
+      SELECT column_name, data_type, is_nullable, column_default
+      FROM information_schema.columns 
+      WHERE table_name = 'Photos' 
+      ORDER BY ordinal_position;
+    `);
+
+    // Verify foreign key constraint
+    const fkCheck = await client.query(`
+      SELECT 
+        tc.constraint_name, 
+        kcu.column_name, 
+        ccu.table_name AS foreign_table_name,
+        ccu.column_name AS foreign_column_name 
+      FROM 
+        information_schema.table_constraints AS tc 
+        JOIN information_schema.key_column_usage AS kcu
+          ON tc.constraint_name = kcu.constraint_name
+          AND tc.table_schema = kcu.table_schema
+        JOIN information_schema.constraint_column_usage AS ccu
+          ON ccu.constraint_name = tc.constraint_name
+          AND ccu.table_schema = tc.table_schema
+      WHERE tc.constraint_type = 'FOREIGN KEY' 
+        AND tc.table_name='Photos';
+    `);
+
+    // Test insert to verify everything works
+    console.log('Testing table with sample data...');
+    const testResult = await client.query(`
+      INSERT INTO "Photos" (event_id, filename, original_name, file_path, description, caption)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING id, filename, created_at
+    `, [
+      1, // Assuming event with id 1 exists
+      'test-photo.jpg',
+      'test-photo.jpg', 
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+      'Test photo description',
+      'Test photo caption'
+    ]);
+
+    // Clean up test data
+    await client.query('DELETE FROM "Photos" WHERE id = $1', [testResult.rows[0].id]);
+    
+    await client.end();
+
+    res.json({
+      success: true,
+      message: 'Photos table created successfully in Vercel test environment',
+      action: 'created',
+      structure: columns.rows,
+      foreignKey: fkCheck.rows[0] || null,
+      testInsert: 'successful'
+    });
+  } catch (error) {
+    console.error('Error creating Photos table:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creating Photos table: ' + error.message,
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
+// Test photo upload with detailed error logging
+app.post('/api/test-photo-upload', async (req, res) => {
+  try {
+    const { eventId, filename, file_data, description, caption } = req.body;
+    
+    console.log('Test photo upload data:', {
+      eventId,
+      filename,
+      hasFileData: !!file_data,
+      fileDataLength: file_data ? file_data.length : 0,
+      description,
+      caption
+    });
+
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+
+    await client.connect();
+    
+    // Verify event exists
+    const eventResult = await client.query('SELECT id FROM "Events" WHERE id = $1', [eventId]);
+    console.log('Event check result:', eventResult.rows);
+    
+    if (eventResult.rows.length === 0) {
+      await client.end();
+      return res.json({
+        success: false,
+        message: 'Event not found',
+        eventId: eventId
+      });
+    }
+
+    // Try to insert photo
+    const result = await client.query(
+      `INSERT INTO "Photos" (event_id, filename, original_name, file_path, description, caption, mime_type, file_size)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING id, filename, original_name, description, caption, created_at`,
+      [eventId, filename, filename, file_data, description || '', caption || '', 'image/jpeg', file_data ? file_data.length : 0]
+    );
+    
+    console.log('Photo insert result:', result.rows);
+    
+    await client.end();
+
+    res.json({
+      success: true,
+      message: 'Test photo uploaded successfully',
+      photo: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Test photo upload error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Test photo upload error: ' + error.message,
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
+// Test detail template rendering
+app.get('/api/test-detail', async (req, res) => {
+  try {
+    const testEvent = {
+      id: 28,
+      event_name: "Test Thanksgiving 2024",
+      event_date: "2024-11-28",
+      description: "Test description",
+      menu_image_url: "/images/2024_Menu.jpeg",
+      event_location: "Test Location",
+      event_type: "Thanksgiving"
+    };
+    
+    res.render('detail', {
+      title: testEvent.event_name,
+      event: testEvent,
+      user: { id: 3, username: 'bob', role: 'admin' }
+    });
+  } catch (error) {
+    console.error('Template rendering error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
+// Create Photos table endpoint
+app.post('/api/create-photos-table', async (req, res) => {
+  try {
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+
+    await client.connect();
+    
+    // Create Photos table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "Photos" (
+        photo_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        event_id INT NOT NULL,
+        filename VARCHAR(255) NOT NULL,
+        original_filename VARCHAR(255),
+        description TEXT,
+        caption TEXT,
+        taken_date TIMESTAMP WITH TIME ZONE NOT NULL,
+        file_size INT,
+        mime_type VARCHAR(100),
+        file_data TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (event_id) REFERENCES "Events"(id) ON DELETE CASCADE
+      )
+    `);
+    
+    await client.end();
+
+    res.json({
+      success: true,
+      message: 'Photos table created successfully'
+    });
+  } catch (error) {
+    console.error('Error creating Photos table:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creating Photos table: ' + error.message
+    });
+  }
+});
+
+// Drop and recreate Photos table with correct schema
+app.post('/api/recreate-photos-table', async (req, res) => {
+  try {
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+
+    await client.connect();
+    
+    console.log('Dropping existing Photos table...');
+    await client.query('DROP TABLE IF EXISTS "Photos" CASCADE;');
+    
+    console.log('Creating Photos table with correct schema...');
+    await client.query(`
+      CREATE TABLE "Photos" (
+        id SERIAL PRIMARY KEY,
+        event_id INTEGER NOT NULL REFERENCES "Events"(id) ON DELETE CASCADE,
+        filename VARCHAR(500) NOT NULL,
+        original_name VARCHAR(500) NOT NULL,
+        file_path TEXT NOT NULL,
+        file_size INTEGER,
+        mime_type VARCHAR(100),
+        description TEXT,
+        caption TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    // Create indexes
+    await client.query(`CREATE INDEX idx_photos_event_id ON "Photos"(event_id);`);
+    await client.query(`CREATE INDEX idx_photos_created_at ON "Photos"(created_at);`);
+    
+    await client.end();
+
+    res.json({
+      success: true,
+      message: 'Photos table recreated with correct schema'
+    });
+  } catch (error) {
+    console.error('Error recreating Photos table:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error recreating Photos table: ' + error.message
+    });
+  }
+});
+
+// Create Photos table if it doesn't exist
+app.post('/api/setup-photos-table', async (req, res) => {
+  try {
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+
+    await client.connect();
+    
+    // Check if Photos table exists
+    const tableCheck = await client.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_schema = 'public'
+        AND table_name = 'Photos'
+      );
+    `);
+
+    if (!tableCheck.rows[0].exists) {
+      console.log('Creating Photos table...');
+      
+      // Create Photos table
+      await client.query(`
+        CREATE TABLE "Photos" (
+          id SERIAL PRIMARY KEY,
+          event_id INTEGER NOT NULL REFERENCES "Events"(id) ON DELETE CASCADE,
+          filename VARCHAR(500) NOT NULL,
+          original_name VARCHAR(500) NOT NULL,
+          file_path TEXT NOT NULL,
+          file_size INTEGER,
+          mime_type VARCHAR(100),
+          description TEXT,
+          caption TEXT,
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW()
+        );
+      `);
+
+      // Create indexes
+      await client.query(`CREATE INDEX idx_photos_event_id ON "Photos"(event_id);`);
+      await client.query(`CREATE INDEX idx_photos_created_at ON "Photos"(created_at);`);
+      
+      console.log('Photos table created successfully');
+    } else {
+      console.log('Photos table already exists, checking column sizes...');
+      
+      // Check if we need to update column sizes
+      const columns = await client.query(`
+        SELECT column_name, character_maximum_length 
+        FROM information_schema.columns 
+        WHERE table_name = 'Photos' 
+        AND column_name IN ('filename', 'original_name')
+      `);
+      
+      for (const col of columns.rows) {
+        if (col.character_maximum_length < 500) {
+          console.log(`Updating ${col.column_name} column size...`);
+          await client.query(`ALTER TABLE "Photos" ALTER COLUMN ${col.column_name} TYPE VARCHAR(500);`);
+        }
+      }
+    }
+
+    await client.end();
+
+    res.json({
+      success: true,
+      message: 'Photos table setup completed'
+    });
+  } catch (error) {
+    console.error('Error setting up Photos table:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error setting up Photos table: ' + error.message
+    });
+  }
+});
+
+// Photo management API endpoints
+app.get('/api/v1/events/:eventId/photos', requireAuth, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+
+    await client.connect();
+    const result = await client.query(
+      'SELECT id, filename, original_name, description, caption, file_path, file_size, mime_type, created_at FROM "Photos" WHERE event_id = $1 ORDER BY created_at DESC',
+      [eventId]
+    );
+    await client.end();
+
+    res.json({
+      success: true,
+      photos: result.rows
+    });
+  } catch (error) {
+    console.error('Error fetching photos:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching photos'
+    });
+  }
+});
+
+app.post('/api/v1/events/:eventId/photos', requireAuth, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const { filename, file_data, description, caption } = req.body;
+
+    console.log('Photo upload request:', {
+      eventId,
+      filename,
+      hasFileData: !!file_data,
+      fileDataLength: file_data ? file_data.length : 0,
+      description,
+      caption
+    });
+
+    if (!filename || !file_data) {
+      return res.status(400).json({
+        success: false,
+        message: 'Filename and file data are required'
+      });
+    }
+
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+
+    await client.connect();
+    
+    // Verify event exists
+    const eventResult = await client.query('SELECT id FROM "Events" WHERE id = $1', [eventId]);
+    if (eventResult.rows.length === 0) {
+      await client.end();
+      return res.status(404).json({
+        success: false,
+        message: 'Event not found'
+      });
+    }
+
+    // Determine MIME type from filename extension
+    const getMimeType = (filename) => {
+      const ext = filename.toLowerCase().split('.').pop();
+      const mimeTypes = {
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'webp': 'image/webp'
+      };
+      return mimeTypes[ext] || 'image/jpeg';
+    };
+
+    // Calculate file size from base64 data
+    const fileSize = Math.round((file_data.length * 3) / 4);
+
+    // Insert photo
+    const result = await client.query(
+      `INSERT INTO "Photos" (event_id, filename, original_name, file_path, description, caption, mime_type, file_size)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING id, filename, original_name, description, caption, created_at`,
+      [
+        eventId, 
+        filename, 
+        filename, 
+        file_data, 
+        description || '', 
+        caption || '', 
+        getMimeType(filename), 
+        fileSize
+      ]
+    );
+    
+    await client.end();
+
+    res.json({
+      success: true,
+      photo: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error uploading photo:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      eventId: req.params.eventId,
+      body: req.body
+    });
+    res.status(500).json({
+      success: false,
+      message: 'Error uploading photo: ' + error.message,
+      error: error.message
+    });
+  }
+});
+
+// Photo serving endpoint that accepts token as query parameter (for img tags)
+app.get('/api/v1/photos/:photoId', async (req, res) => {
+  try {
+    const { photoId } = req.params;
+    const token = req.query.token || req.headers['authorization']?.split(' ')[1];
+    
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Access token required'
+      });
+    }
+    
+    // Verify token
+    try {
+      const user = jwt.verify(token, JWT_SECRET);
+      req.user = user;
+    } catch (err) {
+      return res.status(403).json({
+        success: false,
+        message: 'Invalid token'
+      });
+    }
+    
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+
+    await client.connect();
+    const result = await client.query(
+      'SELECT id, filename, original_name, description, caption, file_path, mime_type, file_size, created_at FROM "Photos" WHERE id = $1',
+      [photoId]
+    );
+    await client.end();
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Photo not found'
+      });
+    }
+
+    const photo = result.rows[0];
+    
+    // Check if file_path has data URL prefix and strip it
+    let base64Data = photo.file_path;
+    if (base64Data.startsWith('data:')) {
+      const commaIndex = base64Data.indexOf(',');
+      if (commaIndex !== -1) {
+        base64Data = base64Data.substring(commaIndex + 1);
+      }
+    }
+    
+    // Set appropriate headers for image display
+    res.set({
+      'Content-Type': photo.mime_type || 'image/jpeg',
+      'Content-Length': photo.file_size || Buffer.from(base64Data, 'base64').length,
+      'Cache-Control': 'public, max-age=31536000' // Cache for 1 year
+    });
+
+    // Convert base64 data to buffer and send
+    const imageBuffer = Buffer.from(base64Data, 'base64');
+    res.send(imageBuffer);
+  } catch (error) {
+    console.error('Error fetching photo:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching photo'
+    });
+  }
+});
+
+app.put('/api/v1/photos/:photoId', requireAuth, async (req, res) => {
+  try {
+    const { photoId } = req.params;
+    const { description, caption } = req.body;
+
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+
+    await client.connect();
+    
+    // Update photo metadata
+    const result = await client.query(
+      'UPDATE "Photos" SET description = $1, caption = $2, updated_at = NOW() WHERE id = $3 RETURNING id, filename, description, caption, updated_at',
+      [description || '', caption || '', photoId]
+    );
+    
+    await client.end();
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Photo not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      photo: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error updating photo:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating photo'
+    });
+  }
+});
+
+app.delete('/api/v1/photos/:photoId', requireAuth, async (req, res) => {
+  try {
+    const { photoId } = req.params;
+
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+
+    await client.connect();
+    
+    // Delete photo
+    const result = await client.query('DELETE FROM "Photos" WHERE id = $1 RETURNING filename', [photoId]);
+    
+    await client.end();
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Photo not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Photo deleted'
+    });
+  } catch (error) {
+    console.error('Error deleting photo:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error deleting photo'
     });
   }
 });
