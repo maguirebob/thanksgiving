@@ -7,6 +7,118 @@ September 2025
 
 * The purpose of this document is to explain the structure and design of the Thanksgiving Website that I am building to document our Thanksgiving Memories.
 
+# Development Conventions
+
+## AI Assistant Development Workflow
+
+When working with Bob Maguire on this Thanksgiving website project, the AI assistant will follow these specific conventions:
+
+### 1. Design-First Approach
+- **Always create a design and add it to the .md first**
+- Before implementing any new functionality, create a comprehensive design document
+- Include detailed specifications, API endpoints, database schemas, and UI mockups
+- Document all design decisions and rationale in the architecture document
+- Ensure the design is complete and approved before proceeding to implementation
+
+### 2. Test-Driven Development (TDD)
+- **Always create a set of tests following the test-driven development approach next**
+- Write comprehensive test suites before implementing functionality
+- Include unit tests, integration tests, and end-to-end tests
+- Test both success and failure scenarios
+- Ensure tests cover all edge cases and error conditions
+- Use descriptive test names that clearly explain what is being tested
+
+#### Enhanced Testing Requirements (Based on Real-World Experience):
+- **Test Real Data Formats**: Use actual browser-generated data (data URLs, base64) not just mock data
+- **Test Cross-Domain Scenarios**: Verify absolute URLs work in browser context, not just relative URLs
+- **Test Image Validation**: Verify API returns valid image data that can actually be decoded and displayed
+- **Test Authentication Methods**: Test both header-based and query parameter authentication (for img tags)
+- **Test Browser-Specific Behavior**: Mock browser APIs (window.location, FileReader, etc.) in tests
+- **Test End-to-End Workflows**: Test complete user journeys, not just individual components
+- **Test Error Scenarios**: Include network failures, invalid data, and browser security restrictions
+- **Test Data URL Handling**: Verify base64 data with and without data URL prefixes
+- **Test File Upload Edge Cases**: Test with real files, various formats, and size limits
+- **Test UI Integration**: Verify JavaScript modules work together in browser environment
+
+### 3. Gradual Implementation Strategy
+When building a new piece of functionality, implement it gradually in this specific order:
+
+#### Phase 1: Database Layer
+- Create or update database tables and schemas
+- Implement database migrations and seed data
+- Create database connection and query functions
+- Test database operations independently
+
+#### Phase 2: API Endpoints
+- Implement REST API endpoints
+- Add proper authentication and authorization
+- Include comprehensive error handling
+- Test all endpoints with various inputs and scenarios
+
+#### Phase 3: JavaScript/Backend Logic
+- Implement business logic and data processing
+- Add validation and sanitization
+- Create utility functions and helpers
+- Test all JavaScript functionality thoroughly
+
+#### Phase 4: User Interface (UI)
+- Design and implement user interface components
+- Add client-side JavaScript for interactivity
+- Implement responsive design and accessibility
+- Test UI across different devices and browsers
+
+### 4. Documentation Standards
+- Update the architecture document with each new feature
+- Include code examples and usage instructions
+- Document any breaking changes or migration steps
+- Maintain a changelog of significant updates
+
+### 5. Quality Assurance
+- Run all tests before considering a feature complete
+- Verify functionality in both development and production environments
+- Ensure code follows established patterns and conventions
+- Perform thorough testing of all user workflows
+
+### 6. Communication Protocol
+- Provide clear status updates at each phase
+- Explain any deviations from the planned approach
+- Ask for clarification when requirements are ambiguous
+- Confirm completion of each phase before proceeding
+
+### 7. Debugging and Troubleshooting Conventions
+Based on real-world debugging experience, follow these practices when issues arise:
+
+#### Debugging Strategy:
+- **Add Comprehensive Logging**: Include detailed console logs for all major operations
+- **Test API Endpoints Directly**: Use curl or Postman to verify API responses independently
+- **Verify Data Formats**: Check actual data being stored vs. expected formats
+- **Test in Browser Context**: Verify functionality works in real browser environment
+- **Check Authentication Flow**: Verify tokens are valid and properly formatted
+- **Validate URL Generation**: Ensure absolute URLs are generated correctly for cross-domain requests
+
+#### Common Issue Patterns:
+- **Data Format Mismatches**: Browser-generated data (data URLs) vs. expected formats
+- **URL Generation Issues**: Relative vs. absolute URL problems in different environments
+- **Authentication Edge Cases**: Different auth methods needed for different use cases
+- **Browser API Differences**: Mock vs. real browser behavior discrepancies
+- **Cross-Domain Security**: CORS and cookie restrictions in production environments
+
+#### Debugging Tools:
+- **API Debug Endpoints**: Create temporary endpoints to inspect data and state
+- **Console Logging**: Add detailed logging to track data flow and identify issues
+- **Browser DevTools**: Use network tab to verify API calls and responses
+- **Database Inspection**: Query database directly to verify data integrity
+- **Environment Testing**: Test in both development and production environments
+
+#### Issue Resolution Process:
+1. **Identify the Root Cause**: Use logging and debugging tools to pinpoint the issue
+2. **Create Minimal Reproduction**: Isolate the problem to its simplest form
+3. **Test the Fix**: Verify the solution works in all relevant environments
+4. **Update Tests**: Add tests to prevent regression of the same issue
+5. **Document the Solution**: Update architecture document with lessons learned
+
+These conventions ensure consistent, high-quality development with proper planning, testing, and implementation practices.
+
 # Languages and Frameworks
 
 ## Client Side:
@@ -240,6 +352,814 @@ npm run test:watch
 ## 🚧 In Progress:
 - **Photo Management**: Upload and manage photos for events
 - **EJS Templates**: Convert production to use EJS templating system
+
+# Photo Management System Design
+
+## Overview
+The photo management system allows users to upload, view, edit, and delete photos associated with specific Thanksgiving events. The system supports both file uploads and camera capture functionality.
+
+## Database Schema
+
+### Photos Table Structure
+```sql
+CREATE TABLE "Photos" (
+    id SERIAL PRIMARY KEY,
+    event_id INTEGER NOT NULL REFERENCES "Events"(id) ON DELETE CASCADE,
+    filename VARCHAR(255) NOT NULL,
+    original_name VARCHAR(255) NOT NULL,
+    file_path TEXT NOT NULL,  -- Base64 encoded image data
+    file_size INTEGER,
+    mime_type VARCHAR(100),
+    description TEXT,
+    caption TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### Key Design Decisions
+- **Base64 Storage**: Images stored as base64 in `file_path` column for Vercel compatibility
+- **Cascade Delete**: Photos automatically deleted when parent event is deleted
+- **Metadata Tracking**: File size, MIME type, and timestamps for proper management
+- **Flexible Descriptions**: Both description and caption fields for different use cases
+
+## API Endpoints
+
+### Photo Management APIs
+```javascript
+// List photos for an event
+GET /api/v1/events/:eventId/photos
+Authorization: Bearer <token>
+Response: { success: true, photos: [...] }
+
+// Upload new photo
+POST /api/v1/events/:eventId/photos
+Authorization: Bearer <token>
+Body: {
+  filename: "photo.jpg",
+  file_data: "base64_encoded_data",
+  description: "Optional description",
+  caption: "Optional caption"
+}
+Response: { success: true, photo: {...} }
+
+// Get photo data
+GET /api/v1/photos/:photoId
+Authorization: Bearer <token>
+Response: Binary image data with proper headers
+
+// Update photo metadata
+PUT /api/v1/photos/:photoId
+Authorization: Bearer <token>
+Body: { description: "New description", caption: "New caption" }
+Response: { success: true, photo: {...} }
+
+// Delete photo
+DELETE /api/v1/photos/:photoId
+Authorization: Bearer <token>
+Response: { success: true, message: "Photo deleted" }
+```
+
+## User Interface Design
+
+### Photo Upload Interface
+```html
+<!-- Photo Upload Section -->
+<div class="photo-upload-section">
+  <h3>Photos</h3>
+  
+  <!-- Upload Buttons -->
+  <div class="upload-controls mb-3">
+    <button class="btn btn-primary" onclick="openPhotoUpload()">
+      <i class="fas fa-upload"></i> Upload Photo
+    </button>
+    <button class="btn btn-success" onclick="openCameraCapture()">
+      <i class="fas fa-camera"></i> Take Photo
+    </button>
+  </div>
+  
+  <!-- Photo Grid -->
+  <div id="photosGrid" class="row">
+    <!-- Photos will be dynamically loaded here -->
+  </div>
+  
+  <!-- No Photos Message -->
+  <div id="noPhotosMessage" class="text-center text-muted" style="display: none;">
+    <i class="fas fa-images fa-3x mb-3"></i>
+    <p>No photos yet. Upload some memories!</p>
+  </div>
+</div>
+```
+
+### Photo Display Cards
+```html
+<!-- Individual Photo Card -->
+<div class="col-md-4 col-lg-3 mb-4">
+  <div class="card">
+    <img src="/api/v1/photos/123" class="card-img-top" alt="Photo">
+    <div class="card-body">
+      <h6 class="card-title">Photo Caption</h6>
+      <p class="card-text small text-muted">Description</p>
+      <div class="btn-group btn-group-sm">
+        <button class="btn btn-outline-primary" onclick="editPhoto(123)">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="btn btn-outline-danger" onclick="deletePhoto(123)">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+### Upload Modals
+```html
+<!-- File Upload Modal -->
+<div class="modal fade" id="photoUploadModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Upload Photo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="photoUploadForm">
+          <div class="mb-3">
+            <label class="form-label">Select Photo</label>
+            <input type="file" class="form-control" accept="image/*" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <input type="text" class="form-control" placeholder="Optional description">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Caption</label>
+            <input type="text" class="form-control" placeholder="Optional caption">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" form="photoUploadForm" class="btn btn-primary">Upload</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Camera Capture Modal -->
+<div class="modal fade" id="cameraModal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Take Photo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="camera-container">
+          <video id="cameraVideo" autoplay></video>
+          <canvas id="cameraCanvas" style="display: none;"></canvas>
+          <img id="capturedImage" style="display: none;" class="img-fluid">
+        </div>
+        <div class="camera-controls mt-3">
+          <button id="captureBtn" class="btn btn-primary">
+            <i class="fas fa-camera"></i> Capture
+          </button>
+          <button id="retakeBtn" class="btn btn-warning" style="display: none;">
+            <i class="fas fa-redo"></i> Retake
+          </button>
+        </div>
+        <form id="cameraForm" style="display: none;">
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <input type="text" class="form-control" placeholder="Optional description">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Caption</label>
+            <input type="text" class="form-control" placeholder="Optional caption">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button id="savePhotoBtn" type="button" class="btn btn-success" style="display: none;">Save Photo</button>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+## JavaScript Functionality
+
+### Core Photo Management Functions
+```javascript
+// Load photos for current event
+async function loadPhotos() {
+  try {
+    const response = await fetch(`/api/v1/events/${eventId}/photos`, {
+      headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+    });
+    const result = await response.json();
+    
+    if (result.success) {
+      displayPhotos(result.photos);
+    } else {
+      console.error('Error loading photos:', result.message);
+    }
+  } catch (error) {
+    console.error('Error loading photos:', error);
+  }
+}
+
+// Display photos in grid
+function displayPhotos(photos) {
+  const grid = document.getElementById('photosGrid');
+  const noPhotosMsg = document.getElementById('noPhotosMessage');
+  
+  if (photos.length === 0) {
+    grid.innerHTML = '';
+    noPhotosMsg.style.display = 'block';
+    return;
+  }
+  
+  noPhotosMsg.style.display = 'none';
+  grid.innerHTML = photos.map(photo => createPhotoCard(photo)).join('');
+}
+
+// Create photo card HTML
+function createPhotoCard(photo) {
+  return `
+    <div class="col-md-4 col-lg-3 mb-4">
+      <div class="card">
+        <img src="/api/v1/photos/${photo.id}" 
+             class="card-img-top" 
+             alt="${photo.caption || 'Photo'}"
+             style="height: 200px; object-fit: cover;">
+        <div class="card-body">
+          <h6 class="card-title">${photo.caption || 'Untitled'}</h6>
+          <p class="card-text small text-muted">${photo.description || ''}</p>
+          <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-primary" onclick="editPhoto(${photo.id})">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-outline-danger" onclick="deletePhoto(${photo.id})">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Upload photo from file
+async function uploadPhoto(file, description, caption) {
+  const base64 = await fileToBase64(file);
+  
+  const response = await fetch(`/api/v1/events/${eventId}/photos`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${getAuthToken()}`
+    },
+    body: JSON.stringify({
+      filename: file.name,
+      file_data: base64,
+      description: description,
+      caption: caption
+    })
+  });
+  
+  const result = await response.json();
+  if (result.success) {
+    loadPhotos(); // Refresh photo list
+  } else {
+    alert('Error uploading photo: ' + result.message);
+  }
+}
+
+// Camera capture functionality
+async function startCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    document.getElementById('cameraVideo').srcObject = stream;
+  } catch (error) {
+    alert('Error accessing camera: ' + error.message);
+  }
+}
+
+function capturePhoto() {
+  const video = document.getElementById('cameraVideo');
+  const canvas = document.getElementById('cameraCanvas');
+  const ctx = canvas.getContext('2d');
+  
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  ctx.drawImage(video, 0, 0);
+  
+  const imageData = canvas.toDataURL('image/jpeg');
+  document.getElementById('capturedImage').src = imageData;
+  document.getElementById('capturedImage').style.display = 'block';
+  document.getElementById('cameraVideo').style.display = 'none';
+  document.getElementById('captureBtn').style.display = 'none';
+  document.getElementById('retakeBtn').style.display = 'inline-block';
+  document.getElementById('cameraForm').style.display = 'block';
+  document.getElementById('savePhotoBtn').style.display = 'inline-block';
+}
+
+// Edit photo metadata
+async function editPhoto(photoId) {
+  const newDescription = prompt('Enter new description:');
+  const newCaption = prompt('Enter new caption:');
+  
+  if (newDescription !== null || newCaption !== null) {
+    const response = await fetch(`/api/v1/photos/${photoId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      body: JSON.stringify({
+        description: newDescription,
+        caption: newCaption
+      })
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+      loadPhotos(); // Refresh photo list
+    } else {
+      alert('Error updating photo: ' + result.message);
+    }
+  }
+}
+
+// Delete photo
+async function deletePhoto(photoId) {
+  if (confirm('Are you sure you want to delete this photo?')) {
+    const response = await fetch(`/api/v1/photos/${photoId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+      loadPhotos(); // Refresh photo list
+    } else {
+      alert('Error deleting photo: ' + result.message);
+    }
+  }
+}
+```
+
+## Security Considerations
+
+### Authentication & Authorization
+- All photo endpoints require JWT authentication
+- Users can only upload photos to events they have access to
+- Photo deletion requires proper authorization checks
+- File type validation (images only)
+- File size limits to prevent abuse
+
+### Data Validation
+```javascript
+// File validation
+function validateFile(file) {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  const maxSize = 5 * 1024 * 1024; // 5MB
+  
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error('Invalid file type. Only images are allowed.');
+  }
+  
+  if (file.size > maxSize) {
+    throw new Error('File too large. Maximum size is 5MB.');
+  }
+  
+  return true;
+}
+```
+
+## Performance Optimizations
+
+### Image Handling
+- Base64 encoding for Vercel compatibility
+- Proper MIME type headers for browser optimization
+- Cache headers for served images
+- Lazy loading for photo grids
+- Thumbnail generation (future enhancement)
+
+### Database Optimization
+- Indexed foreign key on `event_id`
+- Proper data types for file metadata
+- Cascade delete for data integrity
+- Timestamp indexing for sorting
+
+## Error Handling
+
+### Client-Side Error Handling
+```javascript
+// Comprehensive error handling
+function handlePhotoError(error, operation) {
+  console.error(`Photo ${operation} error:`, error);
+  
+  let message = `Error ${operation} photo: `;
+  if (error.message) {
+    message += error.message;
+  } else {
+    message += 'Unknown error occurred';
+  }
+  
+  // Show user-friendly error message
+  alert(message);
+  
+  // Log for debugging
+  console.error('Full error details:', error);
+}
+```
+
+### Server-Side Error Handling
+- Proper HTTP status codes
+- Detailed error logging
+- Graceful degradation
+- Input validation with meaningful messages
+
+## Future Enhancements
+
+### Planned Features
+1. **Thumbnail Generation**: Automatic thumbnail creation for faster loading
+2. **Photo Albums**: Group photos into albums within events
+3. **Photo Sharing**: Share individual photos or albums
+4. **Bulk Operations**: Select and manage multiple photos
+5. **Photo Metadata**: EXIF data extraction and display
+6. **Advanced Search**: Search photos by content, date, or metadata
+7. **Photo Slideshow**: Full-screen photo viewing experience
+8. **Mobile Optimization**: Touch gestures for mobile photo management
+
+### Technical Improvements
+1. **CDN Integration**: Use Vercel's CDN for faster image delivery
+2. **Image Compression**: Automatic image optimization
+3. **Progressive Loading**: Load photos as user scrolls
+4. **Offline Support**: Cache photos for offline viewing
+5. **Real-time Updates**: WebSocket integration for live photo updates
+
+## Testing Strategy
+
+### Unit Tests
+- Photo upload functionality
+- Base64 encoding/decoding
+- File validation
+- API endpoint responses
+
+### Integration Tests
+- End-to-end photo workflow
+- Database operations
+- Authentication integration
+- Error handling scenarios
+
+### User Acceptance Tests
+- Photo upload from file
+- Camera capture functionality
+- Photo editing and deletion
+- Mobile device compatibility
+- Performance with large photo sets
+
+This photo management system provides a comprehensive solution for managing Thanksgiving event photos with a focus on user experience, security, and performance.
+
+# Photo JavaScript/Backend Logic Design
+
+## Overview
+The photo JavaScript/backend logic handles all client-side photo operations, including file processing, API communication, UI updates, and user interactions. This layer bridges the frontend UI with the backend API endpoints.
+
+## Core JavaScript Modules
+
+### 1. Photo Manager (`photoManager.js`)
+Central module for managing all photo operations.
+
+```javascript
+class PhotoManager {
+  constructor(eventId, authToken) {
+    this.eventId = eventId;
+    this.authToken = authToken;
+    this.photos = [];
+    this.isLoading = false;
+  }
+
+  // Core photo operations
+  async loadPhotos()
+  async uploadPhoto(file, description, caption)
+  async updatePhoto(photoId, description, caption)
+  async deletePhoto(photoId)
+  async capturePhoto(videoElement, canvasElement)
+  
+  // Utility functions
+  async fileToBase64(file)
+  validateFile(file)
+  getAuthToken()
+  handleError(error, operation)
+}
+```
+
+### 2. Photo UI Controller (`photoUIController.js`)
+Manages all UI interactions and updates.
+
+```javascript
+class PhotoUIController {
+  constructor(photoManager) {
+    this.photoManager = photoManager;
+    this.uploadModal = null;
+    this.cameraModal = null;
+    this.photosGrid = null;
+  }
+
+  // UI Management
+  initializeUI()
+  displayPhotos(photos)
+  createPhotoCard(photo)
+  showUploadModal()
+  showCameraModal()
+  hideModals()
+  
+  // Event Handlers
+  setupEventListeners()
+  handleFileUpload(event)
+  handleCameraCapture()
+  handlePhotoEdit(photoId)
+  handlePhotoDelete(photoId)
+}
+```
+
+### 3. Camera Controller (`cameraController.js`)
+Handles camera access and photo capture functionality.
+
+```javascript
+class CameraController {
+  constructor(photoManager) {
+    this.photoManager = photoManager;
+    this.stream = null;
+    this.videoElement = null;
+    this.canvasElement = null;
+  }
+
+  // Camera Operations
+  async startCamera()
+  async stopCamera()
+  capturePhoto()
+  retakePhoto()
+  saveCapturedPhoto(description, caption)
+  
+  // Utility Functions
+  setupCameraElements()
+  cleanupCamera()
+  validateCameraSupport()
+}
+```
+
+## API Communication Layer
+
+### Photo API Client (`photoApiClient.js`)
+Handles all API communication with proper error handling and authentication.
+
+```javascript
+class PhotoApiClient {
+  constructor(baseUrl, authToken) {
+    this.baseUrl = baseUrl;
+    this.authToken = authToken;
+  }
+
+  // API Methods
+  async getPhotos(eventId)
+  async uploadPhoto(eventId, photoData)
+  async getPhoto(photoId)
+  async updatePhoto(photoId, updateData)
+  async deletePhoto(photoId)
+  
+  // Utility Methods
+  async makeRequest(endpoint, options)
+  handleApiError(response)
+  getAuthHeaders()
+}
+```
+
+## File Processing Utilities
+
+### File Utilities (`fileUtils.js`)
+Handles file validation, conversion, and processing.
+
+```javascript
+class FileUtils {
+  // File Validation
+  static validateFile(file)
+  static validateImageFile(file)
+  static validateFileSize(file, maxSize = 5MB)
+  static validateFileType(file, allowedTypes)
+  
+  // File Conversion
+  static async fileToBase64(file)
+  static async base64ToBlob(base64, mimeType)
+  static compressImage(file, quality = 0.8)
+  
+  // File Information
+  static getFileInfo(file)
+  static getMimeType(filename)
+  static calculateFileSize(base64Data)
+}
+```
+
+## Error Handling System
+
+### Error Handler (`errorHandler.js`)
+Centralized error handling and user feedback.
+
+```javascript
+class ErrorHandler {
+  // Error Types
+  static ERROR_TYPES = {
+    NETWORK: 'NETWORK_ERROR',
+    VALIDATION: 'VALIDATION_ERROR',
+    AUTHENTICATION: 'AUTH_ERROR',
+    PERMISSION: 'PERMISSION_ERROR',
+    UNKNOWN: 'UNKNOWN_ERROR'
+  };
+
+  // Error Handling
+  static handleError(error, context)
+  static logError(error, context)
+  static showUserError(error, context)
+  static getErrorMessage(error)
+  
+  // User Feedback
+  static showSuccess(message)
+  static showWarning(message)
+  static showInfo(message)
+}
+```
+
+## State Management
+
+### Photo State (`photoState.js`)
+Manages application state for photo operations.
+
+```javascript
+class PhotoState {
+  constructor() {
+    this.photos = [];
+    this.currentEvent = null;
+    this.isLoading = false;
+    this.error = null;
+    this.uploadProgress = 0;
+  }
+
+  // State Management
+  setPhotos(photos)
+  addPhoto(photo)
+  updatePhoto(photoId, updates)
+  removePhoto(photoId)
+  setLoading(loading)
+  setError(error)
+  setUploadProgress(progress)
+  
+  // Getters
+  getPhotos()
+  getPhotoById(id)
+  getLoadingState()
+  getErrorState()
+}
+```
+
+## Event System
+
+### Photo Events (`photoEvents.js`)
+Custom event system for photo operations.
+
+```javascript
+class PhotoEvents {
+  constructor() {
+    this.events = {};
+  }
+
+  // Event Management
+  on(event, callback)
+  off(event, callback)
+  emit(event, data)
+  
+  // Photo-specific Events
+  PHOTO_UPLOADED = 'photo:uploaded'
+  PHOTO_UPDATED = 'photo:updated'
+  PHOTO_DELETED = 'photo:deleted'
+  PHOTO_LOADED = 'photo:loaded'
+  UPLOAD_PROGRESS = 'upload:progress'
+  ERROR_OCCURRED = 'error:occurred'
+}
+```
+
+## Integration Points
+
+### 1. EJS Template Integration
+```javascript
+// In detail.ejs template
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const eventId = <%= event.id %>;
+    const authToken = getAuthToken();
+    
+    const photoManager = new PhotoManager(eventId, authToken);
+    const uiController = new PhotoUIController(photoManager);
+    
+    uiController.initializeUI();
+    photoManager.loadPhotos();
+  });
+</script>
+```
+
+### 2. API Endpoint Integration
+```javascript
+// All API calls use the PhotoApiClient
+const apiClient = new PhotoApiClient('/api/v1', authToken);
+const photos = await apiClient.getPhotos(eventId);
+```
+
+### 3. Error Handling Integration
+```javascript
+// Centralized error handling
+try {
+  await photoManager.uploadPhoto(file, description, caption);
+} catch (error) {
+  ErrorHandler.handleError(error, 'photo_upload');
+}
+```
+
+## Performance Optimizations
+
+### 1. Lazy Loading
+- Load photos as user scrolls
+- Implement virtual scrolling for large photo sets
+- Cache frequently accessed photos
+
+### 2. Image Optimization
+- Automatic image compression
+- Thumbnail generation
+- Progressive loading
+
+### 3. Memory Management
+- Clean up event listeners
+- Dispose of camera streams
+- Clear unused photo data
+
+## Security Considerations
+
+### 1. Input Validation
+- File type validation
+- File size limits
+- XSS prevention in descriptions/captions
+
+### 2. Authentication
+- JWT token management
+- Automatic token refresh
+- Secure token storage
+
+### 3. Data Sanitization
+- Sanitize user inputs
+- Validate API responses
+- Prevent malicious file uploads
+
+## Testing Strategy
+
+### 1. Unit Tests
+- Test individual functions and methods
+- Mock API calls and DOM interactions
+- Test error handling scenarios
+
+### 2. Integration Tests
+- Test component interactions
+- Test API communication
+- Test UI updates
+
+### 3. End-to-End Tests
+- Test complete user workflows
+- Test camera functionality
+- Test file upload/download
+
+## Browser Compatibility
+
+### 1. Modern Browsers
+- Chrome 80+
+- Firefox 75+
+- Safari 13+
+- Edge 80+
+
+### 2. Feature Detection
+- Camera API support
+- File API support
+- Canvas API support
+- Fetch API support
+
+### 3. Fallbacks
+- File input fallback for camera
+- Basic upload for advanced features
+- Graceful degradation
+
+This JavaScript/backend logic design provides a robust, maintainable, and scalable foundation for photo management functionality.
 
 ## 📋 Future Enhancements:
 - **Photo Upload**: Complete Multer integration for photo management
