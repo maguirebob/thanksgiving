@@ -3,6 +3,7 @@ const path = require('path');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const multer = require('multer');
+const expressLayouts = require('express-ejs-layouts');
 
 // Create Express app
 const app = express();
@@ -10,6 +11,16 @@ const app = express();
 // Basic middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Cookie parsing middleware
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
+
+// EJS configuration
+app.use(expressLayouts);
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, '../views'));
+app.set('layout', 'layout');
 
 // JWT secret
 const JWT_SECRET = process.env.JWT_SECRET || 'thanksgiving-menu-jwt-secret-key-change-in-production';
@@ -66,6 +77,45 @@ const authenticateToken = (req, res, next) => {
 };
 
 const requireAuth = authenticateToken;
+
+// Middleware to redirect unauthenticated users to login
+const redirectToLogin = (req, res, next) => {
+  // Check for token in Authorization header or cookie
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+  const cookieToken = req.cookies?.authToken;
+
+  const authToken = token || cookieToken;
+
+  if (!authToken) {
+    // For API requests, return 401
+    if (req.path.startsWith('/api/')) {
+      return res.status(401).json({
+        success: false,
+        error: 'Access token required',
+        message: 'Please provide a valid access token'
+      });
+    }
+    // For web requests, redirect to login
+    return res.redirect('/auth/login');
+  }
+  
+  // If token exists, verify it
+  jwt.verify(authToken, JWT_SECRET, (err, user) => {
+    if (err) {
+      if (req.path.startsWith('/api/')) {
+        return res.status(403).json({
+          success: false,
+          error: 'Invalid token',
+          message: 'Access token is invalid or expired'
+        });
+      }
+      return res.redirect('/auth/login');
+    }
+    req.user = user;
+    next();
+  });
+};
 
 const requireAdmin = (req, res, next) => {
   if (req.user && req.user.role === 'admin') {
@@ -431,17 +481,25 @@ app.post('/auth/login', async (req, res) => {
       { expiresIn: '24h' }
     );
     
-    res.json({
-      success: true,
-      message: 'Login successful',
-      token: token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role
-      }
-    });
+             // Set token as HTTP-only cookie
+             res.cookie('authToken', token, {
+               httpOnly: true,
+               secure: process.env.NODE_ENV === 'production',
+               sameSite: 'strict',
+               maxAge: 24 * 60 * 60 * 1000 // 24 hours
+             });
+
+             res.json({
+               success: true,
+               message: 'Login successful',
+               token: token,
+               user: {
+                 id: user.id,
+                 username: user.username,
+                 email: user.email,
+                 role: user.role
+               }
+             });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({
@@ -452,11 +510,12 @@ app.post('/auth/login', async (req, res) => {
   }
 });
 
-// User logout (JWT is stateless, so logout is handled client-side)
+// User logout (clear cookie)
 app.post('/auth/logout', (req, res) => {
+  res.clearCookie('authToken');
   res.json({
     success: true,
-    message: 'Logout successful - please remove the token from client storage'
+    message: 'Logout successful'
   });
 });
 
@@ -469,39 +528,6 @@ app.get('/auth/me', requireAuth, (req, res) => {
 });
 
 // Admin routes
-// Get all users (admin only)
-app.get('/admin/users', requireAuth, requireAdmin, async (req, res) => {
-  try {
-    const { Client } = require('pg');
-    const client = new Client({
-      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
-      ssl: {
-        require: true,
-        rejectUnauthorized: false
-      }
-    });
-    
-    await client.connect();
-    
-    const result = await client.query(
-      'SELECT id, username, email, role, created_at FROM "Users" ORDER BY created_at DESC'
-    );
-    
-    await client.end();
-    
-    res.json({
-      success: true,
-      users: result.rows
-    });
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch users',
-      message: error.message
-    });
-  }
-});
 
 // Update user role (admin only)
 app.put('/admin/users/:id/role', requireAuth, requireAdmin, async (req, res) => {
@@ -813,7 +839,7 @@ function getMenuDescription(year) {
 }
 
 // Add API routes for events (using direct pg for now)
-app.get('/api/v1/events', async (req, res) => {
+app.get('/api/v1/events', requireAuth, async (req, res) => {
   try {
     const { Client } = require('pg');
     const client = new Client({
@@ -844,7 +870,7 @@ app.get('/api/v1/events', async (req, res) => {
 });
 
 // Get single event by ID
-app.get('/api/v1/events/:id', async (req, res) => {
+app.get('/api/v1/events/:id', requireAuth, async (req, res) => {
   try {
     const { Client } = require('pg');
     const client = new Client({
@@ -1456,8 +1482,8 @@ app.get('/menu/:id', async (req, res) => {
   }
 });
 
-// Add homepage with proper design matching original EJS templates
-app.get('/', async (req, res) => {
+// Homepage with EJS templating (requires authentication)
+app.get('/', redirectToLogin, async (req, res) => {
   try {
     // Fetch events data
     const { Client } = require('pg');
@@ -1475,516 +1501,449 @@ app.get('/', async (req, res) => {
     
     const events = result.rows;
     
+    // Calculate stats
+    const stats = {
+      totalEvents: events.length,
+      latestYear: events.length > 0 ? new Date(events[0].event_date).getFullYear() : null,
+      earliestYear: events.length > 0 ? new Date(events[events.length - 1].event_date).getFullYear() : null
+    };
+    
+    res.render('index', {
+      title: 'Thanksgiving Menus',
+      events: events,
+      stats: stats,
+      user: req.user
+    });
+  } catch (error) {
+    console.error('Error loading homepage:', error);
+    res.render('error', {
+      title: 'Error',
+      message: 'Something went wrong while loading the page.',
+      error: error.message
+    });
+  }
+});
+
+// Menu detail page with EJS templating (requires authentication)
+app.get('/menu/:id', redirectToLogin, async (req, res) => {
+  try {
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+    
+    await client.connect();
+    const result = await client.query('SELECT * FROM "Events" WHERE id = $1', [req.params.id]);
+    await client.end();
+    
+    if (result.rows.length === 0) {
+      return res.render('error', {
+        title: 'Menu Not Found',
+        message: 'The requested menu could not be found.',
+        error: 'Menu not found'
+      });
+    }
+    
+    const event = result.rows[0];
+    res.render('detail', {
+      title: event.event_name,
+      event: event,
+      user: req.user
+    });
+  } catch (error) {
+    console.error('Error loading menu detail:', error);
+    res.render('error', {
+      title: 'Error',
+      message: 'Something went wrong while loading the menu.',
+      error: error.message
+    });
+  }
+});
+
+// Authentication pages
+app.get('/auth/login', (req, res) => {
+  try {
+    res.render('auth/login', {
+      title: 'Login',
+      error: null,
+      success: null,
+      username: ''
+    });
+  } catch (error) {
+    console.error('Error rendering login page:', error);
+    res.status(500).send('Error loading login page');
+  }
+});
+
+app.get('/auth/register', (req, res) => {
+  try {
+    res.render('auth/register', {
+      title: 'Register',
+      error: null,
+      success: null,
+      username: '',
+      email: ''
+    });
+  } catch (error) {
+    console.error('Error rendering register page:', error);
+    res.status(500).send('Error loading register page');
+  }
+});
+
+app.get('/auth/profile', redirectToLogin, (req, res) => {
+  res.render('auth/profile', {
+    title: 'Profile',
+    user: req.user
+  });
+});
+
+// Admin pages
+app.get('/admin', redirectToLogin, requireAdmin, (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Admin Dashboard</title>
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    </head>
+    <body>
+      <div class="container mt-4">
+        <h1>Admin Dashboard</h1>
+        <div class="alert alert-info">
+          <h4>Welcome, ${req.user ? req.user.username : 'Admin'}!</h4>
+          <p>You are logged in as: <strong>${req.user ? req.user.role : 'Unknown'}</strong></p>
+        </div>
+        <div class="row">
+          <div class="col-md-3 mb-2">
+            <a href="/admin/users" class="btn btn-primary w-100">Manage Users</a>
+          </div>
+          <div class="col-md-3 mb-2">
+            <a href="/" class="btn btn-success w-100">View Site</a>
+          </div>
+          <div class="col-md-3 mb-2">
+            <a href="/api/v1/events" class="btn btn-info w-100">API Endpoints</a>
+          </div>
+          <div class="col-md-3 mb-2">
+            <a href="#" id="logoutBtn" class="btn btn-warning w-100">Logout</a>
+          </div>
+        </div>
+      </div>
+      <script>
+        document.getElementById('logoutBtn').addEventListener('click', async function(e) {
+          e.preventDefault();
+          try {
+            await fetch('/auth/logout', { method: 'POST' });
+            window.location.href = '/auth/login';
+          } catch (error) {
+            window.location.href = '/auth/login';
+          }
+        });
+      </script>
+    </body>
+    </html>
+  `);
+});
+
+app.get('/admin/users', redirectToLogin, requireAdmin, async (req, res) => {
+  try {
+    // Fetch all users for admin management
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+
+    await client.connect();
+    const result = await client.query('SELECT id, username, email, role, created_at FROM "Users" ORDER BY created_at DESC');
+    await client.end();
+
+    const users = result.rows;
+
+    // Create HTML table for users
+    let usersTable = '';
+    if (users && users.length > 0) {
+      usersTable = `
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${users.map(user => `
+              <tr>
+                <td>${user.id}</td>
+                <td>${user.username}</td>
+                <td>${user.email}</td>
+                <td><span class="badge ${user.role === 'admin' ? 'bg-danger' : 'bg-primary'}">${user.role}</span></td>
+                <td>${new Date(user.created_at).toLocaleDateString()}</td>
+                <td>
+                  <button class="btn btn-sm btn-warning" onclick="changeRole(${user.id}, '${user.role}')">
+                    Change Role
+                  </button>
+                  ${user.role !== 'admin' ? `<button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id})">Delete</button>` : ''}
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    } else {
+      usersTable = '<p class="text-muted">No users found.</p>';
+    }
+
     res.send(`
       <!DOCTYPE html>
-      <html lang="en">
+      <html>
       <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Thanksgiving Menus - Thanksgiving Menus</title>
-          <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-          <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+Pro:wght@300;400;600&display=swap" rel="stylesheet">
-          <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-          <style>
-              :root {
-                  --primary-black: #000000;
-                  --secondary-gray: #666666;
-                  --light-gray: #f5f5f5;
-                  --border-gray: #e5e5e5;
-                  --accent-orange: #d2691e;
-                  --white: #ffffff;
-              }
-
-              * {
-                  box-sizing: border-box;
-              }
-
-              body {
-                  font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                  line-height: 1.6;
-                  color: var(--primary-black);
-                  background-color: var(--white);
-                  margin: 0;
-                  padding: 0;
-              }
-
-              /* Typography */
-              h1, h2, h3, h4, h5, h6 {
-                  font-family: 'Playfair Display', Georgia, serif;
-                  font-weight: 600;
-                  line-height: 1.2;
-                  margin-bottom: 1rem;
-              }
-
-              .main-title {
-                  font-size: 3.5rem;
-                  font-weight: 700;
-                  color: var(--primary-black);
-                  margin-bottom: 2rem;
-                  text-align: center;
-              }
-
-              .section-title {
-                  font-size: 2.5rem;
-                  font-weight: 600;
-                  color: var(--primary-black);
-                  margin-bottom: 2rem;
-                  border-bottom: 3px solid var(--accent-orange);
-                  padding-bottom: 0.5rem;
-              }
-
-              /* Header */
-              .site-header {
-                  background-color: var(--white);
-                  border-bottom: 1px solid var(--border-gray);
-                  padding: 1rem 0;
-                  position: sticky;
-                  top: 0;
-                  z-index: 1000;
-                  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-              }
-
-              .site-header .container {
-                  display: flex;
-                  justify-content: space-between;
-                  align-items: center;
-              }
-
-              .site-logo {
-                  font-family: 'Playfair Display', Georgia, serif;
-                  font-size: 2rem;
-                  font-weight: 700;
-                  color: var(--primary-black);
-                  text-decoration: none;
-                  display: flex;
-                  align-items: center;
-                  gap: 0.5rem;
-              }
-
-              .site-logo:hover {
-                  color: var(--accent-orange);
-                  text-decoration: none;
-              }
-
-              .site-nav {
-                  display: flex;
-                  gap: 2rem;
-                  list-style: none;
-                  margin: 0;
-                  padding: 0;
-              }
-
-              .site-nav a {
-                  color: var(--secondary-gray);
-                  text-decoration: none;
-                  font-weight: 400;
-                  font-size: 1rem;
-                  transition: color 0.3s ease;
-              }
-
-              .site-nav a:hover {
-                  color: var(--primary-black);
-              }
-
-              /* Grid Layout */
-              .menu-grid {
-                  display: grid;
-                  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-                  gap: 2rem;
-                  margin: 2rem 0;
-              }
-
-              .menu-card {
-                  background: var(--white);
-                  border: 1px solid var(--border-gray);
-                  border-radius: 8px;
-                  overflow: hidden;
-                  transition: all 0.3s ease;
-                  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-              }
-
-              .menu-card:hover {
-                  transform: translateY(-4px);
-                  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-                  border-color: var(--accent-orange);
-              }
-
-              .menu-image-container {
-                  position: relative;
-                  width: 100%;
-                  height: 250px;
-                  overflow: hidden;
-                  background-color: var(--light-gray);
-              }
-
-              .menu-image {
-                  width: 100%;
-                  height: 100%;
-                  object-fit: cover;
-                  object-position: center;
-                  transition: transform 0.3s ease;
-              }
-
-              .menu-card:hover .menu-image {
-                  transform: scale(1.05);
-              }
-
-              .menu-content {
-                  padding: 1.5rem;
-              }
-
-              .menu-title {
-                  font-family: 'Playfair Display', Georgia, serif;
-                  font-size: 1.5rem;
-                  font-weight: 600;
-                  color: var(--primary-black);
-                  margin-bottom: 0.5rem;
-                  line-height: 1.3;
-              }
-
-              .menu-date {
-                  color: var(--secondary-gray);
-                  font-size: 0.9rem;
-                  font-weight: 400;
-                  margin-bottom: 1rem;
-                  text-transform: uppercase;
-                  letter-spacing: 0.5px;
-              }
-
-              .menu-description {
-                  color: var(--secondary-gray);
-                  font-size: 0.95rem;
-                  line-height: 1.6;
-                  margin-bottom: 1.5rem;
-                  display: -webkit-box;
-                  -webkit-line-clamp: 3;
-                  -webkit-box-orient: vertical;
-                  overflow: hidden;
-              }
-
-              .btn-view-details {
-                  background-color: var(--primary-black);
-                  color: var(--white);
-                  border: none;
-                  padding: 0.75rem 1.5rem;
-                  border-radius: 4px;
-                  font-weight: 600;
-                  text-decoration: none;
-                  display: inline-block;
-                  transition: all 0.3s ease;
-                  font-size: 0.9rem;
-                  text-transform: uppercase;
-                  letter-spacing: 0.5px;
-              }
-
-              .btn-view-details:hover {
-                  background-color: var(--accent-orange);
-                  color: var(--white);
-                  text-decoration: none;
-                  transform: translateY(-2px);
-              }
-
-              /* Featured Menu */
-              .featured-menu {
-                  grid-column: 1 / -1;
-                  display: grid;
-                  grid-template-columns: 1fr 1fr;
-                  gap: 2rem;
-                  margin-bottom: 3rem;
-                  background: var(--white);
-                  border: 1px solid var(--border-gray);
-                  border-radius: 8px;
-                  overflow: hidden;
-                  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-              }
-
-              .featured-menu .menu-image-container {
-                  height: 400px;
-              }
-
-              .featured-menu .menu-content {
-                  padding: 2rem;
-                  display: flex;
-                  flex-direction: column;
-                  justify-content: center;
-              }
-
-              .featured-menu .menu-title {
-                  font-size: 2.5rem;
-                  margin-bottom: 1rem;
-              }
-
-              .featured-menu .menu-description {
-                  font-size: 1.1rem;
-                  -webkit-line-clamp: 6;
-              }
-
-              /* Stats Section */
-              .stats-section {
-                  background-color: var(--light-gray);
-                  padding: 3rem 0;
-                  margin: 3rem 0;
-                  text-align: center;
-              }
-
-              /* Footer */
-              .site-footer {
-                  background-color: var(--primary-black);
-                  color: var(--white);
-                  padding: 3rem 0 2rem;
-                  margin-top: 4rem;
-              }
-
-              .footer-content {
-                  text-align: center;
-              }
-
-              .footer-logo {
-                  font-family: 'Playfair Display', Georgia, serif;
-                  font-size: 1.5rem;
-                  font-weight: 600;
-                  margin-bottom: 1rem;
-              }
-
-              .footer-text {
-                  color: #cccccc;
-                  font-size: 0.9rem;
-              }
-
-              /* Responsive Design */
-              @media (max-width: 768px) {
-                  .main-title {
-                      font-size: 2.5rem;
-                  }
-
-                  .menu-grid {
-                      grid-template-columns: 1fr;
-                      gap: 1.5rem;
-                  }
-
-                  .featured-menu {
-                      grid-template-columns: 1fr;
-                  }
-
-                  .featured-menu .menu-image-container {
-                      height: 250px;
-                  }
-
-                  .site-nav {
-                      gap: 1rem;
-                  }
-
-                  .site-logo {
-                      font-size: 1.5rem;
-                  }
-              }
-
-              @media (max-width: 480px) {
-                  .main-title {
-                      font-size: 2rem;
-                  }
-
-                  .menu-content {
-                      padding: 1rem;
-                  }
-
-                  .featured-menu .menu-content {
-                      padding: 1.5rem;
-                  }
-              }
-          </style>
+        <title>User Management</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
       </head>
       <body>
-          <header class="site-header">
-              <div class="container">
-                  <a href="/" class="site-logo">
-                      <i class="fas fa-turkey"></i>
-                      Thanksgiving Menus
-                  </a>
-                  <nav>
-                      <ul class="site-nav">
-                          <li><a href="/">Home</a></li>
-                          <li><a href="/api/v1/events">API</a></li>
-                      </ul>
-                  </nav>
-              </div>
-          </header>
-
-          <main class="container">
-              <!-- Hero Section -->
-              <div class="text-center mb-5">
-                  <h1 class="main-title">
-                      Thanksgiving Menus Through the Years
-                  </h1>
-                  <p class="lead text-muted">A collection of Thanksgiving menus from 1994 to today</p>
-              </div>
-
-              <!-- Overview Section -->
-              <div class="stats-section">
-                  <div class="container">
-                      <h2 class="section-title text-center">The Story Behind the Tradition</h2>
-                      <div class="row align-items-center">
-                          <div class="col-lg-4 text-center mb-4 mb-lg-0">
-                              <img src="/photos/Grandma80s.jpg" 
-                                   alt="Grandma Maguire in her 80s" 
-                                   class="img-fluid rounded shadow"
-                                   style="max-width: 300px; height: auto; object-fit: cover;">
-                          </div>
-                          <div class="col-lg-8">
-                              <div class="overview-text" style="font-size: 1.1rem; line-height: 1.8; color: var(--secondary-gray);">
-                                  <p>
-                                      I can't remember if I was out of either just out of college or I was still attending RIT. I remember that Grandma Maguire could no longer host Thanksgiving at her apartment in Amesbury, Mass, it was too much for her. I remember suggesting to my Father and Linda that they should have it at their house and that I would be willing to go pick her up.
-                                  </p>
-                                  <p>
-                                      Grandma Maguire loved Thanksgiving. It was her favorite holiday because it was a day of serving others and the family gathering together. This is a picture of her when she was in her 80s, she was born in 1906 and passed away in early 2005.
-                                  </p>
-                                  <p>
-                                      Grandma and I put together a menu from her recipes, Gourmet, and my cookbooks. The only thing I definitely remember us making was a deboned turkey from my Cajun cookbook, her Turkey soup that we made from the carcass, and the orange and cranberry relish that my Aunt Emogene was so fond of. After that it just became a tradition and grew into what you see below.
-                                  </p>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-
-              ${events.length > 0 ? `
-              <!-- Featured Menu (Latest) -->
-              <div class="featured-menu">
-                  <div class="menu-image-container">
-                      <img src="${events[0].menu_image_url || '/images/placeholder-menu.jpg'}" 
-                           alt="${events[0].event_name}" 
-                           class="menu-image"
-                           onerror="this.src='/images/placeholder-menu.jpg'">
-                  </div>
-                  <div class="menu-content">
-                      <div class="menu-date">${new Date(events[0].event_date).toLocaleDateString('en-US', { 
-                          weekday: 'long', 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
-                      })}</div>
-                      <h2 class="menu-title">${events[0].event_name}</h2>
-                      <p class="menu-description">${events[0].description || 'A wonderful Thanksgiving celebration with family and friends.'}</p>
-                      <a href="/menu/${events[0].id}" class="btn-view-details">
-                          View Full Menu
-                      </a>
-                  </div>
-              </div>
-
-              <!-- All Menus Grid -->
-              <h2 class="section-title">All Thanksgiving Menus</h2>
-              <div class="menu-grid">
-                  ${events.slice(1).map(event => `
-                      <div class="menu-card">
-                          <div class="menu-image-container">
-                              <img src="${event.menu_image_url || '/images/placeholder-menu.jpg'}" 
-                                   alt="${event.event_name}" 
-                                   class="menu-image"
-                                   onerror="this.src='/images/placeholder-menu.jpg'">
-                          </div>
-                          <div class="menu-content">
-                              <div class="menu-date">${new Date(event.event_date).toLocaleDateString('en-US', { 
-                                  weekday: 'long', 
-                                  year: 'numeric', 
-                                  month: 'long', 
-                                  day: 'numeric' 
-                              })}</div>
-                              <h3 class="menu-title">${event.event_name}</h3>
-                              <p class="menu-description">${event.description || 'A wonderful Thanksgiving celebration with family and friends.'}</p>
-                              <a href="/menu/${event.id}" class="btn-view-details">
-                                  View Details
-                              </a>
-                          </div>
-                      </div>
-                  `).join('')}
-              </div>
-              ` : `
-              <div class="text-center py-5">
-                  <i class="fas fa-utensils" style="font-size: 4rem; color: var(--accent-orange); margin-bottom: 1rem;"></i>
-                  <h2 style="color: var(--secondary-gray);">No Menus Found</h2>
-                  <p style="color: var(--secondary-gray);">There are no Thanksgiving menus in the collection yet.</p>
-              </div>
-              `}
-
-              <!-- Newsletter Signup Section -->
-              <div class="stats-section">
-                  <div class="container text-center">
-                      <h2 class="section-title">Stay Updated</h2>
-                      <p class="lead text-muted mb-4">Get notified when new menus are added to the collection</p>
-                      <div class="row justify-content-center">
-                          <div class="col-md-6">
-                              <div class="input-group">
-                                  <input type="email" class="form-control" placeholder="Enter your email address" aria-label="Email address">
-                                  <button class="btn btn-dark" type="button">Subscribe</button>
-                              </div>
-                              <small class="text-muted mt-2 d-block">We'll never share your email with anyone else.</small>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-          </main>
-
-          <footer class="site-footer">
-              <div class="container">
-                  <div class="footer-content">
-                      <div class="footer-logo">Thanksgiving Menus</div>
-                      <p class="footer-text">Celebrating family traditions through the years</p>
-                  </div>
-              </div>
-          </footer>
-
-          <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <div class="container mt-4">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>User Management</h1>
+            <a href="/admin" class="btn btn-secondary">
+              <i class="fas fa-arrow-left me-2"></i>
+              Back to Dashboard
+            </a>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">All Users (${users ? users.length : 0})</h5>
+            </div>
+            <div class="card-body">
+              ${usersTable}
+            </div>
+          </div>
+        </div>
+        
+        <script>
+          // Get the auth token from localStorage or cookies
+          function getAuthToken() {
+            return localStorage.getItem('authToken') || getCookie('authToken');
+          }
+          
+          // Helper function to get cookie value
+          function getCookie(name) {
+            const value = \`; \${document.cookie}\`;
+            const parts = value.split(\`; \${name}=\`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+          }
+          
+          function changeRole(userId, currentRole) {
+            const newRole = currentRole === 'admin' ? 'user' : 'admin';
+            if (confirm(\`Are you sure you want to change this user's role to \${newRole}?\`)) {
+              const token = getAuthToken();
+              fetch(\`/admin/users/\${userId}/role\`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': \`Bearer \${token}\`
+                },
+                body: JSON.stringify({ role: newRole })
+              })
+              .then(response => response.json())
+              .then(data => {
+                if (data.success) {
+                  location.reload();
+                } else {
+                  alert('Error: ' + data.message);
+                }
+              })
+              .catch(error => {
+                alert('Error: ' + error.message);
+              });
+            }
+          }
+          
+          function deleteUser(userId) {
+            if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+              const token = getAuthToken();
+              fetch(\`/admin/users/\${userId}\`, {
+                method: 'DELETE',
+                headers: {
+                  'Authorization': \`Bearer \${token}\`
+                }
+              })
+              .then(response => response.json())
+              .then(data => {
+                if (data.success) {
+                  location.reload();
+                } else {
+                  alert('Error: ' + data.message);
+                }
+              })
+              .catch(error => {
+                alert('Error: ' + error.message);
+              });
+            }
+          }
+        </script>
       </body>
       </html>
     `);
   } catch (error) {
-    console.error('Error loading homepage:', error);
+    console.error('Error loading admin users page:', error);
     res.status(500).send(`
       <!DOCTYPE html>
-      <html lang="en">
-      <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Error - Thanksgiving Menu App</title>
-          <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-      </head>
+      <html>
+      <head><title>Error</title></head>
       <body>
-          <div class="container mt-5">
-              <div class="row">
-                  <div class="col-md-6 mx-auto text-center">
-                      <h1 class="text-danger">Error</h1>
-                      <p class="lead">Something went wrong while loading the page.</p>
-                      <a href="/" class="btn btn-primary">← Try Again</a>
-                  </div>
-              </div>
-          </div>
+        <h1>User Management Error</h1>
+        <p>Error: ${error.message}</p>
+        <p><a href="/admin">Back to Admin Dashboard</a></p>
       </body>
       </html>
     `);
   }
 });
 
+// Admin API endpoints for user management
+app.put('/admin/users/:userId/role', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { role } = req.body;
+
+    if (!role || !['admin', 'user'].includes(role)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid role. Must be "admin" or "user"' 
+      });
+    }
+
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+
+    await client.connect();
+    
+    // Check if user exists
+    const userResult = await client.query('SELECT id, username, role FROM "Users" WHERE id = $1', [userId]);
+    if (userResult.rows.length === 0) {
+      await client.end();
+      return res.status(404).json({ 
+        success: false, 
+        message: 'User not found' 
+      });
+    }
+
+    const user = userResult.rows[0];
+    
+    // Prevent changing your own role
+    if (user.id === req.user.id) {
+      await client.end();
+      return res.status(400).json({ 
+        success: false, 
+        message: 'You cannot change your own role' 
+      });
+    }
+
+    // Update user role
+    await client.query('UPDATE "Users" SET role = $1 WHERE id = $2', [role, userId]);
+    await client.end();
+
+    res.json({ 
+      success: true, 
+      message: `User ${user.username} role changed to ${role}` 
+    });
+  } catch (error) {
+    console.error('Error changing user role:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error changing user role' 
+    });
+  }
+});
+
+app.delete('/admin/users/:userId', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+
+    await client.connect();
+    
+    // Check if user exists
+    const userResult = await client.query('SELECT id, username, role FROM "Users" WHERE id = $1', [userId]);
+    if (userResult.rows.length === 0) {
+      await client.end();
+      return res.status(404).json({ 
+        success: false, 
+        message: 'User not found' 
+      });
+    }
+
+    const user = userResult.rows[0];
+    
+    // Prevent deleting yourself
+    if (user.id === req.user.id) {
+      await client.end();
+      return res.status(400).json({ 
+        success: false, 
+        message: 'You cannot delete your own account' 
+      });
+    }
+
+    // Prevent deleting admin users
+    if (user.role === 'admin') {
+      await client.end();
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Cannot delete admin users' 
+      });
+    }
+
+    // Delete user
+    await client.query('DELETE FROM "Users" WHERE id = $1', [userId]);
+    await client.end();
+
+    res.json({ 
+      success: true, 
+      message: `User ${user.username} deleted successfully` 
+    });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error deleting user' 
+    });
+  }
+});
+
 // Catch-all for other routes
 app.get('*', (req, res) => {
-  res.status(404).json({
-    error: 'Route not found',
-    path: req.path,
-    availableRoutes: [
-      '/', 
-      '/api/test', 
-      '/api/pg-test', 
-      '/api/db-test', 
-      '/api/v1/events', 
-      '/health', 
-      '/setup-db', 
-      '/load-all-menus',
-      '/auth/register',
-      '/auth/login',
-      '/auth/logout',
-      '/auth/me',
-      '/admin/users'
-    ],
-    timestamp: new Date().toISOString()
+  res.status(404).render('error', {
+    title: 'Page Not Found',
+    message: 'The page you are looking for does not exist.',
+    error: '404 Not Found'
   });
 });
 

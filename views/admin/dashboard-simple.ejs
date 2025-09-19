@@ -1,0 +1,76 @@
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-12">
+      <h1 class="mb-4">Admin Dashboard</h1>
+      
+      <!-- Welcome Message -->
+      <div class="alert alert-info">
+        <h4>Welcome, <%= user ? user.username : 'Admin' %>!</h4>
+        <p>You are logged in as: <strong><%= user ? user.role : 'Unknown' %></strong></p>
+      </div>
+      
+      <!-- Statistics Cards -->
+      <div class="row mb-4">
+        <div class="col-md-4">
+          <div class="card text-center">
+            <div class="card-body">
+              <h5 class="card-title">Total Users</h5>
+              <h2 class="text-primary"><%= stats ? stats.totalUsers : 0 %></h2>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card text-center">
+            <div class="card-body">
+              <h5 class="card-title">Total Events</h5>
+              <h2 class="text-success"><%= stats ? stats.totalEvents : 0 %></h2>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card text-center">
+            <div class="card-body">
+              <h5 class="card-title">Total Photos</h5>
+              <h2 class="text-info"><%= stats ? stats.totalPhotos : 0 %></h2>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Quick Actions</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-3 mb-2">
+              <a href="/admin/users" class="btn btn-primary w-100">
+                <i class="fas fa-users me-2"></i>
+                Manage Users
+              </a>
+            </div>
+            <div class="col-md-3 mb-2">
+              <a href="/" class="btn btn-success w-100">
+                <i class="fas fa-home me-2"></i>
+                View Site
+              </a>
+            </div>
+            <div class="col-md-3 mb-2">
+              <a href="/api/v1/events" class="btn btn-info w-100">
+                <i class="fas fa-code me-2"></i>
+                API Endpoints
+              </a>
+            </div>
+            <div class="col-md-3 mb-2">
+              <a href="#" id="logoutBtn" class="btn btn-warning w-100">
+                <i class="fas fa-sign-out-alt me-2"></i>
+                Logout
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
