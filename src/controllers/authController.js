@@ -79,11 +79,11 @@ const register = async (req, res) => {
 
     const { username, email, password, first_name, last_name } = req.body;
 
-    // Check if user already exists
+    // Check if user already exists (case-insensitive username check)
     const existingUser = await User.findOne({
       where: {
         [Op.or]: [
-          { username: username },
+          { username_lower: username.toLowerCase() },
           { email: email }
         ]
       }
@@ -101,6 +101,7 @@ const register = async (req, res) => {
     const password_hash = await User.hashPassword(password);
     const user = await User.create({
       username,
+      username_lower: username.toLowerCase(),
       email,
       password_hash,
       first_name: first_name || null,

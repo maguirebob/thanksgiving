@@ -5,6 +5,7 @@ CREATE TYPE enum_Users_role AS ENUM ('user', 'admin');
 CREATE TABLE IF NOT EXISTS "Users" (
   user_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   username VARCHAR(255) UNIQUE NOT NULL,
+  username_lower VARCHAR(255) UNIQUE NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
   role enum_Users_role NOT NULL DEFAULT 'user',
@@ -13,6 +14,9 @@ CREATE TABLE IF NOT EXISTS "Users" (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Create index for case-insensitive username lookups
+CREATE INDEX IF NOT EXISTS idx_users_username_lower ON "Users"(username_lower);
 
 -- Create table Sessions (uppercase)
 CREATE TABLE IF NOT EXISTS "Sessions" (
@@ -82,8 +86,8 @@ INSERT INTO events (event_name, event_type, event_location, event_date, event_de
 ('Thanksgiving Dinner 2024', 'Thanksgiving', 'Middletown, NJ','2024-11-28',  'This dinner was marked by the death of Tricia''s Grandmother, Grandman Goodse', 'Thanksgiving 2024', '2024_Menu.jpeg');
 
 -- Insert sample users (password is 'password123' for both)
-INSERT INTO "Users" (username, email, password_hash, role, first_name, last_name) VALUES
-('admin', 'admin@thanksgiving.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'Admin', 'User'),
-('bob', 'bob@thanksgiving.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'Bob', 'Maguire');
+INSERT INTO "Users" (username, username_lower, email, password_hash, role, first_name, last_name) VALUES
+('admin', 'admin', 'admin@thanksgiving.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'Admin', 'User'),
+('bob', 'bob', 'bob@thanksgiving.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'Bob', 'Maguire');
 
 
