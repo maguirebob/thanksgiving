@@ -215,43 +215,33 @@ describe('Event Model', () => {
 
     beforeEach(async () => {
       event = await db.Event.create({
-        year: 2023,
-        title: 'Thanksgiving 2023',
+        event_name: 'Thanksgiving 2023',
+        event_type: 'Thanksgiving',
+        event_date: '2023-11-23',
+        event_location: 'Test Location',
         description: 'Test event',
-        date: '2023-11-23',
-        location: 'Test Location',
-        host: 'Test Host',
-        menu_items: JSON.stringify([
-          { item: 'Turkey', category: 'Main Course' }
-        ])
+        menu_image_url: '/images/2023_Menu.jpeg'
       });
     });
 
     test('should update event fields', async () => {
-      event.title = 'Updated Thanksgiving 2023';
+      event.event_name = 'Updated Thanksgiving 2023';
       event.description = 'Updated description';
-      event.location = 'Updated Location';
+      event.event_location = 'Updated Location';
       await event.save();
 
-      const updatedEvent = await db.Event.findByPk(event.event_id);
-      expect(updatedEvent.title).toBe('Updated Thanksgiving 2023');
+      const updatedEvent = await db.Event.findByPk(event.id);
+      expect(updatedEvent.event_name).toBe('Updated Thanksgiving 2023');
       expect(updatedEvent.description).toBe('Updated description');
-      expect(updatedEvent.location).toBe('Updated Location');
+      expect(updatedEvent.event_location).toBe('Updated Location');
     });
 
-    test('should update menu items', async () => {
-      const newMenuItems = [
-        { item: 'Turkey', category: 'Main Course' },
-        { item: 'Mashed Potatoes', category: 'Side Dish' },
-        { item: 'Pumpkin Pie', category: 'Dessert' }
-      ];
-
-      event.menu_items = JSON.stringify(newMenuItems);
+    test('should update menu image URL', async () => {
+      event.menu_image_url = '/images/updated_2023_Menu.jpeg';
       await event.save();
 
-      const updatedEvent = await db.Event.findByPk(event.event_id);
-      const parsedMenuItems = JSON.parse(updatedEvent.menu_items);
-      expect(parsedMenuItems).toHaveLength(3);
+      const updatedEvent = await db.Event.findByPk(event.id);
+      expect(updatedEvent.menu_image_url).toBe('/images/updated_2023_Menu.jpeg');
     });
 
     test('should update updated_at timestamp', async () => {
@@ -260,7 +250,7 @@ describe('Event Model', () => {
       // Wait a bit to ensure timestamp difference
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      event.title = 'Updated Title';
+      event.event_name = 'Updated Title';
       await event.save();
 
       expect(event.updated_at.getTime()).toBeGreaterThan(originalUpdatedAt.getTime());
@@ -270,16 +260,15 @@ describe('Event Model', () => {
   describe('Event Deletion', () => {
     test('should delete event', async () => {
       const event = await db.Event.create({
-        year: 2023,
-        title: 'Thanksgiving 2023',
+        event_name: 'Thanksgiving 2023',
+        event_type: 'Thanksgiving',
+        event_date: '2023-11-23',
+        event_location: 'Test Location',
         description: 'Test event',
-        date: '2023-11-23',
-        location: 'Test Location',
-        host: 'Test Host',
-        menu_items: JSON.stringify([])
+        menu_image_url: '/images/2023_Menu.jpeg'
       });
 
-      const eventId = event.event_id;
+      const eventId = event.id;
       await event.destroy();
 
       const deletedEvent = await db.Event.findByPk(eventId);
@@ -288,33 +277,31 @@ describe('Event Model', () => {
 
     test('should cascade delete photos when event is deleted', async () => {
       const event = await db.Event.create({
-        year: 2023,
-        title: 'Thanksgiving 2023',
+        event_name: 'Thanksgiving 2023',
+        event_type: 'Thanksgiving',
+        event_date: '2023-11-23',
+        event_location: 'Test Location',
         description: 'Test event',
-        date: '2023-11-23',
-        location: 'Test Location',
-        host: 'Test Host',
-        menu_items: JSON.stringify([])
+        menu_image_url: '/images/2023_Menu.jpeg'
       });
 
       // Create a photo for the event
       const photo = await db.Photo.create({
-        event_id: event.event_id,
+        event_id: event.id,
         filename: 'test-photo.jpg',
-        original_filename: 'test-photo.jpg',
+        original_name: 'test-photo.jpg',
         description: 'Test photo',
         caption: 'Test caption',
-        taken_date: new Date(),
+        file_path: 'data:image/jpeg;base64,' + Buffer.from('fake image data').toString('base64'),
         file_size: 1024000,
-        mime_type: 'image/jpeg',
-        file_path: '/uploads/test-photo.jpg'
+        mime_type: 'image/jpeg'
       });
 
       // Delete the event
       await event.destroy();
 
       // Check that the photo was also deleted
-      const deletedPhoto = await db.Photo.findByPk(photo.photo_id);
+      const deletedPhoto = await db.Photo.findByPk(photo.id);
       expect(deletedPhoto).toBeNull();
     });
   });
@@ -322,43 +309,40 @@ describe('Event Model', () => {
   describe('Event Associations', () => {
     test('should have many photos', async () => {
       const event = await db.Event.create({
-        year: 2023,
-        title: 'Thanksgiving 2023',
+        event_name: 'Thanksgiving 2023',
+        event_type: 'Thanksgiving',
+        event_date: '2023-11-23',
+        event_location: 'Test Location',
         description: 'Test event',
-        date: '2023-11-23',
-        location: 'Test Location',
-        host: 'Test Host',
-        menu_items: JSON.stringify([])
+        menu_image_url: '/images/2023_Menu.jpeg'
       });
 
       // Create photos for the event
       await db.Photo.bulkCreate([
         {
-          event_id: event.event_id,
+          event_id: event.id,
           filename: 'photo1.jpg',
-          original_filename: 'photo1.jpg',
+          original_name: 'photo1.jpg',
           description: 'Photo 1',
           caption: 'Caption 1',
-          taken_date: new Date(),
+          file_path: 'data:image/jpeg;base64,' + Buffer.from('fake image data 1').toString('base64'),
           file_size: 1024000,
-          mime_type: 'image/jpeg',
-          file_path: '/uploads/photo1.jpg'
+          mime_type: 'image/jpeg'
         },
         {
-          event_id: event.event_id,
+          event_id: event.id,
           filename: 'photo2.jpg',
-          original_filename: 'photo2.jpg',
+          original_name: 'photo2.jpg',
           description: 'Photo 2',
           caption: 'Caption 2',
-          taken_date: new Date(),
+          file_path: 'data:image/jpeg;base64,' + Buffer.from('fake image data 2').toString('base64'),
           file_size: 1024000,
-          mime_type: 'image/jpeg',
-          file_path: '/uploads/photo2.jpg'
+          mime_type: 'image/jpeg'
         }
       ]);
 
       // Test association
-      const eventWithPhotos = await db.Event.findByPk(event.event_id, {
+      const eventWithPhotos = await db.Event.findByPk(event.id, {
         include: [db.Photo]
       });
 
