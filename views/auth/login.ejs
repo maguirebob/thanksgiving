@@ -17,7 +17,7 @@
             </div>
           <% } %>
 
-          <form method="POST" action="/auth/login">
+          <form id="loginForm">
             <div class="mb-3">
               <label for="username" class="form-label">Username</label>
               <input 
@@ -63,4 +63,57 @@
   </div>
 </div>
 
+<script>
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+  
+  try {
+    const response = await fetch('/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, password })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      // Store JWT token in localStorage
+      localStorage.setItem('authToken', data.token);
+      
+      // Redirect to homepage
+      window.location.href = '/';
+    } else {
+      // Show error message
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'alert alert-danger';
+      errorDiv.textContent = data.message || 'Login failed';
+      
+      const form = document.getElementById('loginForm');
+      form.insertBefore(errorDiv, form.firstChild);
+      
+      // Remove error after 5 seconds
+      setTimeout(() => {
+        errorDiv.remove();
+      }, 5000);
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'alert alert-danger';
+    errorDiv.textContent = 'Network error. Please try again.';
+    
+    const form = document.getElementById('loginForm');
+    form.insertBefore(errorDiv, form.firstChild);
+    
+    setTimeout(() => {
+      errorDiv.remove();
+    }, 5000);
+  }
+});
+</script>
 

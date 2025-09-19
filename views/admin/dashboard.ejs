@@ -53,16 +53,14 @@
                   <% recentEvents.forEach(event => { %>
                     <tr>
                       <td>
-                        <a href="/menu/<%= event.event_id %>" class="text-decoration-none">
+                        <a href="/menu/<%= event.id %>" class="text-decoration-none">
                           <%= event.event_name %>
                         </a>
                       </td>
                       <td><%= new Date(event.event_date).toLocaleDateString() %></td>
-                      <td><%= event.event_location %></td>
+                      <td>Family Home</td>
                       <td>
-                        <span class="badge bg-secondary">
-                          <%= event.photos ? event.photos.length : 0 %>
-                        </span>
+                        <span class="badge bg-secondary">0</span>
                       </td>
                       <td><%= new Date(event.created_at).toLocaleDateString() %></td>
                     </tr>

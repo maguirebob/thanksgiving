@@ -20,7 +20,7 @@
             <div class="col-lg-8">
                 <div class="overview-text" style="font-size: 1.1rem; line-height: 1.8; color: var(--secondary-gray);">
                     <p>
-                        I can't remember if I was out of either just out of college or I was still attending RIT. I remember that Grandma Maguire could no longer host Thanksgiving at her apartment in Amesbury, Mass, it was too much for her. I remember suggesting to my Father and Linda that they should have it at their house and that I would be willing to go pick her up.
+                        I can't remember if I was just out of college or I was still attending RIT. I remember that Grandma Maguire could no longer host Thanksgiving at her apartment in Amesbury, Mass, it was too much for her. I remember suggesting to my Father and Linda that they should have it at their house and that I would be willing to go pick her up.
                     </p>
                     <p>
                         Grandma Maguire loved Thanksgiving. It was her favorite holiday because it was a day of serving others and the family gathering together. This is a picture of her when she was in her 80s, she was born in 1906 and passed away in early 2005.
@@ -38,8 +38,8 @@
 <% if (events && events.length > 0) { %>
     <div class="featured-menu">
         <div class="menu-image-container">
-            <img src="/images/<%= events[0].menu_image_filename %>" 
-                 alt="<%= events[0].menu_title %>" 
+            <img src="<%= events[0].menu_image_url %>" 
+                 alt="<%= events[0].event_name %>" 
                  class="menu-image"
                  onerror="this.src='/images/placeholder-menu.jpg'">
         </div>
@@ -50,10 +50,9 @@
                 month: 'long', 
                 day: 'numeric' 
             }) %></div>
-            <h2 class="menu-title"><%= events[0].menu_title %></h2>
-            <div class="menu-location"><%= events[0].event_location %></div>
-            <p class="menu-description"><%= events[0].event_description %></p>
-            <a href="/menu/<%= events[0].event_id %>" class="btn-view-details">
+            <h2 class="menu-title"><%= events[0].event_name %></h2>
+            <p class="menu-description"><%= events[0].description || 'A wonderful Thanksgiving celebration with family and friends.' %></p>
+            <a href="/menu/<%= events[0].id %>" class="btn-view-details">
                 View Full Menu
             </a>
         </div>
@@ -68,8 +67,8 @@
             <% if (index > 0) { %> <!-- Skip first item as it's featured above -->
                 <div class="menu-card">
                     <div class="menu-image-container">
-                        <img src="/images/<%= event.menu_image_filename %>" 
-                             alt="<%= event.menu_title %>" 
+                        <img src="<%= event.menu_image_url %>" 
+                             alt="<%= event.event_name %>" 
                              class="menu-image"
                              onerror="this.src='/images/placeholder-menu.jpg'">
                     </div>
@@ -80,10 +79,9 @@
                             month: 'long', 
                             day: 'numeric' 
                         }) %></div>
-                        <h3 class="menu-title"><%= event.menu_title %></h3>
-                        <div class="menu-location"><%= event.event_location %></div>
-                        <p class="menu-description"><%= event.event_description %></p>
-                        <a href="/menu/<%= event.event_id %>" class="btn-view-details">
+                        <h3 class="menu-title"><%= event.event_name %></h3>
+                        <p class="menu-description"><%= event.description || 'A wonderful Thanksgiving celebration with family and friends.' %></p>
+                        <a href="/menu/<%= event.id %>" class="btn-view-details">
                             View Details
                         </a>
                     </div>
