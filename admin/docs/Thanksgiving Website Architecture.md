@@ -1161,6 +1161,330 @@ try {
 
 This JavaScript/backend logic design provides a robust, maintainable, and scalable foundation for photo management functionality.
 
+# Enhanced Menu Details Page Design Options
+
+## Overview
+The enhanced menu details page will provide a comprehensive view of each Thanksgiving event, including the original menu image, uploaded photos, recipes, and blog posts. This creates a rich, multi-media experience for users to explore and engage with Thanksgiving memories.
+
+## Design Option 1: Single Page with Tabbed Navigation
+
+### Layout Structure
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Thanksgiving 2023                        │
+│                    November 23, 2023                        │
+├─────────────────────────────────────────────────────────────┤
+│  [Menu Image]  │  [Event Details]  │  [Quick Stats]        │
+│                │  - Location       │  - Photos: 12         │
+│                │  - Host           │  - Recipes: 8         │
+│                │  - Attendees      │  - Blog Posts: 3      │
+├─────────────────────────────────────────────────────────────┤
+│  [Photos] [Recipes] [Blog] [Comments]                      │
+├─────────────────────────────────────────────────────────────┤
+│  Content Area (changes based on selected tab)              │
+│                                                             │
+│  Photos Tab: Photo grid with upload/camera options         │
+│  Recipes Tab: Recipe cards with search and filtering       │
+│  Blog Tab: Blog post list with read more functionality     │
+│  Comments Tab: Comment system with replies                 │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Features
+- **Hero Section**: Large menu image with event details overlay
+- **Tabbed Navigation**: Easy switching between content types
+- **Quick Stats**: Overview of content available
+- **Responsive Design**: Works on all device sizes
+- **Search/Filter**: Within each content type
+
+## Design Option 2: Multi-Page Approach
+
+### Page Structure
+```
+1. Main Details Page
+   ├── Menu Image (large, prominent)
+   ├── Event Information
+   ├── Quick Navigation Cards
+   │   ├── [Photos] → Photos Page
+   │   ├── [Recipes] → Recipes Page
+   │   ├── [Blog] → Blog Page
+   │   └── [Comments] → Comments Page
+   └── Recent Activity Feed
+
+2. Photos Page
+   ├── Photo Grid (enhanced)
+   ├── Upload/Camera Options
+   ├── Photo Categories/Tags
+   └── Photo Slideshow Mode
+
+3. Recipes Page
+   ├── Recipe Grid/List
+   ├── Search and Filter
+   ├── Recipe Categories
+   └── Recipe Detail Modal/Page
+
+4. Blog Page
+   ├── Blog Post List
+   ├── Search and Filter
+   ├── Blog Categories
+   └── Full Blog Post View
+
+5. Comments Page
+   ├── Comment Thread
+   ├── Reply System
+   ├── Comment Moderation
+   └── Comment Statistics
+```
+
+## Design Option 3: Dashboard-Style Layout
+
+### Layout Structure
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Thanksgiving 2023                        │
+│                    November 23, 2023                        │
+├─────────────────────────────────────────────────────────────┤
+│  [Menu Image]  │  [Event Details]  │  [Quick Actions]      │
+│                │  - Location       │  - Upload Photo       │
+│                │  - Host           │  - Add Recipe         │
+│                │  - Attendees      │  - Write Blog         │
+├─────────────────────────────────────────────────────────────┤
+│  [Content Grid - 2x2 Layout]                               │
+│  ┌─────────────┬─────────────┬─────────────┬─────────────┐ │
+│  │   Photos    │  Recipes    │    Blog     │  Comments   │ │
+│  │   (12)      │    (8)      │     (3)     │     (15)    │ │
+│  │             │             │             │             │ │
+│  │ [View All]  │ [View All]  │ [View All]  │ [View All]  │ │
+│  └─────────────┴─────────────┴─────────────┴─────────────┘ │
+├─────────────────────────────────────────────────────────────┤
+│  [Recent Activity Timeline]                                │
+│  - Photo uploaded by Bob (2 hours ago)                     │
+│  - Recipe added by Sarah (1 day ago)                       │
+│  - Blog post published by Mom (3 days ago)                 │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Design Option 4: Mobile-First Card Layout
+
+### Layout Structure
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Thanksgiving 2023                        │
+│                    November 23, 2023                        │
+├─────────────────────────────────────────────────────────────┤
+│  [Menu Image - Full Width]                                 │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│  [Event Details Card]                                       │
+│  - Location: Family Home                                    │
+│  - Host: Mom & Dad                                          │
+│  - Attendees: 15 people                                     │
+├─────────────────────────────────────────────────────────────┤
+│  [Content Cards - Stacked]                                 │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │  📸 Photos (12)                    [View All] →        │ │
+│  │  [Photo Preview Grid]                                  │ │
+│  └─────────────────────────────────────────────────────────┘ │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │  🍽️ Recipes (8)                   [View All] →        │ │
+│  │  [Recipe Preview Cards]                                │ │
+│  └─────────────────────────────────────────────────────────┘ │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │  📝 Blog (3)                       [View All] →        │ │
+│  │  [Blog Post Previews]                                  │ │
+│  └─────────────────────────────────────────────────────────┘ │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │  💬 Comments (15)                  [View All] →        │ │
+│  │  [Recent Comments]                                     │ │
+│  └─────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Design Option 5: Timeline-Based Layout
+
+### Layout Structure
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Thanksgiving 2023                        │
+│                    November 23, 2023                        │
+├─────────────────────────────────────────────────────────────┤
+│  [Menu Image - Hero Section]                               │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│  [Timeline Navigation]                                      │
+│  [Before] [During] [After] [Recipes] [Blog]                │
+├─────────────────────────────────────────────────────────────┤
+│  [Timeline Content]                                         │
+│                                                             │
+│  Before Thanksgiving:                                       │
+│  - Recipe planning blog posts                              │
+│  - Shopping list photos                                    │
+│  - Preparation photos                                      │
+│                                                             │
+│  During Thanksgiving:                                       │
+│  - Menu photos                                             │
+│  - Family photos                                           │
+│  - Cooking process photos                                  │
+│                                                             │
+│  After Thanksgiving:                                        │
+│  - Leftover recipe ideas                                   │
+│  - Reflection blog posts                                   │
+│  - Thank you notes                                         │
+│                                                             │
+│  Recipes:                                                  │
+│  - All recipes from this year                              │
+│  - Family favorites                                        │
+│  - New experiments                                         │
+│                                                             │
+│  Blog:                                                     │
+│  - Preparation stories                                     │
+│  - Cooking adventures                                      │
+│  - Family memories                                         │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Design Option 6: Magazine-Style Layout
+
+### Layout Structure
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Thanksgiving 2023                        │
+│                    November 23, 2023                        │
+├─────────────────────────────────────────────────────────────┤
+│  [Menu Image - Large Hero]                                 │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│  [Featured Content Row]                                     │
+│  ┌─────────────┬─────────────┬─────────────┐               │
+│  │  Featured   │  Featured   │  Featured   │               │
+│  │   Photo     │   Recipe    │   Blog      │               │
+│  │             │             │             │               │
+│  │ [View All]  │ [View All]  │ [View All]  │               │
+│  └─────────────┴─────────────┴─────────────┘               │
+├─────────────────────────────────────────────────────────────┤
+│  [Content Sections]                                         │
+│                                                             │
+│  📸 Photos Section                                          │
+│  [Photo Grid with Categories]                               │
+│                                                             │
+│  🍽️ Recipes Section                                         │
+│  [Recipe Cards with Search]                                 │
+│                                                             │
+│  📝 Blog Section                                            │
+│  [Blog Post List with Excerpts]                             │
+│                                                             │
+│  💬 Comments Section                                        │
+│  [Comment Thread with Replies]                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Recommended Approach: Hybrid Design
+
+### Primary Layout: Option 1 (Tabbed Navigation)
+- **Best for**: Desktop users who want to see all content in one place
+- **Advantages**: Easy navigation, all content accessible, good for power users
+- **Mobile**: Collapses to Option 4 (Card Layout)
+
+### Secondary Layout: Option 4 (Mobile-First Cards)
+- **Best for**: Mobile users and casual browsing
+- **Advantages**: Touch-friendly, easy to scan, good for quick access
+- **Desktop**: Can be used as an alternative view
+
+### Content Organization:
+1. **Hero Section**: Menu image with event details
+2. **Quick Stats**: Overview of available content
+3. **Tabbed Navigation**: Photos, Recipes, Blog, Comments
+4. **Content Areas**: Each tab shows relevant content
+5. **Search/Filter**: Within each content type
+6. **Recent Activity**: Timeline of recent additions
+
+## Implementation Strategy
+
+### Phase 1: Enhanced Details Page
+- Add tabbed navigation to existing details page
+- Implement photo section (already done)
+- Add placeholder sections for recipes and blog
+
+### Phase 2: Recipe Management
+- Create recipe database schema
+- Implement recipe CRUD operations
+- Add recipe search and filtering
+
+### Phase 3: Blog Management
+- Create blog post database schema
+- Implement blog CRUD operations
+- Add blog post editor and viewer
+
+### Phase 4: Comments System
+- Create comments database schema
+- Implement comment CRUD operations
+- Add comment moderation features
+
+### Phase 5: Advanced Features
+- Search across all content types
+- Content recommendations
+- Social sharing features
+- Content analytics
+
+## Database Schema Additions
+
+### Recipes Table
+```sql
+CREATE TABLE "Recipes" (
+    id SERIAL PRIMARY KEY,
+    event_id INTEGER NOT NULL REFERENCES "Events"(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    ingredients TEXT NOT NULL,
+    instructions TEXT NOT NULL,
+    prep_time INTEGER, -- minutes
+    cook_time INTEGER, -- minutes
+    servings INTEGER,
+    difficulty VARCHAR(50), -- easy, medium, hard
+    category VARCHAR(100), -- appetizer, main, side, dessert
+    image_url VARCHAR(500),
+    created_by INTEGER REFERENCES "Users"(id),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### Blog Posts Table
+```sql
+CREATE TABLE "BlogPosts" (
+    id SERIAL PRIMARY KEY,
+    event_id INTEGER NOT NULL REFERENCES "Events"(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    excerpt TEXT,
+    status VARCHAR(50) DEFAULT 'draft', -- draft, published, archived
+    featured_image VARCHAR(500),
+    tags TEXT[], -- array of tags
+    created_by INTEGER REFERENCES "Users"(id),
+    published_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### Comments Table
+```sql
+CREATE TABLE "Comments" (
+    id SERIAL PRIMARY KEY,
+    event_id INTEGER NOT NULL REFERENCES "Events"(id) ON DELETE CASCADE,
+    content_type VARCHAR(50) NOT NULL, -- photo, recipe, blog
+    content_id INTEGER NOT NULL,
+    parent_id INTEGER REFERENCES "Comments"(id), -- for replies
+    content TEXT NOT NULL,
+    created_by INTEGER REFERENCES "Users"(id),
+    status VARCHAR(50) DEFAULT 'approved', -- pending, approved, rejected
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+This design provides a comprehensive, user-friendly way to access all Thanksgiving content while maintaining good performance and usability across different devices and user preferences.
+
 ## 📋 Future Enhancements:
 - **Photo Upload**: Complete Multer integration for photo management
 - **Search Functionality**: Search menus by year, content, or keywords

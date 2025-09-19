@@ -41,6 +41,9 @@ class PhotoManager {
         } else {
           console.error('PhotoManager: UI controller not available!');
         }
+        
+        // Update stats
+        this.updateStats();
       } else {
         throw new Error(response.message || 'Failed to load photos');
       }
@@ -278,6 +281,28 @@ class PhotoManager {
   async handlePhotoEdit(event) {
     if (this.uiController) {
       return await this.uiController.handlePhotoEdit(event);
+    }
+  }
+
+  /**
+   * Update stats counters
+   */
+  updateStats() {
+    try {
+      const photoCount = this.photos.length;
+      const photoCountElement = document.getElementById('photoCount');
+      const photosBadgeElement = document.getElementById('photosBadge');
+      
+      if (photoCountElement) {
+        photoCountElement.textContent = photoCount;
+      }
+      if (photosBadgeElement) {
+        photosBadgeElement.textContent = photoCount;
+      }
+      
+      console.log(`PhotoManager: Updated photo count to ${photoCount}`);
+    } catch (error) {
+      console.error('PhotoManager: Error updating stats:', error);
     }
   }
 }
