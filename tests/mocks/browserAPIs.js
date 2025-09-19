@@ -76,6 +76,7 @@ global.Image = jest.fn().mockImplementation(() => ({
 // Mock alert
 global.alert = jest.fn();
 
+
 // Mock document.createElement
 const mockCanvas = {
   width: 0,
