@@ -2,14 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/index-with-sequelize.js",
+      "src": "api/index-with-raw-sql.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "api/index-with-sequelize.js"
+      "dest": "api/index-with-raw-sql.js"
     }
   ],
   "env": {
