@@ -76,6 +76,20 @@ global.Image = jest.fn().mockImplementation(() => ({
 // Mock alert
 global.alert = jest.fn();
 
+// Mock TextEncoder
+global.TextEncoder = jest.fn().mockImplementation(() => ({
+  encode: jest.fn().mockImplementation((input) => {
+    return new Uint8Array(Buffer.from(input, 'utf8'));
+  })
+}));
+
+// Mock TextDecoder
+global.TextDecoder = jest.fn().mockImplementation(() => ({
+  decode: jest.fn().mockImplementation((input) => {
+    return Buffer.from(input).toString('utf8');
+  })
+}));
+
 
 // Mock document.createElement
 const mockCanvas = {
@@ -143,6 +157,8 @@ if (global.window) {
   global.window.URL = global.URL;
   global.window.Image = global.Image;
   global.window.alert = global.alert;
+  global.window.TextEncoder = global.TextEncoder;
+  global.window.TextDecoder = global.TextDecoder;
   global.window.addEventListener = jest.fn();
   global.window.removeEventListener = jest.fn();
 }

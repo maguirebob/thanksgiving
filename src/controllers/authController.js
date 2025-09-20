@@ -83,7 +83,7 @@ const register = async (req, res) => {
     const existingUser = await User.findOne({
       where: {
         [Op.or]: [
-          { username_lower: username.toLowerCase() },
+          { username: username.toLowerCase() },
           { email: email }
         ]
       }
@@ -97,11 +97,10 @@ const register = async (req, res) => {
       });
     }
 
-    // Hash password and create user
+    // Hash password and create user (username will be converted to lowercase by model hook)
     const password_hash = await User.hashPassword(password);
     const user = await User.create({
-      username,
-      username_lower: username.toLowerCase(),
+      username: username.toLowerCase(),
       email,
       password_hash,
       first_name: first_name || null,
