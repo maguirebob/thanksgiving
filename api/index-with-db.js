@@ -1,194 +1,177 @@
 const express = require('express');
 const path = require('path');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const multer = require('multer');
 const expressLayouts = require('express-ejs-layouts');
+const session = require('express-session');
 
-// Create Express app
 const app = express();
 
-// Basic middleware
+// Trust proxy in production
+app.set('trust proxy', 1);
+
+// Middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.static('public'));
 
-// Cookie parsing middleware
-const cookieParser = require('cookie-parser');
-app.use(cookieParser());
+// Session configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'thanksgiving-menu-secret-key-change-in-production',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
 
-// EJS configuration
+// Set view engine to EJS and configure layouts
 app.use(expressLayouts);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '../views'));
 app.set('layout', 'layout');
 
-// JWT secret
-const JWT_SECRET = process.env.JWT_SECRET || 'thanksgiving-menu-jwt-secret-key-change-in-production';
-
-// Multer configuration for file uploads
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'), false);
-    }
-  }
-});
-
-// Make upload middleware available to routes
+// Request logging middleware
 app.use((req, res, next) => {
-  req.upload = upload;
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   next();
 });
 
-// Serve static files from public directory
-app.use('/images', express.static(path.join(__dirname, '../public/images')));
-app.use('/photos', express.static(path.join(__dirname, '../public/photos')));
-app.use('/css', express.static(path.join(__dirname, '../public/css')));
-app.use('/js', express.static(path.join(__dirname, '../public/js')));
-app.use('/javascript', express.static(path.join(__dirname, '../public/javascript')));
-
-// JWT Authentication middleware
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-
-  if (!token) {
-    return res.status(401).json({
-      success: false,
-      error: 'Access token required',
-      message: 'Please provide a valid access token'
-    });
-  }
-
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.status(403).json({
-        success: false,
-        error: 'Invalid token',
-        message: 'Access token is invalid or expired'
-      });
+// Lazy load database with error handling
+let db = null;
+const getDb = async () => {
+  if (!db) {
+    try {
+      console.log('Loading database...');
+      db = require('../models');
+      await db.sequelize.authenticate();
+      console.log('Database connected successfully');
+    } catch (error) {
+      console.error('Database connection failed:', error);
+      throw error;
     }
-    req.user = user;
-    next();
-  });
+  }
+  return db;
 };
 
-const requireAuth = authenticateToken;
+// Add user to locals for all views (mock for now)
+app.use((req, res, next) => {
+  res.locals.user = null; // No auth for now
+  next();
+});
 
-// Middleware to redirect unauthenticated users to login
-const redirectToLogin = (req, res, next) => {
-  // Check for token in Authorization header or cookie
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-  const cookieToken = req.cookies?.authToken;
-
-  const authToken = token || cookieToken;
-
-  if (!authToken) {
-    // For API requests, return 401
-    if (req.path.startsWith('/api/')) {
-      return res.status(401).json({
-      success: false,
-        error: 'Access token required',
-        message: 'Please provide a valid access token'
-      });
-    }
-    // For web requests, redirect to login
-    return res.redirect('/auth/login');
+// Routes with database
+app.get('/', async (req, res) => {
+  try {
+    const database = await getDb();
+    
+    // Get events with error handling
+    const events = await database.Event.findAll({
+      order: [['event_date', 'DESC']],
+      limit: 20
+    });
+    
+    res.render('index', {
+      title: 'Thanksgiving Menus',
+      events: events
+    });
+  } catch (error) {
+    console.error('Error loading home page:', error);
+    res.render('index', {
+      title: 'Thanksgiving Menus',
+      events: [],
+      error: 'Unable to load menu data at this time'
+    });
   }
-  
-  // If token exists, verify it
-  jwt.verify(authToken, JWT_SECRET, (err, user) => {
-    if (err) {
-      if (req.path.startsWith('/api/')) {
-        return res.status(403).json({
-          success: false,
-          error: 'Invalid token',
-          message: 'Access token is invalid or expired'
-        });
+});
+
+app.get('/blog', async (req, res) => {
+  try {
+    const database = await getDb();
+    
+    // Get blog posts with pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+    
+    const { count, rows: posts } = await database.BlogPost.findAndCountAll({
+      where: { status: 'published' },
+      include: [
+        {
+          model: database.User,
+          as: 'author',
+          attributes: ['id', 'username', 'first_name', 'last_name']
+        },
+        {
+          model: database.BlogCategory,
+          as: 'category',
+          attributes: ['id', 'name', 'color']
+        },
+        {
+          model: database.Event,
+          as: 'event',
+          attributes: ['id', 'event_name', 'event_date']
+        }
+      ],
+      order: [['published_at', 'DESC']],
+      limit: limit,
+      offset: offset
+    });
+    
+    res.render('blog/index', {
+      title: 'Blog - Thanksgiving Memories',
+      posts: posts,
+      pagination: {
+        page: page,
+        limit: limit,
+        total: count,
+        pages: Math.ceil(count / limit)
       }
-      return res.redirect('/auth/login');
-    }
-    req.user = user;
-  next();
-  });
-};
-
-const requireAdmin = (req, res, next) => {
-  if (req.user && req.user.role === 'admin') {
-    return next();
-  } else {
-    return res.status(403).json({
-      success: false,
-      error: 'Admin access required',
-      message: 'This resource requires administrator privileges'
+    });
+  } catch (error) {
+    console.error('Error loading blog page:', error);
+    res.render('blog/index', {
+      title: 'Blog - Thanksgiving Memories',
+      posts: [],
+      pagination: {
+        page: 1,
+        limit: 10,
+        total: 0,
+        pages: 0
+      },
+      error: 'Unable to load blog posts at this time'
     });
   }
-};
-
-// Add user to response locals (for compatibility)
-app.use((req, res, next) => {
-  res.locals.user = req.user || null;
-  res.locals.isAuthenticated = !!req.user;
-  res.locals.isAdmin = !!(req.user && req.user.role === 'admin');
-  next();
 });
 
-// Simple test endpoint (no database required)
-app.get('/api/test', (req, res) => {
-  res.json({ 
-    message: 'API is working',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
-  });
-});
-
-// Debug endpoint
-app.get('/api/debug', (req, res) => {
+// Health check endpoint
+app.get('/health', (req, res) => {
   res.json({
-    success: true,
-    message: 'Debug endpoint working',
+    status: 'OK',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-    hasDatabaseUrl: !!process.env.DATABASE_URL,
-    hasPostgresUrl: !!process.env.POSTGRES_URL
+    uptime: process.uptime(),
+    version: '1.0.0'
   });
 });
 
-// Test database connection
+// Database health check endpoint
 app.get('/api/db-test', async (req, res) => {
   try {
     console.log('Testing database connection...');
+    const database = await getDb();
+    console.log('Database connection successful');
     
-    // Test direct pg connection first
-    const { Client } = require('pg');
-    const client = new Client({
-      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
-      ssl: {
-        require: true,
-        rejectUnauthorized: false
-      }
-    });
-    
-    await client.connect();
-    console.log('Direct pg connection successful');
-    
-    // Test querying the Events table
-    const result = await client.query('SELECT COUNT(*) as count FROM "Events"');
-    const eventCount = result.rows[0].count;
-    
-    await client.end();
+    // Get some basic stats
+    const eventCount = await database.Event.count();
+    const userCount = await database.User.count();
     
     res.json({
       status: 'OK',
-      message: 'Database connection successful (direct pg)',
-      eventCount: parseInt(eventCount),
+      message: 'Database connection successful',
+      stats: {
+        events: eventCount,
+        users: userCount
+      },
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV || 'development'
     });
@@ -204,69 +187,30 @@ app.get('/api/db-test', async (req, res) => {
   }
 });
 
-// Test blog database
-app.get('/api/blog-test', async (req, res) => {
-  try {
-    const { Client } = require('pg');
-    const client = new Client({
-      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
-      ssl: {
-        require: true,
-        rejectUnauthorized: false
-      }
-    });
-    
-    await client.connect();
-    
-    // Test blog categories
-    const categoriesResult = await client.query('SELECT COUNT(*) as count FROM blog_categories');
-    const categoryCount = parseInt(categoriesResult.rows[0].count);
-    
-    // Test blog tags
-    const tagsResult = await client.query('SELECT COUNT(*) as count FROM blog_tags');
-    const tagCount = parseInt(tagsResult.rows[0].count);
-    
-    // Test blog posts
-    const postsResult = await client.query('SELECT COUNT(*) as count FROM blog_posts');
-    const postCount = parseInt(postsResult.rows[0].count);
-    
-    await client.end();
-    
-    res.json({
-      success: true,
-      message: 'Blog database is working correctly',
-      counts: {
-        categories: categoryCount,
-        tags: tagCount,
-        posts: postCount
-      }
-    });
-    
-  } catch (error) {
-    console.error('Blog test error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Blog test failed',
-      message: error.message
-    });
-  }
-});
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'OK',
+// API test endpoint
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    message: 'API is working',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
   });
 });
 
-// Catch-all for other routes
-app.get('*', (req, res) => {
-  res.status(404).json({
-    error: 'Not Found',
-    message: 'The requested resource was not found',
-    path: req.path
+// Error handling middleware
+app.use((req, res) => {
+  res.status(404).render('error', {
+    title: 'Page Not Found',
+    message: 'The page you are looking for does not exist.',
+    error: '404 Not Found'
+  });
+});
+
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).render('error', {
+    title: 'Error',
+    message: 'Something went wrong.',
+    error: err.message
   });
 });
 
