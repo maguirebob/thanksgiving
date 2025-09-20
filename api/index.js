@@ -317,11 +317,57 @@ app.post('/setup-db', async (req, res) => {
     await client.query(setupSQL);
     console.log('Database tables created and sample data inserted');
     
+    // Run username migration to lowercase
+    console.log('Running username migration to lowercase...');
+    const migrateSQL = `
+      -- Get all users with their current usernames
+      SELECT id, username FROM "Users";
+    `;
+    
+    const users = await client.query(migrateSQL);
+    console.log(`Found ${users.rows.length} users to check`);
+    
+    // Check for usernames that need to be converted
+    const usersToUpdate = users.rows.filter(user => user.username !== user.username.toLowerCase());
+    
+    if (usersToUpdate.length > 0) {
+      console.log(`Found ${usersToUpdate.length} usernames to convert to lowercase:`);
+      usersToUpdate.forEach(user => {
+        console.log(`  ${user.username} -> ${user.username.toLowerCase()}`);
+      });
+      
+      // Update usernames to lowercase
+      for (const user of usersToUpdate) {
+        const lowercaseUsername = user.username.toLowerCase();
+        
+        // Check if lowercase version already exists
+        const existingUser = await client.query(
+          'SELECT id FROM "Users" WHERE username = $1 AND id != $2',
+          [lowercaseUsername, user.id]
+        );
+        
+        if (existingUser.rows.length > 0) {
+          console.log(`⚠️  Skipping ${user.username} -> ${lowercaseUsername} (conflict with existing user)`);
+          continue;
+        }
+        
+        // Update the username
+        await client.query(
+          'UPDATE "Users" SET username = $1 WHERE id = $2',
+          [lowercaseUsername, user.id]
+        );
+        
+        console.log(`✅ Updated: ${user.username} -> ${lowercaseUsername}`);
+      }
+    } else {
+      console.log('✅ All usernames are already lowercase, no migration needed');
+    }
+    
     await client.end();
     
     res.json({
       success: true,
-      message: 'Database setup completed successfully',
+      message: 'Database setup and username migration completed successfully',
       timestamp: new Date().toISOString()
     });
   } catch (error) {
