@@ -1567,3 +1567,564 @@ This design provides a comprehensive, user-friendly way to access all Thanksgivi
 - **Users**: Admin and test users created
 - **Photos**: Ready for photo upload functionality
 - **Sessions**: Development session storage configured
+
+---
+
+# User Profile Management System
+
+## Overview
+
+A comprehensive user profile management system that allows users to update their own account information while maintaining proper security boundaries. Only administrators can modify user roles, ensuring proper access control.
+
+## Design Goals
+
+1. **User Self-Service**: Users can update their own profile information
+2. **Security**: Sensitive operations (role changes) restricted to admins only
+3. **User Experience**: Intuitive interface with clear feedback
+4. **Data Validation**: Comprehensive input validation and error handling
+5. **Consistency**: Follows established authentication and UI patterns
+
+## User Interface Design
+
+### Profile Page Layout
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    User Profile Management                  │
+├─────────────────────────────────────────────────────────────┤
+│  Navigation: [Home] [Profile] [Admin] [Logout]             │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────────┐  ┌─────────────────────────────────┐  │
+│  │   Profile Info  │  │        Account Settings        │  │
+│  │                 │  │                                 │  │
+│  │  Username: bob  │  │  Email: bob@example.com        │  │
+│  │  Role: user     │  │  [Edit Email]                  │  │
+│  │  Joined: 2024   │  │                                 │  │
+│  │                 │  │  Password: ••••••••             │  │
+│  │                 │  │  [Change Password]              │  │
+│  └─────────────────┘  │                                 │  │
+│                       │  First Name: Bob                │  │
+│  ┌─────────────────┐  │  [Edit First Name]              │  │
+│  │   Quick Stats   │  │                                 │  │
+│  │                 │  │  Last Name: Maguire             │  │
+│  │  Events: 5      │  │  [Edit Last Name]               │  │
+│  │  Photos: 12     │  │                                 │  │
+│  │  Comments: 3    │  └─────────────────────────────────┘  │
+│  └─────────────────┘                                       │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │              Admin-Only Section (if admin)              │ │
+│  │                                                         │ │
+│  │  Role Management:                                       │ │
+│  │  [Change User Role] [View All Users]                   │ │
+│  └─────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Edit Modal Design
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Edit Email Address                       │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Current Email: bob@example.com                            │
+│                                                             │
+│  New Email: [________________]                             │
+│                                                             │
+│  Confirm Email: [________________]                         │
+│                                                             │
+│  Password: [________________] (required for verification)  │
+│                                                             │
+│  [Cancel]                                    [Save Changes] │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Database Schema Updates
+
+### Users Table (No Changes Required)
+The existing `Users` table already has all necessary fields:
+```sql
+CREATE TABLE "Users" (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(255) UNIQUE NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  role enum_users_role DEFAULT 'user',
+  first_name VARCHAR(255),
+  last_name VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+## API Endpoints Design
+
+### User Profile Endpoints
+
+#### 1. Get Current User Profile
+```http
+GET /api/v1/profile
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "user": {
+    "id": 3,
+    "username": "bob",
+    "email": "bob@example.com",
+    "first_name": "Bob",
+    "last_name": "Maguire",
+    "role": "user",
+    "created_at": "2024-01-15T10:30:00Z",
+    "updated_at": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+#### 2. Update User Profile
+```http
+PUT /api/v1/profile
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "email": "newemail@example.com",
+  "first_name": "Robert",
+  "last_name": "Maguire",
+  "current_password": "currentpassword123"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Profile updated successfully",
+  "user": {
+    "id": 3,
+    "username": "bob",
+    "email": "newemail@example.com",
+    "first_name": "Robert",
+    "last_name": "Maguire",
+    "role": "user",
+    "updated_at": "2024-01-15T11:45:00Z"
+  }
+}
+```
+
+#### 3. Change Password
+```http
+PUT /api/v1/profile/password
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "current_password": "oldpassword123",
+  "new_password": "newpassword456",
+  "confirm_password": "newpassword456"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Password changed successfully"
+}
+```
+
+### Admin-Only Endpoints
+
+#### 4. Get All Users (Admin Only)
+```http
+GET /api/v1/admin/users
+Authorization: Bearer <admin_token>
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "email": "admin@thanksgiving.com",
+      "first_name": "Admin",
+      "last_name": "User",
+      "role": "admin",
+      "created_at": "2024-01-01T00:00:00Z"
+    },
+    {
+      "id": 3,
+      "username": "bob",
+      "email": "bob@example.com",
+      "first_name": "Bob",
+      "last_name": "Maguire",
+      "role": "user",
+      "created_at": "2024-01-15T10:30:00Z"
+    }
+  ]
+}
+```
+
+#### 5. Update User Role (Admin Only)
+```http
+PUT /api/v1/admin/users/:userId/role
+Authorization: Bearer <admin_token>
+Content-Type: application/json
+
+{
+  "role": "admin"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "User role updated successfully",
+  "user": {
+    "id": 3,
+    "username": "bob",
+    "role": "admin"
+  }
+}
+```
+
+## Security Implementation
+
+### Password Verification
+All profile updates require current password verification:
+```javascript
+// Verify current password before allowing updates
+const isValidPassword = await bcrypt.compare(currentPassword, user.password_hash);
+if (!isValidPassword) {
+  return res.status(401).json({
+    success: false,
+    error: 'Invalid current password'
+  });
+}
+```
+
+### Role-Based Access Control
+```javascript
+// Admin-only middleware
+const requireAdmin = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    return next();
+  } else {
+    return res.status(403).json({
+      success: false,
+      error: 'Admin access required'
+    });
+  }
+};
+```
+
+### Input Validation
+```javascript
+// Email validation
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if (!emailRegex.test(email)) {
+  return res.status(400).json({
+    success: false,
+    error: 'Invalid email format'
+  });
+}
+
+// Password strength validation
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/;
+if (!passwordRegex.test(newPassword)) {
+  return res.status(400).json({
+    success: false,
+    error: 'Password must be at least 8 characters with uppercase, lowercase, and number'
+  });
+}
+```
+
+## Frontend Implementation
+
+### Profile Page (EJS Template)
+```html
+<!-- views/auth/profile.ejs -->
+<div class="profile-container">
+  <div class="profile-header">
+    <h1>User Profile</h1>
+    <p>Manage your account settings and personal information</p>
+  </div>
+
+  <div class="profile-content">
+    <div class="profile-info">
+      <h3>Profile Information</h3>
+      <div class="info-item">
+        <label>Username:</label>
+        <span><%= user.username %></span>
+      </div>
+      <div class="info-item">
+        <label>Role:</label>
+        <span class="role-badge <%= user.role %>"><%= user.role %></span>
+      </div>
+      <div class="info-item">
+        <label>Member Since:</label>
+        <span><%= new Date(user.created_at).toLocaleDateString() %></span>
+      </div>
+    </div>
+
+    <div class="account-settings">
+      <h3>Account Settings</h3>
+      
+      <!-- Email Section -->
+      <div class="setting-item">
+        <label>Email Address:</label>
+        <span id="current-email"><%= user.email %></span>
+        <button onclick="openEditModal('email')" class="btn-edit">Edit</button>
+      </div>
+
+      <!-- Password Section -->
+      <div class="setting-item">
+        <label>Password:</label>
+        <span>••••••••</span>
+        <button onclick="openEditModal('password')" class="btn-edit">Change</button>
+      </div>
+
+      <!-- Name Sections -->
+      <div class="setting-item">
+        <label>First Name:</label>
+        <span id="current-first-name"><%= user.first_name || 'Not set' %></span>
+        <button onclick="openEditModal('first_name')" class="btn-edit">Edit</button>
+      </div>
+
+      <div class="setting-item">
+        <label>Last Name:</label>
+        <span id="current-last-name"><%= user.last_name || 'Not set' %></span>
+        <button onclick="openEditModal('last_name')" class="btn-edit">Edit</button>
+      </div>
+    </div>
+
+    <!-- Admin Section (only visible to admins) -->
+    <% if (user.role === 'admin') { %>
+    <div class="admin-section">
+      <h3>Administration</h3>
+      <div class="admin-actions">
+        <a href="/admin/users" class="btn btn-primary">Manage Users</a>
+        <a href="/admin" class="btn btn-secondary">Admin Dashboard</a>
+      </div>
+    </div>
+    <% } %>
+  </div>
+</div>
+```
+
+### JavaScript for Profile Management
+```javascript
+// Profile management functionality
+class ProfileManager {
+  constructor() {
+    this.authToken = localStorage.getItem('authToken');
+    this.init();
+  }
+
+  init() {
+    this.setupEventListeners();
+  }
+
+  setupEventListeners() {
+    // Modal form submissions
+    document.getElementById('edit-form').addEventListener('submit', this.handleEditSubmit.bind(this));
+    document.getElementById('password-form').addEventListener('submit', this.handlePasswordSubmit.bind(this));
+  }
+
+  openEditModal(field) {
+    const modal = document.getElementById('edit-modal');
+    const fieldInput = document.getElementById('field-input');
+    const fieldLabel = document.getElementById('field-label');
+    
+    // Set up modal based on field type
+    const fieldConfig = {
+      email: { label: 'Email Address', type: 'email', placeholder: 'Enter new email' },
+      first_name: { label: 'First Name', type: 'text', placeholder: 'Enter first name' },
+      last_name: { label: 'Last Name', type: 'text', placeholder: 'Enter last name' }
+    };
+
+    const config = fieldConfig[field];
+    fieldLabel.textContent = config.label;
+    fieldInput.type = config.type;
+    fieldInput.placeholder = config.placeholder;
+    fieldInput.dataset.field = field;
+    
+    modal.style.display = 'block';
+  }
+
+  async handleEditSubmit(e) {
+    e.preventDefault();
+    
+    const field = e.target.querySelector('[data-field]').dataset.field;
+    const value = e.target.querySelector('[data-field]').value;
+    const currentPassword = e.target.querySelector('#current-password').value;
+
+    try {
+      const response = await fetch('/api/v1/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.authToken}`
+        },
+        body: JSON.stringify({
+          [field]: value,
+          current_password: currentPassword
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        this.showMessage('Profile updated successfully', 'success');
+        this.updateDisplay(field, value);
+        this.closeModal();
+      } else {
+        this.showMessage(data.error || 'Update failed', 'error');
+      }
+    } catch (error) {
+      this.showMessage('Network error occurred', 'error');
+    }
+  }
+
+  async handlePasswordSubmit(e) {
+    e.preventDefault();
+    
+    const currentPassword = e.target.querySelector('#current-password').value;
+    const newPassword = e.target.querySelector('#new-password').value;
+    const confirmPassword = e.target.querySelector('#confirm-password').value;
+
+    if (newPassword !== confirmPassword) {
+      this.showMessage('New passwords do not match', 'error');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/v1/profile/password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.authToken}`
+        },
+        body: JSON.stringify({
+          current_password: currentPassword,
+          new_password: newPassword,
+          confirm_password: confirmPassword
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        this.showMessage('Password changed successfully', 'success');
+        this.closeModal();
+        e.target.reset();
+      } else {
+        this.showMessage(data.error || 'Password change failed', 'error');
+      }
+    } catch (error) {
+      this.showMessage('Network error occurred', 'error');
+    }
+  }
+
+  updateDisplay(field, value) {
+    const element = document.getElementById(`current-${field.replace('_', '-')}`);
+    if (element) {
+      element.textContent = value || 'Not set';
+    }
+  }
+
+  showMessage(message, type) {
+    // Implementation for showing success/error messages
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'}`;
+    messageDiv.textContent = message;
+    
+    document.querySelector('.profile-content').insertBefore(messageDiv, document.querySelector('.profile-content').firstChild);
+    
+    setTimeout(() => {
+      messageDiv.remove();
+    }, 5000);
+  }
+
+  closeModal() {
+    document.getElementById('edit-modal').style.display = 'none';
+    document.getElementById('password-modal').style.display = 'none';
+  }
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', () => {
+  new ProfileManager();
+});
+```
+
+## Implementation Phases
+
+### Phase 1: Database & API Endpoints
+1. Create profile management API endpoints
+2. Implement password verification logic
+3. Add input validation and error handling
+4. Create admin-only role management endpoints
+
+### Phase 2: Frontend Implementation
+1. Create profile page EJS template
+2. Implement JavaScript for profile management
+3. Add modal forms for editing
+4. Create admin user management interface
+
+### Phase 3: Testing & Security
+1. Write comprehensive tests for all endpoints
+2. Test role-based access control
+3. Validate input sanitization
+4. Test password change functionality
+
+### Phase 4: UI/UX Polish
+1. Add loading states and animations
+2. Improve error messaging
+3. Add confirmation dialogs for sensitive operations
+4. Mobile responsiveness testing
+
+## Security Considerations
+
+### Data Protection
+- All profile updates require current password verification
+- Password changes require confirmation
+- Email changes require verification (future enhancement)
+- Role changes restricted to admins only
+
+### Input Validation
+- Email format validation
+- Password strength requirements
+- XSS prevention through proper escaping
+- SQL injection prevention through parameterized queries
+
+### Access Control
+- JWT token verification for all endpoints
+- Role-based middleware for admin functions
+- User can only modify their own profile
+- Admins can modify any user's role
+
+## Future Enhancements
+
+### Planned Features
+1. **Email Verification**: Send verification emails for email changes
+2. **Two-Factor Authentication**: Add 2FA for enhanced security
+3. **Profile Pictures**: Allow users to upload profile avatars
+4. **Activity Log**: Track profile changes and login history
+5. **Bulk User Management**: Admin tools for managing multiple users
+
+### Technical Improvements
+1. **Rate Limiting**: Prevent brute force attacks on password changes
+2. **Audit Logging**: Log all profile changes for security
+3. **Session Management**: Allow users to view active sessions
+4. **Account Recovery**: Password reset functionality
+5. **Data Export**: Allow users to export their data
+
+This design provides a comprehensive, secure, and user-friendly profile management system that maintains proper security boundaries while giving users control over their account information.
