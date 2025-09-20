@@ -1,4 +1,5 @@
 const { setupVercelDatabase } = require('../scripts/setup-vercel-db');
+const migrateUsernamesToLowercase = require('../scripts/migrate-usernames-to-lowercase');
 
 module.exports = async (req, res) => {
   // Only allow POST requests
@@ -24,9 +25,12 @@ module.exports = async (req, res) => {
     console.log('🔄 Starting database setup via API...');
     await setupVercelDatabase();
     
+    console.log('🔄 Starting username migration to lowercase...');
+    await migrateUsernamesToLowercase();
+    
     res.json({
       success: true,
-      message: 'Database setup completed successfully',
+      message: 'Database setup and username migration completed successfully',
       timestamp: new Date().toISOString()
     });
   } catch (error) {
