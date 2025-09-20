@@ -2,14 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/test-db-simple.js",
+      "src": "api/index-with-sequelize.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "api/test-db-simple.js"
+      "dest": "api/index-with-sequelize.js"
     }
   ],
   "env": {
