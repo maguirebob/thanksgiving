@@ -576,6 +576,389 @@ app.get('/auth/me', requireAuth, (req, res) => {
   });
 });
 
+// Profile management routes
+
+// Get current user profile
+app.get('/api/v1/profile', requireAuth, async (req, res) => {
+  try {
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+    
+    await client.connect();
+    
+    const result = await client.query(
+      'SELECT id, username, email, first_name, last_name, role, created_at, updated_at FROM "Users" WHERE id = $1',
+      [req.user.id]
+    );
+    
+    await client.end();
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      user: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Profile retrieval error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// Update user profile
+app.put('/api/v1/profile', requireAuth, async (req, res) => {
+  try {
+    const { email, first_name, last_name, current_password } = req.body;
+
+    // Validate required fields
+    if (!current_password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Current password is required'
+      });
+    }
+
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+    
+    await client.connect();
+    
+    // Get current user with password
+    const userResult = await client.query(
+      'SELECT id, username, email, first_name, last_name, role, password_hash FROM "Users" WHERE id = $1',
+      [req.user.id]
+    );
+    
+    if (userResult.rows.length === 0) {
+      await client.end();
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+    
+    const user = userResult.rows[0];
+    
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(current_password, user.password_hash);
+    if (!isPasswordValid) {
+      await client.end();
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid current password'
+      });
+    }
+    
+    // Prepare update data
+    const updateFields = [];
+    const updateValues = [];
+    let paramCount = 1;
+    
+    if (email !== undefined) {
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        await client.end();
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid email format'
+        });
+      }
+      updateFields.push(`email = $${paramCount}`);
+      updateValues.push(email);
+      paramCount++;
+    }
+    
+    if (first_name !== undefined) {
+      updateFields.push(`first_name = $${paramCount}`);
+      updateValues.push(first_name);
+      paramCount++;
+    }
+    
+    if (last_name !== undefined) {
+      updateFields.push(`last_name = $${paramCount}`);
+      updateValues.push(last_name);
+      paramCount++;
+    }
+    
+    if (updateFields.length === 0) {
+      await client.end();
+      return res.status(400).json({
+        success: false,
+        error: 'No fields to update'
+      });
+    }
+    
+    // Add updated_at
+    updateFields.push(`updated_at = CURRENT_TIMESTAMP`);
+    
+    // Update user
+    const updateQuery = `UPDATE "Users" SET ${updateFields.join(', ')} WHERE id = $${paramCount} RETURNING id, username, email, first_name, last_name, role, created_at, updated_at`;
+    updateValues.push(req.user.id);
+    
+    const updateResult = await client.query(updateQuery, updateValues);
+    await client.end();
+    
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: updateResult.rows[0]
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// Change user password
+app.put('/api/v1/profile/password', requireAuth, async (req, res) => {
+  try {
+    const { current_password, new_password, confirm_password } = req.body;
+
+    // Validate required fields
+    if (!current_password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Current password is required'
+      });
+    }
+
+    if (!new_password) {
+      return res.status(400).json({
+        success: false,
+        error: 'New password is required'
+      });
+    }
+
+    if (!confirm_password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Password confirmation is required'
+      });
+    }
+
+    // Validate password confirmation
+    if (new_password !== confirm_password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Password confirmation does not match'
+      });
+    }
+
+    // Validate password strength
+    if (new_password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        error: 'Password must be at least 8 characters long'
+      });
+    }
+
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+    
+    await client.connect();
+    
+    // Get current user with password
+    const userResult = await client.query(
+      'SELECT id, password_hash FROM "Users" WHERE id = $1',
+      [req.user.id]
+    );
+    
+    if (userResult.rows.length === 0) {
+      await client.end();
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+    
+    const user = userResult.rows[0];
+    
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(current_password, user.password_hash);
+    if (!isPasswordValid) {
+      await client.end();
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid current password'
+      });
+    }
+    
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(new_password, 10);
+    
+    // Update password
+    await client.query(
+      'UPDATE "Users" SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      [hashedPassword, req.user.id]
+    );
+    
+    await client.end();
+    
+    res.json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+  } catch (error) {
+    console.error('Password change error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// Get all users (admin only)
+app.get('/api/v1/admin/users', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+    
+    await client.connect();
+    
+    const result = await client.query(
+      'SELECT id, username, email, first_name, last_name, role, created_at, updated_at FROM "Users" ORDER BY created_at ASC'
+    );
+    
+    await client.end();
+    
+    res.json({
+      success: true,
+      users: result.rows
+    });
+  } catch (error) {
+    console.error('Get all users error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// Update user role (admin only) - updated version
+app.put('/api/v1/admin/users/:userId/role', requireAuth, requireAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { role } = req.body;
+
+    // Validate required fields
+    if (!role) {
+      return res.status(400).json({
+        success: false,
+        error: 'Role is required'
+      });
+    }
+
+    // Validate role value
+    if (!['admin', 'user'].includes(role)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid role. Must be "admin" or "user"'
+      });
+    }
+
+    // Validate user ID
+    const userIdNum = parseInt(userId);
+    if (isNaN(userIdNum)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid user ID'
+      });
+    }
+
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    });
+    
+    await client.connect();
+    
+    // Check if user exists
+    const userResult = await client.query(
+      'SELECT id, username, email, first_name, last_name, role FROM "Users" WHERE id = $1',
+      [userIdNum]
+    );
+    
+    if (userResult.rows.length === 0) {
+      await client.end();
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    const user = userResult.rows[0];
+    
+    // Prevent admin from changing their own role
+    if (user.id === req.user.id) {
+      await client.end();
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot change your own role'
+      });
+    }
+    
+    // Update user role
+    const updateResult = await client.query(
+      'UPDATE "Users" SET role = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id, username, email, first_name, last_name, role, created_at, updated_at',
+      [role, userIdNum]
+    );
+    
+    await client.end();
+    
+    res.json({
+      success: true,
+      message: 'User role updated successfully',
+      user: updateResult.rows[0]
+    });
+  } catch (error) {
+    console.error('Update user role error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
 // Admin routes
 
 // Update user role (admin only)
