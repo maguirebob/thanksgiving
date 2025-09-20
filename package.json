@@ -40,6 +40,7 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
     "pg": "^8.11.3",
+    "pg-connection-string": "^2.6.2",
     "pg-hstore": "^2.3.4",
     "prisma": "^6.16.2",
     "sequelize": "^6.35.0"
