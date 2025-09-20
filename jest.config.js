@@ -19,6 +19,8 @@ module.exports = {
     Blob: true,
     URL: true,
     Image: true,
-    alert: true
+    alert: true,
+    TextEncoder: true,
+    TextDecoder: true
   }
 };
