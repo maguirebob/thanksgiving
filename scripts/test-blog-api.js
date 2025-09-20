@@ -9,198 +9,145 @@
  *   DATABASE_URL="your-vercel-db-url" node scripts/test-blog-api.js
  */
 
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient({
-  log: ['error'],
-});
+const db = require('../models');
 
 async function testBlogAPI() {
   try {
     console.log('🧪 Testing Blog API functionality...');
     
     // Test database connection
-    await prisma.$connect();
+    await db.sequelize.authenticate();
     console.log('✅ Database connection successful');
     
     // Test 1: Get all blog posts
     console.log('\n📝 Testing blog posts...');
-    const posts = await prisma.blogPost.findMany({
+    const posts = await db.BlogPost.findAll({
       where: { status: 'published' },
-      include: {
-        author: {
-          select: {
-            id: true,
-            username: true,
-            first_name: true,
-            last_name: true
-          }
+      include: [
+        {
+          model: db.User,
+          as: 'author',
+          attributes: ['id', 'username', 'first_name', 'last_name']
         },
-        category: true,
-        tags: true,
-        event: {
-          select: {
-            id: true,
-            event_name: true,
-            event_date: true
-          }
+        {
+          model: db.BlogCategory,
+          as: 'category',
+          attributes: ['id', 'name', 'color']
+        },
+        {
+          model: db.Event,
+          as: 'event',
+          attributes: ['id', 'event_name', 'event_date']
+        },
+        {
+          model: db.BlogTag,
+          as: 'tags',
+          attributes: ['id', 'name', 'slug'],
+          through: { attributes: [] }
         }
-      },
-      take: 5
+      ],
+      limit: 5
     });
     console.log(`✅ Found ${posts.length} published blog posts`);
     
     if (posts.length > 0) {
-      console.log(`   - Latest post: "${posts[0].title}" by ${posts[0].author.username}`);
+      const post = posts[0];
+      console.log(`   Sample post: "${post.title}" by ${post.author.username}`);
+      if (post.category) {
+        console.log(`   Category: ${post.category.name}`);
+      }
+      if (post.tags && post.tags.length > 0) {
+        console.log(`   Tags: ${post.tags.map(tag => tag.name).join(', ')}`);
+      }
     }
     
-    // Test 2: Get all categories
+    // Test 2: Get all blog categories
     console.log('\n📂 Testing blog categories...');
-    const categories = await prisma.blogCategory.findMany({
-      where: { isActive: true },
-      include: {
-        _count: {
-          select: {
-            posts: {
-              where: { status: 'published' }
-            }
-          }
-        }
-      }
+    const categories = await db.BlogCategory.findAll({
+      where: { is_active: true },
+      order: [['name', 'ASC']]
     });
-    console.log(`✅ Found ${categories.length} active categories`);
+    console.log(`✅ Found ${categories.length} active blog categories`);
     
-    categories.forEach(cat => {
-      console.log(`   - ${cat.name}: ${cat._count.posts} posts`);
+    if (categories.length > 0) {
+      categories.forEach(cat => {
+        console.log(`   - ${cat.name} (${cat.color})`);
+      });
+    }
+    
+    // Test 3: Get all blog tags
+    console.log('\n🏷️  Testing blog tags...');
+    const tags = await db.BlogTag.findAll({
+      order: [['name', 'ASC']]
     });
+    console.log(`✅ Found ${tags.length} blog tags`);
     
-    // Test 3: Get all tags
-    console.log('\n🏷️ Testing blog tags...');
-    const tags = await prisma.blogTag.findMany({
-      orderBy: { usage_count: 'desc' },
-      take: 10
-    });
-    console.log(`✅ Found ${tags.length} tags`);
+    if (tags.length > 0) {
+      const popularTags = tags
+        .sort((a, b) => b.usage_count - a.usage_count)
+        .slice(0, 5);
+      console.log(`   Popular tags: ${popularTags.map(tag => `${tag.name} (${tag.usage_count})`).join(', ')}`);
+    }
     
-    tags.forEach(tag => {
-      console.log(`   - ${tag.name}: ${tag.usage_count} uses`);
-    });
+    // Test 4: Get blog statistics
+    console.log('\n📊 Testing blog statistics...');
+    const totalPosts = await db.BlogPost.count();
+    const publishedPosts = await db.BlogPost.count({ where: { status: 'published' } });
+    const draftPosts = await db.BlogPost.count({ where: { status: 'draft' } });
+    const featuredPosts = await db.BlogPost.count({ where: { is_featured: true } });
+    const totalViews = await db.BlogPost.sum('view_count') || 0;
     
-    // Test 4: Test search functionality
+    console.log(`✅ Blog Statistics:`);
+    console.log(`   Total posts: ${totalPosts}`);
+    console.log(`   Published posts: ${publishedPosts}`);
+    console.log(`   Draft posts: ${draftPosts}`);
+    console.log(`   Featured posts: ${featuredPosts}`);
+    console.log(`   Total views: ${totalViews}`);
+    
+    // Test 5: Test search functionality
     console.log('\n🔍 Testing search functionality...');
-    const searchResults = await prisma.blogPost.findMany({
+    const searchResults = await db.BlogPost.findAll({
       where: {
         status: 'published',
-        OR: [
-          { title: { contains: 'thanksgiving', mode: 'insensitive' } },
-          { content: { contains: 'thanksgiving', mode: 'insensitive' } }
+        [db.Sequelize.Op.or]: [
+          { title: { [db.Sequelize.Op.iLike]: '%thanksgiving%' } },
+          { content: { [db.Sequelize.Op.iLike]: '%thanksgiving%' } }
         ]
       },
-      take: 3
+      limit: 3
     });
-    console.log(`✅ Search for "thanksgiving" found ${searchResults.length} posts`);
+    console.log(`✅ Found ${searchResults.length} posts matching "thanksgiving"`);
     
-    // Test 5: Test featured posts
-    console.log('\n⭐ Testing featured posts...');
-    const featuredPosts = await prisma.blogPost.findMany({
-      where: {
-        status: 'published',
-        is_featured: true
-      },
-      take: 3
-    });
-    console.log(`✅ Found ${featuredPosts.length} featured posts`);
-    
-    // Test 6: Test category posts
+    // Test 6: Test category filtering
     if (categories.length > 0) {
-      console.log('\n📂 Testing category posts...');
-      const categoryPosts = await prisma.blogPost.findMany({
-        where: {
-          category_id: categories[0].id,
-          status: 'published'
+      console.log('\n📂 Testing category filtering...');
+      const categoryId = categories[0].id;
+      const categoryPosts = await db.BlogPost.findAll({
+        where: { 
+          status: 'published',
+          category_id: categoryId
         },
-        take: 3
+        include: [{
+          model: db.BlogCategory,
+          as: 'category',
+          attributes: ['name']
+        }]
       });
-      console.log(`✅ Category "${categories[0].name}" has ${categoryPosts.length} posts`);
+      console.log(`✅ Found ${categoryPosts.length} posts in category "${categories[0].name}"`);
     }
-    
-    // Test 7: Test tag posts
-    if (tags.length > 0) {
-      console.log('\n🏷️ Testing tag posts...');
-      const tagPosts = await prisma.blogPost.findMany({
-        where: {
-          tags: {
-            some: {
-              id: tags[0].id
-            }
-          },
-          status: 'published'
-        },
-        take: 3
-      });
-      console.log(`✅ Tag "${tags[0].name}" has ${tagPosts.length} posts`);
-    }
-    
-    // Test 8: Test statistics
-    console.log('\n📊 Testing blog statistics...');
-    const [
-      totalPosts,
-      publishedPosts,
-      draftPosts,
-      totalCategories,
-      totalTags,
-      totalViews
-    ] = await Promise.all([
-      prisma.blogPost.count(),
-      prisma.blogPost.count({ where: { status: 'published' } }),
-      prisma.blogPost.count({ where: { status: 'draft' } }),
-      prisma.blogCategory.count(),
-      prisma.blogTag.count(),
-      prisma.blogPost.aggregate({
-        _sum: { view_count: true }
-      })
-    ]);
-    
-    console.log('✅ Blog statistics:');
-    console.log(`   - Total posts: ${totalPosts}`);
-    console.log(`   - Published posts: ${publishedPosts}`);
-    console.log(`   - Draft posts: ${draftPosts}`);
-    console.log(`   - Categories: ${totalCategories}`);
-    console.log(`   - Tags: ${totalTags}`);
-    console.log(`   - Total views: ${totalViews._sum.view_count || 0}`);
     
     console.log('\n🎉 All blog API tests passed successfully!');
     
-    return {
-      success: true,
-      message: 'Blog API functionality is working correctly',
-      stats: {
-        posts: { total: totalPosts, published: publishedPosts, draft: draftPosts },
-        categories: totalCategories,
-        tags: totalTags,
-        totalViews: totalViews._sum.view_count || 0
-      }
-    };
-    
   } catch (error) {
     console.error('❌ Blog API test failed:', error);
-    throw error;
+    process.exit(1);
   } finally {
-    await prisma.$disconnect();
+    await db.sequelize.close();
   }
 }
 
-// Run the test if this script is executed directly
 if (require.main === module) {
-  testBlogAPI()
-    .then(() => {
-      console.log('✅ Blog API test completed successfully');
-      process.exit(0);
-    })
-    .catch((error) => {
-      console.error('❌ Blog API test failed:', error.message);
-      process.exit(1);
-    });
+  testBlogAPI();
 }
 
 module.exports = { testBlogAPI };

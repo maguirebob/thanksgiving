@@ -1,8 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-});
+const db = require('../../models');
 
 /**
  * Blog Controller
@@ -18,163 +14,138 @@ const getAllPosts = async (req, res) => {
     const tag = req.query.tag;
     const search = req.query.search;
     const featured = req.query.featured === 'true';
-    const eventId = req.query.eventId;
-
-    const skip = (page - 1) * limit;
+    const offset = (page - 1) * limit;
 
     // Build where clause
-    const where = {
-      status: 'published'
-    };
-
+    const whereClause = { status: 'published' };
+    
     if (category) {
-      where.category = {
-        slug: category
-      };
+      whereClause['$category.slug$'] = category;
     }
-
+    
     if (tag) {
-      where.tags = {
-        some: {
-          slug: tag
-        }
-      };
+      whereClause['$tags.slug$'] = tag;
     }
-
+    
     if (search) {
-      where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { content: { contains: search, mode: 'insensitive' } },
-        { excerpt: { contains: search, mode: 'insensitive' } }
+      whereClause[db.Sequelize.Op.or] = [
+        { title: { [db.Sequelize.Op.iLike]: `%${search}%` } },
+        { content: { [db.Sequelize.Op.iLike]: `%${search}%` } },
+        { excerpt: { [db.Sequelize.Op.iLike]: `%${search}%` } }
       ];
     }
-
+    
     if (featured) {
-      where.is_featured = true;
+      whereClause.is_featured = true;
     }
 
-    if (eventId) {
-      where.event_id = parseInt(eventId);
-    }
-
-    const [posts, total] = await Promise.all([
-      prisma.blogPost.findMany({
-        where,
-        include: {
-          author: {
-            select: {
-              id: true,
-              username: true,
-              first_name: true,
-              last_name: true
-            }
-          },
-          category: true,
-          tags: true,
-          event: {
-            select: {
-              id: true,
-              event_name: true,
-              event_date: true
-            }
-          }
+    const { count, rows: posts } = await db.BlogPost.findAndCountAll({
+      where: whereClause,
+      include: [
+        {
+          model: db.User,
+          as: 'author',
+          attributes: ['id', 'username', 'first_name', 'last_name']
         },
-        orderBy: [
-          { is_featured: 'desc' },
-          { published_at: 'desc' }
-        ],
-        skip,
-        take: limit
-      }),
-      prisma.blogPost.count({ where })
-    ]);
+        {
+          model: db.BlogCategory,
+          as: 'category',
+          attributes: ['id', 'name', 'color', 'slug']
+        },
+        {
+          model: db.Event,
+          as: 'event',
+          attributes: ['id', 'event_name', 'event_date']
+        },
+        {
+          model: db.BlogTag,
+          as: 'tags',
+          attributes: ['id', 'name', 'slug'],
+          through: { attributes: [] }
+        }
+      ],
+      order: [['published_at', 'DESC']],
+      limit: limit,
+      offset: offset,
+      distinct: true
+    });
 
     res.json({
       success: true,
-      data: {
-        posts,
-        pagination: {
-          page,
-          limit,
-          total,
-          pages: Math.ceil(total / limit)
-        }
+      data: posts,
+      pagination: {
+        page: page,
+        limit: limit,
+        total: count,
+        pages: Math.ceil(count / limit)
       }
     });
-
   } catch (error) {
     console.error('Error fetching blog posts:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch blog posts',
-      message: error.message
+      message: 'Failed to fetch blog posts',
+      error: error.message
     });
   }
 };
 
-// GET /api/v1/blog/posts/:id - Get single blog post by ID or slug
+// GET /api/v1/blog/posts/:id - Get a single blog post by ID
 const getPostById = async (req, res) => {
   try {
-    const { id } = req.params;
-    const isSlug = isNaN(parseInt(id));
-
-    const where = isSlug ? { slug: id } : { id: parseInt(id) };
-
-    const post = await prisma.blogPost.findFirst({
-      where: {
-        ...where,
-        status: 'published'
-      },
-      include: {
-        author: {
-          select: {
-            id: true,
-            username: true,
-            first_name: true,
-            last_name: true
-          }
+    const postId = req.params.id;
+    
+    const post = await db.BlogPost.findByPk(postId, {
+      include: [
+        {
+          model: db.User,
+          as: 'author',
+          attributes: ['id', 'username', 'first_name', 'last_name']
         },
-        category: true,
-        tags: true,
-        event: {
-          select: {
-            id: true,
-            event_name: true,
-            event_date: true
-          }
+        {
+          model: db.BlogCategory,
+          as: 'category',
+          attributes: ['id', 'name', 'color', 'slug']
+        },
+        {
+          model: db.Event,
+          as: 'event',
+          attributes: ['id', 'event_name', 'event_date']
+        },
+        {
+          model: db.BlogTag,
+          as: 'tags',
+          attributes: ['id', 'name', 'slug'],
+          through: { attributes: [] }
         }
-      }
+      ]
     });
 
     if (!post) {
       return res.status(404).json({
         success: false,
-        error: 'Blog post not found'
+        message: 'Blog post not found'
       });
     }
 
     // Increment view count
-    await prisma.blogPost.update({
-      where: { id: post.id },
-      data: { view_count: { increment: 1 } }
-    });
+    await post.increment('view_count');
 
     res.json({
       success: true,
       data: post
     });
-
   } catch (error) {
     console.error('Error fetching blog post:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch blog post',
-      message: error.message
+      message: 'Failed to fetch blog post',
+      error: error.message
     });
   }
 };
 
-// POST /api/v1/blog/posts - Create new blog post
+// POST /api/v1/blog/posts - Create a new blog post
 const createPost = async (req, res) => {
   try {
     const {
@@ -186,104 +157,92 @@ const createPost = async (req, res) => {
       is_featured = false,
       event_id,
       category_id,
-      tag_ids = []
+      tags = []
     } = req.body;
 
     // Validate required fields
     if (!title || !content) {
       return res.status(400).json({
         success: false,
-        error: 'Title and content are required'
+        message: 'Title and content are required'
       });
     }
 
     // Generate slug from title
     const slug = title
       .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim('-');
-
-    // Check if slug already exists
-    const existingPost = await prisma.blogPost.findUnique({
-      where: { slug }
-    });
-
-    if (existingPost) {
-      return res.status(400).json({
-        success: false,
-        error: 'A post with this title already exists'
-      });
-    }
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
 
     // Create the blog post
-    const post = await prisma.blogPost.create({
-      data: {
-        title,
-        slug,
-        content,
-        excerpt,
-        featured_image_url,
-        status,
-        is_featured,
-        author_id: req.user.id,
-        event_id: event_id ? parseInt(event_id) : null,
-        category_id: category_id ? parseInt(category_id) : null,
-        published_at: status === 'published' ? new Date() : null,
-        tags: {
-          connect: tag_ids.map(id => ({ id: parseInt(id) }))
-        }
-      },
-      include: {
-        author: {
-          select: {
-            id: true,
-            username: true,
-            first_name: true,
-            last_name: true
-          }
-        },
-        category: true,
-        tags: true,
-        event: {
-          select: {
-            id: true,
-            event_name: true,
-            event_date: true
-          }
-        }
-      }
+    const post = await db.BlogPost.create({
+      title,
+      slug,
+      content,
+      excerpt,
+      featured_image_url,
+      status,
+      is_featured,
+      author_id: req.user.id,
+      event_id: event_id || null,
+      category_id: category_id || null,
+      published_at: status === 'published' ? new Date() : null
     });
 
-    // Update tag usage counts
-    if (tag_ids.length > 0) {
-      await prisma.blogTag.updateMany({
-        where: { id: { in: tag_ids.map(id => parseInt(id)) } },
-        data: { usage_count: { increment: 1 } }
+    // Add tags if provided
+    if (tags && tags.length > 0) {
+      const tagRecords = await db.BlogTag.findAll({
+        where: { id: { [db.Sequelize.Op.in]: tags } }
       });
+      await post.setTags(tagRecords);
     }
+
+    // Fetch the complete post with associations
+    const completePost = await db.BlogPost.findByPk(post.id, {
+      include: [
+        {
+          model: db.User,
+          as: 'author',
+          attributes: ['id', 'username', 'first_name', 'last_name']
+        },
+        {
+          model: db.BlogCategory,
+          as: 'category',
+          attributes: ['id', 'name', 'color', 'slug']
+        },
+        {
+          model: db.Event,
+          as: 'event',
+          attributes: ['id', 'event_name', 'event_date']
+        },
+        {
+          model: db.BlogTag,
+          as: 'tags',
+          attributes: ['id', 'name', 'slug'],
+          through: { attributes: [] }
+        }
+      ]
+    });
 
     res.status(201).json({
       success: true,
-      data: post,
+      data: completePost,
       message: 'Blog post created successfully'
     });
-
   } catch (error) {
     console.error('Error creating blog post:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to create blog post',
-      message: error.message
+      message: 'Failed to create blog post',
+      error: error.message
     });
   }
 };
 
-// PUT /api/v1/blog/posts/:id - Update blog post
+// PUT /api/v1/blog/posts/:id - Update a blog post
 const updatePost = async (req, res) => {
   try {
-    const { id } = req.params;
+    const postId = req.params.id;
     const {
       title,
       content,
@@ -293,480 +252,283 @@ const updatePost = async (req, res) => {
       is_featured,
       event_id,
       category_id,
-      tag_ids
+      tags = []
     } = req.body;
 
-    // Check if post exists and user has permission
-    const existingPost = await prisma.blogPost.findUnique({
-      where: { id: parseInt(id) },
-      include: { tags: true }
-    });
-
-    if (!existingPost) {
+    // Find the post
+    const post = await db.BlogPost.findByPk(postId);
+    if (!post) {
       return res.status(404).json({
         success: false,
-        error: 'Blog post not found'
+        message: 'Blog post not found'
       });
     }
 
     // Check if user owns the post or is admin
-    if (existingPost.author_id !== req.user.id && req.user.role !== 'admin') {
+    if (post.author_id !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
-        error: 'Not authorized to update this post'
+        message: 'You can only edit your own posts'
       });
     }
 
     // Generate new slug if title changed
-    let slug = existingPost.slug;
-    if (title && title !== existingPost.title) {
+    let slug = post.slug;
+    if (title && title !== post.title) {
       slug = title
         .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-')
-        .trim('-');
-
-      // Check if new slug already exists
-      const slugExists = await prisma.blogPost.findFirst({
-        where: { slug, id: { not: parseInt(id) } }
-      });
-
-      if (slugExists) {
-        return res.status(400).json({
-          success: false,
-          error: 'A post with this title already exists'
-        });
-      }
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
     }
 
-    // Update the blog post
-    const updateData = {
-      ...(title && { title }),
-      ...(slug !== existingPost.slug && { slug }),
-      ...(content && { content }),
-      ...(excerpt !== undefined && { excerpt }),
-      ...(featured_image_url !== undefined && { featured_image_url }),
-      ...(status && { status }),
-      ...(is_featured !== undefined && { is_featured }),
-      ...(event_id !== undefined && { event_id: event_id ? parseInt(event_id) : null }),
-      ...(category_id !== undefined && { category_id: category_id ? parseInt(category_id) : null }),
-      ...(status === 'published' && !existingPost.published_at && { published_at: new Date() })
-    };
-
-    const post = await prisma.blogPost.update({
-      where: { id: parseInt(id) },
-      data: updateData,
-      include: {
-        author: {
-          select: {
-            id: true,
-            username: true,
-            first_name: true,
-            last_name: true
-          }
-        },
-        category: true,
-        tags: true,
-        event: {
-          select: {
-            id: true,
-            event_name: true,
-            event_date: true
-          }
-        }
-      }
+    // Update the post
+    await post.update({
+      title: title || post.title,
+      slug,
+      content: content || post.content,
+      excerpt: excerpt !== undefined ? excerpt : post.excerpt,
+      featured_image_url: featured_image_url !== undefined ? featured_image_url : post.featured_image_url,
+      status: status || post.status,
+      is_featured: is_featured !== undefined ? is_featured : post.is_featured,
+      event_id: event_id !== undefined ? event_id : post.event_id,
+      category_id: category_id !== undefined ? category_id : post.category_id,
+      published_at: status === 'published' && post.status !== 'published' ? new Date() : post.published_at
     });
 
     // Update tags if provided
-    if (tag_ids !== undefined) {
-      // Disconnect old tags
-      await prisma.blogPost.update({
-        where: { id: parseInt(id) },
-        data: {
-          tags: {
-            set: []
-          }
-        }
+    if (tags && tags.length >= 0) {
+      const tagRecords = await db.BlogTag.findAll({
+        where: { id: { [db.Sequelize.Op.in]: tags } }
       });
-
-      // Connect new tags
-      if (tag_ids.length > 0) {
-        await prisma.blogPost.update({
-          where: { id: parseInt(id) },
-          data: {
-            tags: {
-              connect: tag_ids.map(id => ({ id: parseInt(id) }))
-            }
-          }
-        });
-
-        // Update tag usage counts
-        await prisma.blogTag.updateMany({
-          where: { id: { in: tag_ids.map(id => parseInt(id)) } },
-          data: { usage_count: { increment: 1 } }
-        });
-      }
+      await post.setTags(tagRecords);
     }
+
+    // Fetch the updated post with associations
+    const updatedPost = await db.BlogPost.findByPk(post.id, {
+      include: [
+        {
+          model: db.User,
+          as: 'author',
+          attributes: ['id', 'username', 'first_name', 'last_name']
+        },
+        {
+          model: db.BlogCategory,
+          as: 'category',
+          attributes: ['id', 'name', 'color', 'slug']
+        },
+        {
+          model: db.Event,
+          as: 'event',
+          attributes: ['id', 'event_name', 'event_date']
+        },
+        {
+          model: db.BlogTag,
+          as: 'tags',
+          attributes: ['id', 'name', 'slug'],
+          through: { attributes: [] }
+        }
+      ]
+    });
 
     res.json({
       success: true,
-      data: post,
+      data: updatedPost,
       message: 'Blog post updated successfully'
     });
-
   } catch (error) {
     console.error('Error updating blog post:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to update blog post',
-      message: error.message
+      message: 'Failed to update blog post',
+      error: error.message
     });
   }
 };
 
-// DELETE /api/v1/blog/posts/:id - Delete blog post
+// DELETE /api/v1/blog/posts/:id - Delete a blog post
 const deletePost = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    // Check if post exists and user has permission
-    const existingPost = await prisma.blogPost.findUnique({
-      where: { id: parseInt(id) },
-      include: { tags: true }
-    });
-
-    if (!existingPost) {
+    const postId = req.params.id;
+    
+    const post = await db.BlogPost.findByPk(postId);
+    if (!post) {
       return res.status(404).json({
         success: false,
-        error: 'Blog post not found'
+        message: 'Blog post not found'
       });
     }
 
     // Check if user owns the post or is admin
-    if (existingPost.author_id !== req.user.id && req.user.role !== 'admin') {
+    if (post.author_id !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
-        error: 'Not authorized to delete this post'
+        message: 'You can only delete your own posts'
       });
     }
 
-    // Update tag usage counts before deleting
-    if (existingPost.tags.length > 0) {
-      await prisma.blogTag.updateMany({
-        where: { id: { in: existingPost.tags.map(tag => tag.id) } },
-        data: { usage_count: { decrement: 1 } }
-      });
-    }
-
-    // Delete the blog post
-    await prisma.blogPost.delete({
-      where: { id: parseInt(id) }
-    });
+    await post.destroy();
 
     res.json({
       success: true,
       message: 'Blog post deleted successfully'
     });
-
   } catch (error) {
     console.error('Error deleting blog post:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to delete blog post',
-      message: error.message
+      message: 'Failed to delete blog post',
+      error: error.message
     });
   }
 };
 
-// GET /api/v1/blog/posts/event/:eventId - Get posts for specific event
-const getPostsByEvent = async (req, res) => {
+// GET /api/v1/blog/posts/slug/:slug - Get a blog post by slug
+const getPostBySlug = async (req, res) => {
   try {
-    const { eventId } = req.params;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-
-    const [posts, total] = await Promise.all([
-      prisma.blogPost.findMany({
-        where: {
-          event_id: parseInt(eventId),
-          status: 'published'
+    const slug = req.params.slug;
+    
+    const post = await db.BlogPost.findOne({
+      where: { slug, status: 'published' },
+      include: [
+        {
+          model: db.User,
+          as: 'author',
+          attributes: ['id', 'username', 'first_name', 'last_name']
         },
-        include: {
-          author: {
-            select: {
-              id: true,
-              username: true,
-              first_name: true,
-              last_name: true
-            }
-          },
-          category: true,
-          tags: true
+        {
+          model: db.BlogCategory,
+          as: 'category',
+          attributes: ['id', 'name', 'color', 'slug']
         },
-        orderBy: { published_at: 'desc' },
-        skip,
-        take: limit
-      }),
-      prisma.blogPost.count({
-        where: {
-          event_id: parseInt(eventId),
-          status: 'published'
+        {
+          model: db.Event,
+          as: 'event',
+          attributes: ['id', 'event_name', 'event_date']
+        },
+        {
+          model: db.BlogTag,
+          as: 'tags',
+          attributes: ['id', 'name', 'slug'],
+          through: { attributes: [] }
         }
-      })
-    ]);
-
-    res.json({
-      success: true,
-      data: {
-        posts,
-        pagination: {
-          page,
-          limit,
-          total,
-          pages: Math.ceil(total / limit)
-        }
-      }
+      ]
     });
 
-  } catch (error) {
-    console.error('Error fetching event posts:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch event posts',
-      message: error.message
-    });
-  }
-};
-
-// GET /api/v1/blog/search - Search blog posts
-const searchPosts = async (req, res) => {
-  try {
-    const { q: query, category, tag, eventId } = req.query;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-
-    if (!query) {
-      return res.status(400).json({
+    if (!post) {
+      return res.status(404).json({
         success: false,
-        error: 'Search query is required'
+        message: 'Blog post not found'
       });
     }
 
-    const where = {
-      status: 'published',
-      OR: [
-        { title: { contains: query, mode: 'insensitive' } },
-        { content: { contains: query, mode: 'insensitive' } },
-        { excerpt: { contains: query, mode: 'insensitive' } }
-      ]
-    };
-
-    if (category) {
-      where.category = { slug: category };
-    }
-
-    if (tag) {
-      where.tags = { some: { slug: tag } };
-    }
-
-    if (eventId) {
-      where.event_id = parseInt(eventId);
-    }
-
-    const [posts, total] = await Promise.all([
-      prisma.blogPost.findMany({
-        where,
-        include: {
-          author: {
-            select: {
-              id: true,
-              username: true,
-              first_name: true,
-              last_name: true
-            }
-          },
-          category: true,
-          tags: true,
-          event: {
-            select: {
-              id: true,
-              event_name: true,
-              event_date: true
-            }
-          }
-        },
-        orderBy: { published_at: 'desc' },
-        skip,
-        take: limit
-      }),
-      prisma.blogPost.count({ where })
-    ]);
+    // Increment view count
+    await post.increment('view_count');
 
     res.json({
       success: true,
-      data: {
-        posts,
-        pagination: {
-          page,
-          limit,
-          total,
-          pages: Math.ceil(total / limit)
-        },
-        query
-      }
+      data: post
     });
-
   } catch (error) {
-    console.error('Error searching posts:', error);
+    console.error('Error fetching blog post by slug:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to search posts',
-      message: error.message
+      message: 'Failed to fetch blog post',
+      error: error.message
     });
   }
 };
 
-// GET /api/v1/blog/posts/featured - Get featured posts
+// GET /api/v1/blog/posts/featured - Get featured blog posts
 const getFeaturedPosts = async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 5;
-
-    const posts = await prisma.blogPost.findMany({
-      where: {
+    
+    const posts = await db.BlogPost.findAll({
+      where: { 
         status: 'published',
         is_featured: true
       },
-      include: {
-        author: {
-          select: {
-            id: true,
-            username: true,
-            first_name: true,
-            last_name: true
-          }
+      include: [
+        {
+          model: db.User,
+          as: 'author',
+          attributes: ['id', 'username', 'first_name', 'last_name']
         },
-        category: true,
-        tags: true,
-        event: {
-          select: {
-            id: true,
-            event_name: true,
-            event_date: true
-          }
+        {
+          model: db.BlogCategory,
+          as: 'category',
+          attributes: ['id', 'name', 'color', 'slug']
+        },
+        {
+          model: db.Event,
+          as: 'event',
+          attributes: ['id', 'event_name', 'event_date']
+        },
+        {
+          model: db.BlogTag,
+          as: 'tags',
+          attributes: ['id', 'name', 'slug'],
+          through: { attributes: [] }
         }
-      },
-      orderBy: { published_at: 'desc' },
-      take: limit
+      ],
+      order: [['published_at', 'DESC']],
+      limit: limit
     });
 
     res.json({
       success: true,
       data: posts
     });
-
   } catch (error) {
     console.error('Error fetching featured posts:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch featured posts',
-      message: error.message
+      message: 'Failed to fetch featured posts',
+      error: error.message
     });
   }
 };
 
-// GET /api/v1/blog/posts/recent - Get recent posts
-const getRecentPosts = async (req, res) => {
+// GET /api/v1/blog/posts/stats - Get blog statistics (admin only)
+const getBlogStats = async (req, res) => {
   try {
-    const limit = parseInt(req.query.limit) || 10;
-
-    const posts = await prisma.blogPost.findMany({
-      where: {
-        status: 'published'
-      },
-      include: {
-        author: {
-          select: {
-            id: true,
-            username: true,
-            first_name: true,
-            last_name: true
-          }
-        },
-        category: true,
-        tags: true,
-        event: {
-          select: {
-            id: true,
-            event_name: true,
-            event_date: true
-          }
-        }
-      },
-      orderBy: { published_at: 'desc' },
-      take: limit
+    const totalPosts = await db.BlogPost.count();
+    const publishedPosts = await db.BlogPost.count({ where: { status: 'published' } });
+    const draftPosts = await db.BlogPost.count({ where: { status: 'draft' } });
+    const featuredPosts = await db.BlogPost.count({ where: { is_featured: true } });
+    const totalViews = await db.BlogPost.sum('view_count') || 0;
+    
+    const categoryStats = await db.BlogPost.findAll({
+      attributes: [
+        'category_id',
+        [db.Sequelize.fn('COUNT', db.Sequelize.col('id')), 'post_count']
+      ],
+      include: [{
+        model: db.BlogCategory,
+        as: 'category',
+        attributes: ['name', 'color']
+      }],
+      group: ['category_id', 'category.id'],
+      raw: false
     });
 
     res.json({
       success: true,
-      data: posts
+      data: {
+        totalPosts,
+        publishedPosts,
+        draftPosts,
+        featuredPosts,
+        totalViews,
+        categoryStats
+      }
     });
-
   } catch (error) {
-    console.error('Error fetching recent posts:', error);
+    console.error('Error fetching blog stats:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch recent posts',
-      message: error.message
-    });
-  }
-};
-
-// GET /api/v1/blog/posts/popular - Get popular posts
-const getPopularPosts = async (req, res) => {
-  try {
-    const limit = parseInt(req.query.limit) || 10;
-
-    const posts = await prisma.blogPost.findMany({
-      where: {
-        status: 'published'
-      },
-      include: {
-        author: {
-          select: {
-            id: true,
-            username: true,
-            first_name: true,
-            last_name: true
-          }
-        },
-        category: true,
-        tags: true,
-        event: {
-          select: {
-            id: true,
-            event_name: true,
-            event_date: true
-          }
-        }
-      },
-      orderBy: { view_count: 'desc' },
-      take: limit
-    });
-
-    res.json({
-      success: true,
-      data: posts
-    });
-
-  } catch (error) {
-    console.error('Error fetching popular posts:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch popular posts',
-      message: error.message
+      message: 'Failed to fetch blog statistics',
+      error: error.message
     });
   }
 };
@@ -777,9 +539,7 @@ module.exports = {
   createPost,
   updatePost,
   deletePost,
-  getPostsByEvent,
-  searchPosts,
+  getPostBySlug,
   getFeaturedPosts,
-  getRecentPosts,
-  getPopularPosts
+  getBlogStats
 };

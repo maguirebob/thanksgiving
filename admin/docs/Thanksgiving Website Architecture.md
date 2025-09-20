@@ -3822,10 +3822,10 @@ This implementation plan ensures a robust, scalable, and user-friendly blog syst
 ## 12. Vercel Deployment Debugging Conventions
 
 ### Problem Solved
-Vercel deployments failing with `FUNCTION_INVOCATION_FAILED` errors due to complex dependency issues, particularly with ORM libraries (Prisma) that have schema mismatches with existing databases.
+Vercel deployments failing with `FUNCTION_INVOCATION_FAILED` errors due to complex dependency issues, particularly with ORM libraries that have schema mismatches with existing databases.
 
 ### Root Causes Identified
-1. **ORM Schema Mismatches**: Prisma schema definitions don't perfectly match actual database structure
+1. **ORM Schema Mismatches**: ORM schema definitions don't perfectly match actual database structure
 2. **Complex Dependencies**: Heavy ORM libraries can cause initialization failures in serverless environments
 3. **Database Connection Issues**: ORM connection pooling conflicts with Vercel's serverless architecture
 4. **Import Chain Failures**: One failing import can crash the entire API
