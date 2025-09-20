@@ -10,6 +10,10 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --coverage --watchAll=false",
+    "test:frontend": "playwright test",
+    "test:frontend:ui": "playwright test --ui",
+    "test:frontend:headed": "playwright test --headed",
+    "test:frontend:debug": "playwright test --debug",
     "lint": "echo \"Linting not configured\"",
     "setup": "node -e \"console.log('Please run the SQL script in admin/create_tables.sql to set up the database')\""
   },
@@ -42,6 +46,7 @@
     "node": ">=18.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
     "jest": "^30.1.3",
     "jest-environment-jsdom": "^30.1.2",
     "jsdom": "^27.0.0",

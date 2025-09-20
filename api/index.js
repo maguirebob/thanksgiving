@@ -49,6 +49,8 @@ app.use((req, res, next) => {
 // Serve static files from public directory
 app.use('/images', express.static(path.join(__dirname, '../public/images')));
 app.use('/photos', express.static(path.join(__dirname, '../public/photos')));
+app.use('/css', express.static(path.join(__dirname, '../public/css')));
+app.use('/js', express.static(path.join(__dirname, '../public/js')));
 
 // Serve JavaScript modules
 app.use('/javascript', express.static(path.join(__dirname, '../public/javascript')));
@@ -265,9 +267,22 @@ app.post('/setup-db', async (req, res) => {
         email VARCHAR(255) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
         role enum_users_role DEFAULT 'user',
+        first_name VARCHAR(255),
+        last_name VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+      
+      -- Add first_name and last_name columns if they don't exist
+      DO $$ 
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Users' AND column_name = 'first_name') THEN
+          ALTER TABLE "Users" ADD COLUMN first_name VARCHAR(255);
+        END IF;
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'Users' AND column_name = 'last_name') THEN
+          ALTER TABLE "Users" ADD COLUMN last_name VARCHAR(255);
+        END IF;
+      END $$;
       
       -- Create Sessions table
       CREATE TABLE IF NOT EXISTS "Sessions" (
