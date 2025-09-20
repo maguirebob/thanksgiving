@@ -127,6 +127,50 @@ module.exports = (sequelize, DataTypes) => {
     return !!user;
   };
 
+  // Profile management methods
+  User.prototype.updateProfile = async function(updateData) {
+    const allowedFields = ['email', 'first_name', 'last_name'];
+    const filteredData = {};
+    
+    // Only allow specific fields to be updated
+    for (const field of allowedFields) {
+      if (updateData[field] !== undefined) {
+        filteredData[field] = updateData[field];
+      }
+    }
+    
+    // Validate email if provided
+    if (filteredData.email && !this.sequelize.Validator.isEmail(filteredData.email)) {
+      throw new Error('Invalid email format');
+    }
+    
+    // Update the user
+    await this.update(filteredData);
+    return this;
+  };
+
+  User.prototype.changePassword = async function(currentPassword, newPassword) {
+    // Verify current password
+    const isCurrentPasswordValid = await this.validatePassword(currentPassword);
+    if (!isCurrentPasswordValid) {
+      throw new Error('Invalid current password');
+    }
+    
+    // Validate new password
+    if (!newPassword || newPassword.length < 8) {
+      throw new Error('Password must be at least 8 characters long');
+    }
+    
+    // Hash and update password
+    const hashedPassword = await User.hashPassword(newPassword);
+    await this.update({ password_hash: hashedPassword });
+    return this;
+  };
+
+  User.prototype.verifyPassword = async function(password) {
+    return await this.validatePassword(password);
+  };
+
   return User;
 };
 
