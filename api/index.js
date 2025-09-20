@@ -414,9 +414,9 @@ app.post('/auth/register', async (req, res) => {
     
     await client.connect();
     
-    // Check if user already exists
+    // Check if user already exists (case-insensitive username check)
     const existingUser = await client.query(
-      'SELECT id FROM "Users" WHERE username = $1 OR email = $2',
+      'SELECT id FROM "Users" WHERE LOWER(username) = LOWER($1) OR email = $2',
       [username, email]
     );
     
@@ -432,12 +432,12 @@ app.post('/auth/register', async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    // Create user
+    // Create user (convert username to lowercase)
     const result = await client.query(
       `INSERT INTO "Users" (username, email, password_hash, role) 
        VALUES ($1, $2, $3, 'user') 
        RETURNING id, username, email, role, created_at`,
-      [username, email, hashedPassword]
+      [username.toLowerCase(), email, hashedPassword]
     );
     
     await client.end();
@@ -489,9 +489,9 @@ app.post('/auth/login', async (req, res) => {
     
     await client.connect();
     
-    // Find user
+    // Find user (case-insensitive username lookup)
     const result = await client.query(
-      'SELECT id, username, email, password_hash, role FROM "Users" WHERE username = $1',
+      'SELECT id, username, email, password_hash, role FROM "Users" WHERE LOWER(username) = LOWER($1)',
       [username]
     );
     
