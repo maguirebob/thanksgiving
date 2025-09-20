@@ -49,6 +49,72 @@ When building a new piece of functionality, implement it gradually in this speci
 - Create database connection and query functions
 - Test database operations independently
 
+### 4. Case-Insensitive Username Handling
+**Always implement case-insensitive username functionality for user authentication systems.**
+
+#### Problem Solved
+- Resolves inconsistencies between local development databases (case-insensitive) and production databases (case-sensitive)
+- Ensures consistent user experience across all environments
+- Prevents duplicate user accounts due to case variations
+
+#### Implementation Approach
+1. **Database Storage**: Always store usernames in lowercase in the database
+2. **Registration**: Convert usernames to lowercase before storing using `username.toLowerCase()`
+3. **Login Lookup**: Use case-insensitive database queries with `LOWER(username) = LOWER($1)`
+4. **Duplicate Check**: Use case-insensitive comparison for existing username checks with `LOWER(username) = LOWER($1)`
+5. **Migration**: Include username migration in database setup to convert existing usernames to lowercase
+
+#### Code Examples
+```javascript
+// Registration - Convert to lowercase before storing
+const result = await client.query(
+  `INSERT INTO "Users" (username, email, password_hash, role) 
+   VALUES ($1, $2, $3, 'user') 
+   RETURNING id, username, email, role, created_at`,
+  [username.toLowerCase(), email, hashedPassword]
+);
+
+// Login - Case-insensitive lookup
+const result = await client.query(
+  'SELECT id, username, email, password_hash, role FROM "Users" WHERE LOWER(username) = LOWER($1)',
+  [username]
+);
+
+// Duplicate Check - Case-insensitive comparison
+const existingUser = await client.query(
+  'SELECT id FROM "Users" WHERE LOWER(username) = LOWER($1) OR email = $2',
+  [username, email]
+);
+```
+
+#### Migration Script Pattern
+```javascript
+// Get all users and convert usernames to lowercase
+const users = await client.query('SELECT id, username FROM "Users"');
+const usersToUpdate = users.rows.filter(user => user.username !== user.username.toLowerCase());
+
+for (const user of usersToUpdate) {
+  const lowercaseUsername = user.username.toLowerCase();
+  
+  // Check for conflicts
+  const existingUser = await client.query(
+    'SELECT id FROM "Users" WHERE username = $1 AND id != $2',
+    [lowercaseUsername, user.id]
+  );
+  
+  if (existingUser.rows.length === 0) {
+    await client.query('UPDATE "Users" SET username = $1 WHERE id = $2', 
+      [lowercaseUsername, user.id]);
+  }
+}
+```
+
+#### Benefits
+- **Consistency**: Works identically across all environments
+- **User-Friendly**: Users can login with any case variation (bob, Bob, BOB)
+- **Prevents Duplicates**: No duplicate accounts due to case differences
+- **Future-Proof**: Handles any database case-sensitivity settings
+
 #### Phase 2: API Endpoints
 - Implement REST API endpoints
 - Add proper authentication and authorization
