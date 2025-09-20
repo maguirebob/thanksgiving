@@ -56,28 +56,22 @@
                     <!-- Quick Stats -->
                     <div class="quick-stats mt-4">
                         <div class="row text-center">
-                            <div class="col-3">
+                            <div class="col-4">
                                 <div class="stat-item">
                                     <div class="stat-number" id="photoCount" style="font-size: 1.8rem; font-weight: bold; color: #007bff;">0</div>
                                     <div class="stat-label" style="font-size: 0.9rem; color: #6c757d;">Photos</div>
                                 </div>
                             </div>
-                            <div class="col-3">
+                            <div class="col-4">
                                 <div class="stat-item">
                                     <div class="stat-number" id="recipeCount" style="font-size: 1.8rem; font-weight: bold; color: #28a745;">0</div>
                                     <div class="stat-label" style="font-size: 0.9rem; color: #6c757d;">Recipes</div>
                                 </div>
                             </div>
-                            <div class="col-3">
+                            <div class="col-4">
                                 <div class="stat-item">
                                     <div class="stat-number" id="blogCount" style="font-size: 1.8rem; font-weight: bold; color: #ffc107;">0</div>
                                     <div class="stat-label" style="font-size: 0.9rem; color: #6c757d;">Blog Posts</div>
-                                </div>
-                            </div>
-                            <div class="col-3">
-                                <div class="stat-item">
-                                    <div class="stat-number" id="commentCount" style="font-size: 1.8rem; font-weight: bold; color: #dc3545;">0</div>
-                                    <div class="stat-label" style="font-size: 0.9rem; color: #6c757d;">Comments</div>
                                 </div>
                             </div>
                         </div>
@@ -119,12 +113,6 @@
                 <button class="nav-link" id="blog-tab" data-bs-toggle="tab" data-bs-target="#blog" type="button" role="tab" aria-controls="blog" aria-selected="false">
                     <i class="fas fa-pen me-2"></i>Blog
                     <span class="badge bg-warning ms-2" id="blogBadge">0</span>
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="comments-tab" data-bs-toggle="tab" data-bs-target="#comments" type="button" role="tab" aria-controls="comments" aria-selected="false">
-                    <i class="fas fa-comments me-2"></i>Comments
-                    <span class="badge bg-danger ms-2" id="commentsBadge">0</span>
                 </button>
             </li>
         </ul>
@@ -265,59 +253,6 @@
             </div>
         </div>
 
-        <!-- Comments Tab -->
-        <div class="tab-pane fade" id="comments" role="tabpanel" aria-labelledby="comments-tab">
-            <div class="comments-section">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="mb-0">
-                        <i class="fas fa-comments me-2"></i>Comments
-                    </h3>
-                    <button class="btn btn-primary" onclick="addComment()">
-                        <i class="fas fa-plus me-2"></i>Add Comment
-                    </button>
-                </div>
-                
-                <!-- Add Comment Form -->
-                <div class="add-comment-form mb-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Add a Comment</h5>
-                            <form id="commentForm">
-                                <div class="mb-3">
-                                    <textarea class="form-control" rows="3" placeholder="Share your thoughts about this Thanksgiving..." id="commentText" required></textarea>
-                                </div>
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <select class="form-select" id="commentType" style="width: auto; display: inline-block;">
-                                            <option value="general">General Comment</option>
-                                            <option value="photo">About a Photo</option>
-                                            <option value="recipe">About a Recipe</option>
-                                            <option value="blog">About a Blog Post</option>
-                                        </select>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-paper-plane me-2"></i>Post Comment
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Comments List -->
-                <div id="commentsList">
-                    <!-- Placeholder for comments -->
-                    <div class="text-center text-muted py-5">
-                        <i class="fas fa-comments fa-3x mb-3" style="color: #dee2e6;"></i>
-                        <h4>No comments yet</h4>
-                        <p>Be the first to share your thoughts!</p>
-                        <button class="btn btn-primary" onclick="addComment()">
-                            <i class="fas fa-plus me-2"></i>Add First Comment
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -569,9 +504,6 @@ async function updateStats() {
         document.getElementById('blogCount').textContent = '0';
         document.getElementById('blogBadge').textContent = '0';
         
-        // TODO: Update comment count when comments are implemented
-        document.getElementById('commentCount').textContent = '0';
-        document.getElementById('commentsBadge').textContent = '0';
     } catch (error) {
         console.error('Error updating stats:', error);
     }
@@ -588,13 +520,6 @@ function writeBlog() {
     // TODO: Implement blog creation
 }
 
-function addComment() {
-    // Focus on comment form
-    document.getElementById('commentText').focus();
-    // Switch to comments tab
-    const commentsTab = new bootstrap.Tab(document.getElementById('comments-tab'));
-    commentsTab.show();
-}
 
 // Tab change handlers
 document.addEventListener('DOMContentLoaded', function() {
@@ -616,21 +541,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 case '#blog':
                     loadBlogPosts();
                     break;
-                case '#comments':
-                    loadComments();
-                    break;
             }
         });
     });
     
-    // Handle comment form submission
-    const commentForm = document.getElementById('commentForm');
-    if (commentForm) {
-        commentForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            submitComment();
-        });
-    }
     
     // Handle recipe search/filter
     const recipeSearch = document.getElementById('recipeSearch');
@@ -660,10 +574,6 @@ function loadBlogPosts() {
     // TODO: Implement blog post loading
 }
 
-function loadComments() {
-    console.log('Loading comments...');
-    // TODO: Implement comment loading
-}
 
 function filterRecipes() {
     console.log('Filtering recipes...');
@@ -675,22 +585,6 @@ function filterBlogPosts() {
     // TODO: Implement blog post filtering
 }
 
-function submitComment() {
-    const commentText = document.getElementById('commentText').value;
-    const commentType = document.getElementById('commentType').value;
-    
-    if (!commentText.trim()) {
-        alert('Please enter a comment.');
-        return;
-    }
-    
-    console.log('Submitting comment:', { text: commentText, type: commentType });
-    // TODO: Implement comment submission
-    
-    // Clear form
-    document.getElementById('commentText').value = '';
-    alert('Comment functionality coming soon!');
-}
 
 // Photo loading is now handled by PhotoManager.loadPhotos()
 

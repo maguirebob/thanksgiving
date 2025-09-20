@@ -8,13 +8,9 @@ class DatabaseHelper {
       await db.sequelize.authenticate();
       console.log('✅ Test database connection established');
       
-      // Sync all models (create tables)
-      await db.sequelize.sync({ force: true });
-      console.log('✅ Test database tables created');
-      
-      // Insert test data
-      await this.insertTestData();
-      console.log('✅ Test data inserted');
+      // For Vercel database, we don't force sync or insert test data
+      // We work with existing data
+      console.log('✅ Using existing Vercel database data');
       
     } catch (error) {
       console.error('❌ Database setup failed:', error);

@@ -36,8 +36,7 @@ describe('User Model - Case Insensitive Username (Simple)', () => {
       const user = await db.User.create(userData);
 
       expect(user).toBeTruthy();
-      expect(user.username).toBe('TestUser123');
-      expect(user.username_lower).toBe('testuser123');
+      expect(user.username).toBe('testuser123'); // Username is stored in lowercase
       expect(user.email).toBe('test@example.com');
     });
 
@@ -76,25 +75,25 @@ describe('User Model - Case Insensitive Username (Simple)', () => {
     test('findByUsername should work with lowercase', async () => {
       const user = await db.User.findByUsername('testuser');
       expect(user).toBeTruthy();
-      expect(user.username).toBe('TestUser');
+      expect(user.username).toBe('testuser'); // Username is stored in lowercase
     });
 
     test('findByUsername should work with uppercase', async () => {
       const user = await db.User.findByUsername('TESTUSER');
       expect(user).toBeTruthy();
-      expect(user.username).toBe('TestUser');
+      expect(user.username).toBe('testuser'); // Username is stored in lowercase
     });
 
     test('findByUsername should work with mixed case', async () => {
       const user = await db.User.findByUsername('TestUser');
       expect(user).toBeTruthy();
-      expect(user.username).toBe('TestUser');
+      expect(user.username).toBe('testuser'); // Username is stored in lowercase
     });
 
     test('findByUsername should work with random case', async () => {
       const user = await db.User.findByUsername('tEsTuSeR');
       expect(user).toBeTruthy();
-      expect(user.username).toBe('TestUser');
+      expect(user.username).toBe('testuser'); // Username is stored in lowercase
     });
 
     test('findByUsername should return null for non-existent username', async () => {
@@ -149,19 +148,19 @@ describe('User Model - Case Insensitive Username (Simple)', () => {
     test('findByCredentials should work with lowercase username', async () => {
       const user = await db.User.findByCredentials('testuser', 'password123');
       expect(user).toBeTruthy();
-      expect(user.username).toBe('TestUser');
+      expect(user.username).toBe('testuser'); // Username is stored in lowercase
     });
 
     test('findByCredentials should work with uppercase username', async () => {
       const user = await db.User.findByCredentials('TESTUSER', 'password123');
       expect(user).toBeTruthy();
-      expect(user.username).toBe('TestUser');
+      expect(user.username).toBe('testuser'); // Username is stored in lowercase
     });
 
     test('findByCredentials should work with mixed case username', async () => {
       const user = await db.User.findByCredentials('TestUser', 'password123');
       expect(user).toBeTruthy();
-      expect(user.username).toBe('TestUser');
+      expect(user.username).toBe('testuser'); // Username is stored in lowercase
     });
 
     test('findByCredentials should throw error for wrong password', async () => {

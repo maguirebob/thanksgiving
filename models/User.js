@@ -58,15 +58,21 @@ module.exports = (sequelize, DataTypes) => {
     createdAt: 'created_at',
     updatedAt: 'updated_at',
     hooks: {
-      beforeCreate: (user) => {
+      beforeCreate: async (user) => {
         if (user.username) {
           user.username = user.username.toLowerCase();
         }
+        if (user.password_hash && !user.password_hash.startsWith('$2')) {
+          user.password_hash = await bcrypt.hash(user.password_hash, 10);
+        }
         user.updated_at = new Date();
       },
-      beforeUpdate: (user) => {
+      beforeUpdate: async (user) => {
         if (user.changed('username') && user.username) {
           user.username = user.username.toLowerCase();
+        }
+        if (user.changed('password_hash') && user.password_hash && !user.password_hash.startsWith('$2')) {
+          user.password_hash = await bcrypt.hash(user.password_hash, 10);
         }
         user.updated_at = new Date();
       }
@@ -78,11 +84,19 @@ module.exports = (sequelize, DataTypes) => {
     return await bcrypt.compare(password, this.password_hash);
   };
 
+  User.prototype.validPassword = async function(password) {
+    return await bcrypt.compare(password, this.password_hash);
+  };
+
   User.prototype.getFullName = function() {
     if (this.first_name && this.last_name) {
       return `${this.first_name} ${this.last_name}`;
+    } else if (this.first_name) {
+      return this.first_name;
+    } else if (this.last_name) {
+      return this.last_name;
     }
-    return this.username;
+    return '';
   };
 
   User.prototype.isAdmin = function() {

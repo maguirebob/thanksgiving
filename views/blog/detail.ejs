@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= blogPost.title %> - Thanksgiving Blog</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/blog.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Header -->
+        <header class="blog-header">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="/blog">Blog</a></li>
+                                <li class="breadcrumb-item active" aria-current="page"><%= blogPost.title %></li>
+                            </ol>
+                        </nav>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a href="/blog" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Back to Blog
+                        </a>
+                        <% if (user && (user.role === 'admin' || user.id === blogPost.author_id)) { %>
+                        <a href="/blog/edit/<%= blogPost.id %>" class="btn btn-primary ms-2">
+                            <i class="fas fa-edit me-2"></i>
+                            Edit Post
+                        </a>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="blog-main">
+            <div class="container">
+                <div class="row">
+                    <!-- Blog Post Content -->
+                    <div class="col-lg-8">
+                        <article class="blog-post-detail">
+                            <!-- Post Header -->
+                            <header class="post-header">
+                                <h1 class="post-title"><%= blogPost.title %></h1>
+                                
+                                <div class="post-meta">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-6">
+                                            <div class="author-info">
+                                                <i class="fas fa-user me-2"></i>
+                                                <span class="author-name">
+                                                    <%= blogPost.author.first_name %> <%= blogPost.author.last_name %>
+                                                </span>
+                                                <span class="post-date">
+                                                    <i class="fas fa-calendar me-1"></i>
+                                                    <%= new Date(blogPost.published_at).toLocaleDateString() %>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 text-end">
+                                            <div class="post-stats">
+                                                <span class="view-count">
+                                                    <i class="fas fa-eye me-1"></i>
+                                                    <%= blogPost.view_count %> views
+                                                </span>
+                                                <% if (blogPost.is_featured) { %>
+                                                <span class="featured-badge">
+                                                    <i class="fas fa-star me-1"></i>
+                                                    Featured
+                                                </span>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Category and Tags -->
+                                <div class="post-categories-tags">
+                                    <% if (blogPost.category) { %>
+                                    <span class="category-badge" style="background-color: <%= blogPost.category.color %>">
+                                        <%= blogPost.category.name %>
+                                    </span>
+                                    <% } %>
+                                    
+                                    <% if (blogPost.tags && blogPost.tags.length > 0) { %>
+                                    <div class="post-tags">
+                                        <% blogPost.tags.forEach(tag => { %>
+                                        <span class="tag-badge">
+                                            <i class="fas fa-tag me-1"></i>
+                                            <%= tag.blog_tag.name %>
+                                        </span>
+                                        <% }); %>
+                                    </div>
+                                    <% } %>
+                                </div>
+                            </header>
+
+                            <!-- Featured Image -->
+                            <% if (blogPost.featured_image_url) { %>
+                            <div class="post-featured-image">
+                                <img src="<%= blogPost.featured_image_url %>" alt="<%= blogPost.title %>" class="img-fluid rounded">
+                            </div>
+                            <% } %>
+
+                            <!-- Post Content -->
+                            <div class="post-content">
+                                <%= blogPost.content %>
+                            </div>
+
+                            <!-- Post Footer -->
+                            <footer class="post-footer">
+                                <div class="post-actions">
+                                    <button class="btn btn-outline-primary" id="likeBtn">
+                                        <i class="fas fa-heart me-2"></i>
+                                        Like
+                                    </button>
+                                    <button class="btn btn-outline-secondary" id="shareBtn">
+                                        <i class="fas fa-share me-2"></i>
+                                        Share
+                                    </button>
+                                </div>
+                            </footer>
+                        </article>
+
+                        <!-- Related Posts -->
+                        <section class="related-posts mt-5">
+                            <h4>Related Posts</h4>
+                            <div id="relatedPosts">
+                                <!-- Related posts will be loaded here -->
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- Sidebar -->
+                    <div class="col-lg-4">
+                        <!-- Author Info -->
+                        <div class="blog-sidebar-widget">
+                            <h5 class="widget-title">
+                                <i class="fas fa-user me-2"></i>
+                                About the Author
+                            </h5>
+                            <div class="author-card">
+                                <div class="author-avatar">
+                                    <i class="fas fa-user-circle fa-3x"></i>
+                                </div>
+                                <div class="author-details">
+                                    <h6><%= blogPost.author.first_name %> <%= blogPost.author.last_name %></h6>
+                                    <p class="author-username">@<%= blogPost.author.username %></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Categories -->
+                        <div class="blog-sidebar-widget">
+                            <h5 class="widget-title">
+                                <i class="fas fa-folder me-2"></i>
+                                Categories
+                            </h5>
+                            <div id="categoriesList">
+                                <!-- Categories will be loaded here -->
+                            </div>
+                        </div>
+
+                        <!-- Popular Tags -->
+                        <div class="blog-sidebar-widget">
+                            <h5 class="widget-title">
+                                <i class="fas fa-tags me-2"></i>
+                                Popular Tags
+                            </h5>
+                            <div id="tagsList">
+                                <!-- Tags will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/blogManager.js"></script>
+    <script>
+        // Initialize blog detail functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const blogManager = new BlogManager();
+            blogManager.initDetail();
+        });
+    </script>
+</body>
+</html>

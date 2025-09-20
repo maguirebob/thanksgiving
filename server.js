@@ -97,6 +97,173 @@ app.use('/auth', authRoutes);
 app.use('/admin', adminRoutes);
 app.use(`${appConfig.apiPrefix}/${appConfig.apiVersion}`, apiRoutes);
 
+// Blog routes
+app.get('/blog', async (req, res) => {
+  try {
+    const database = await getDb();
+    
+    // Get blog posts with pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+    
+    const { count, rows: posts } = await database.BlogPost.findAndCountAll({
+      where: { status: 'published' },
+      include: [
+        {
+          model: database.User,
+          as: 'author',
+          attributes: ['id', 'username', 'first_name', 'last_name']
+        },
+        {
+          model: database.BlogCategory,
+          as: 'category',
+          attributes: ['id', 'name', 'color']
+        },
+        {
+          model: database.Event,
+          as: 'event',
+          attributes: ['id', 'event_name', 'event_date']
+        }
+      ],
+      order: [['published_at', 'DESC']],
+      limit: limit,
+      offset: offset
+    });
+    
+    res.render('blog/index', {
+      title: 'Blog - Thanksgiving Memories',
+      posts: posts,
+      pagination: {
+        page: page,
+        limit: limit,
+        total: count,
+        pages: Math.ceil(count / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Error loading blog page:', error);
+    res.status(500).render('error', {
+      title: 'Error',
+      message: 'Failed to load blog page',
+      error: error.message
+    });
+  }
+});
+
+app.get('/blog/:id', async (req, res) => {
+  try {
+    const database = await getDb();
+    const postId = req.params.id;
+    
+    const blogPost = await database.BlogPost.findByPk(postId, {
+      include: [
+        {
+          model: database.User,
+          as: 'author',
+          attributes: ['id', 'username', 'first_name', 'last_name']
+        },
+        {
+          model: database.BlogCategory,
+          as: 'category',
+          attributes: ['id', 'name', 'color']
+        },
+        {
+          model: database.Event,
+          as: 'event',
+          attributes: ['id', 'event_name', 'event_date']
+        },
+        {
+          model: database.BlogPostTag,
+          as: 'tags',
+          include: [{
+            model: database.BlogTag,
+            as: 'blog_tag',
+            attributes: ['id', 'name', 'slug']
+          }]
+        }
+      ]
+    });
+    
+    if (!blogPost) {
+      return res.status(404).render('error', {
+        title: 'Post Not Found',
+        message: 'The blog post you are looking for does not exist.',
+        error: '404 Not Found'
+      });
+    }
+    
+    // Increment view count
+    await blogPost.increment('view_count');
+    
+    res.render('blog/detail', {
+      title: `${blogPost.title} - Thanksgiving Blog`,
+      blogPost: blogPost
+    });
+  } catch (error) {
+    console.error('Error loading blog post:', error);
+    res.status(500).render('error', {
+      title: 'Error',
+      message: 'Failed to load blog post',
+      error: error.message
+    });
+  }
+});
+
+app.get('/blog/create', (req, res) => {
+  res.render('blog/create', {
+    title: 'Create New Post - Thanksgiving Blog'
+  });
+});
+
+app.get('/blog/edit/:id', async (req, res) => {
+  try {
+    const database = await getDb();
+    const postId = req.params.id;
+    
+    const blogPost = await database.BlogPost.findByPk(postId, {
+      include: [
+        {
+          model: database.User,
+          as: 'author',
+          attributes: ['id', 'username', 'first_name', 'last_name']
+        },
+        {
+          model: database.BlogCategory,
+          as: 'category',
+          attributes: ['id', 'name', 'color']
+        },
+        {
+          model: database.Event,
+          as: 'event',
+          attributes: ['id', 'event_name', 'event_date']
+        }
+      ]
+    });
+    
+    if (!blogPost) {
+      return res.status(404).render('error', {
+        title: 'Post Not Found',
+        message: 'The blog post you are looking for does not exist.',
+        error: '404 Not Found'
+      });
+    }
+    
+    res.render('blog/create', {
+      title: `Edit ${blogPost.title} - Thanksgiving Blog`,
+      blogPost: blogPost,
+      isEdit: true
+    });
+  } catch (error) {
+    console.error('Error loading blog post for editing:', error);
+    res.status(500).render('error', {
+      title: 'Error',
+      message: 'Failed to load blog post for editing',
+      error: error.message
+    });
+  }
+});
+
 // Health check endpoint (no database required)
 app.get('/health', (req, res) => {
   res.json({

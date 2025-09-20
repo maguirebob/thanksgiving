@@ -2,6 +2,7 @@ const express = require('express');
 const menuController = require('../controllers/menuController');
 const photoController = require('../controllers/photoController');
 const profileRoutes = require('./profileRoutes');
+const blogRoutes = require('./blogRoutes');
 const {
   validateMenuId,
   validateYear,
@@ -87,5 +88,8 @@ router.delete('/photos/:photoId',
 
 // Profile management routes
 router.use('/', profileRoutes);
+
+// Blog routes
+router.use('/blog', blogRoutes);
 
 module.exports = router;

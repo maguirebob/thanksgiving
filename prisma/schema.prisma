@@ -1,0 +1,148 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Existing tables (matching current database structure)
+model Users {
+  id          Int      @id @default(autoincrement())
+  username    String   @unique
+  email       String   @unique
+  password_hash String
+  role        String   @default("user")
+  first_name  String?
+  last_name   String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @default(now())
+
+  // Relations
+  sessions    Sessions[]
+  blogPosts   BlogPost[]
+
+  @@map("Users")
+}
+
+model Sessions {
+  session_id String   @id
+  user_id    Int
+  expires    DateTime
+  data       String?
+  created_at DateTime @default(now())
+
+  // Relations
+  user Users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("Sessions")
+}
+
+model Events {
+  id                  Int      @id @default(autoincrement())
+  event_name          String
+  event_date          DateTime @db.Date
+  description         String?
+  menu_image_url      String?
+
+  // Relations
+  photos    Photos[]
+  blogPosts BlogPost[]
+
+  @@map("Events")
+}
+
+model Photos {
+  id                Int      @id @default(autoincrement())
+  event_id          Int
+  filename          String
+  original_name     String
+  file_path         String
+  file_size         Int?
+  mime_type         String?
+  description       String?
+  caption           String?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @default(now())
+
+  // Relations
+  event Events @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  @@map("Photos")
+}
+
+// New blog tables
+model BlogCategory {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  color       String   @default("#007bff")
+  slug        String   @unique
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  posts BlogPost[]
+
+  @@map("blog_categories")
+}
+
+model BlogTag {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  usageCount  Int      @default(0) @map("usage_count")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  posts BlogPostTag[]
+
+  @@map("blog_tags")
+}
+
+model BlogPost {
+  id                Int      @id @default(autoincrement())
+  title             String
+  slug              String   @unique
+  content           String
+  excerpt           String?
+  featuredImageUrl  String?  @map("featured_image_url")
+  status            String   @default("draft")
+  isFeatured        Boolean  @default(false) @map("is_featured")
+  viewCount         Int      @default(0) @map("view_count")
+  authorId          Int      @map("author_id")
+  eventId           Int?     @map("event_id")
+  categoryId        Int?     @map("category_id")
+  publishedAt       DateTime? @map("published_at")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  author   Users         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  event    Events?       @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  category BlogCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tags     BlogPostTag[]
+
+  @@map("blog_posts")
+}
+
+model BlogPostTag {
+  id         Int      @id @default(autoincrement())
+  blogPostId Int      @map("blog_post_id")
+  blogTagId  Int      @map("blog_tag_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  blogPost BlogPost @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  blogTag  BlogTag  @relation(fields: [blogTagId], references: [id], onDelete: Cascade)
+
+  @@unique([blogPostId, blogTagId])
+  @@map("blog_post_tags")
+}

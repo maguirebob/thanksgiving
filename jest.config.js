@@ -9,7 +9,6 @@ module.exports = {
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
   testTimeout: 10000,
   maxWorkers: 1,
   // Browser API mocks
@@ -22,5 +21,7 @@ module.exports = {
     alert: true,
     TextEncoder: true,
     TextDecoder: true
-  }
+  },
+  // Setup files to run before tests
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.js', '<rootDir>/tests/setup-url.js']
 };

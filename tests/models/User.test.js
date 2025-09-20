@@ -121,12 +121,12 @@ describe('User Model', () => {
       });
     });
 
-    test('validPassword should return true for correct password', () => {
-      expect(user.validPassword('password123')).toBe(true);
+    test('validPassword should return true for correct password', async () => {
+      expect(await user.validPassword('password123')).toBe(true);
     });
 
-    test('validPassword should return false for incorrect password', () => {
-      expect(user.validPassword('wrongpassword')).toBe(false);
+    test('validPassword should return false for incorrect password', async () => {
+      expect(await user.validPassword('wrongpassword')).toBe(false);
     });
 
     test('isAdmin should return true for admin user', async () => {

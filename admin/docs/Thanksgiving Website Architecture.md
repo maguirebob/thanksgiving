@@ -183,6 +183,213 @@ Based on real-world debugging experience, follow these practices when issues ari
 4. **Update Tests**: Add tests to prevent regression of the same issue
 5. **Document the Solution**: Update architecture document with lessons learned
 
+### 8. Frontend Modal and UI Management Conventions
+
+#### Problem Solved
+Bootstrap modals can leave behind backdrop elements and CSS classes that cause grey screens and UI blocking issues, especially when modals are closed programmatically or when there are duplicate form submissions.
+
+#### Implementation Approach
+**Always implement comprehensive modal cleanup and duplicate submission prevention**
+
+#### Code Examples
+
+**Modal Backdrop Cleanup Method:**
+```javascript
+cleanupModalBackdrop() {
+    console.log('Cleaning up modal backdrop');
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    console.log('Found backdrops:', backdrops.length);
+    backdrops.forEach(backdrop => {
+        console.log('Removing backdrop');
+        backdrop.remove();
+    });
+    
+    // Remove modal-open class from body
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    console.log('Cleaned up modal classes');
+}
+```
+
+**Duplicate Submission Prevention:**
+```javascript
+// Add isSubmitting flag to prevent duplicate form submissions
+constructor() {
+    this.isSubmitting = false;
+    // ... other properties
+}
+
+async handleFormSubmission(event) {
+    event.preventDefault();
+    
+    // Prevent duplicate submissions
+    if (this.isSubmitting) {
+        console.log('Form already being submitted, ignoring duplicate');
+        return;
+    }
+    
+    this.isSubmitting = true;
+    
+    try {
+        // ... form processing
+    } finally {
+        this.isSubmitting = false;
+    }
+}
+```
+
+**Modal Event Listeners for Cleanup:**
+```javascript
+setupModalEvents() {
+    // Add cleanup to ALL modal close events
+    document.getElementById('editProfileModal')?.addEventListener('hidden.bs.modal', () => {
+        this.cleanupModalBackdrop();
+    });
+    
+    document.getElementById('viewAllUsersModal')?.addEventListener('hidden.bs.modal', () => {
+        this.cleanupModalBackdrop();
+    });
+    
+    // ... repeat for all modals
+}
+```
+
+**Button Loading State Management:**
+```javascript
+setButtonLoading(buttonId, loading) {
+    const button = document.getElementById(buttonId);
+    if (!button) return;
+
+    if (loading) {
+        // Store original content if not already stored
+        if (!button.dataset.originalContent) {
+            button.dataset.originalContent = button.innerHTML;
+        }
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Loading...';
+    } else {
+        button.disabled = false;
+        // Restore original button content
+        const originalContent = button.dataset.originalContent;
+        if (originalContent) {
+            button.innerHTML = originalContent;
+        }
+    }
+}
+```
+
+#### Benefits
+- **Prevents Grey Screens**: Modal backdrops are properly cleaned up
+- **Prevents Duplicate Submissions**: Forms can't be submitted multiple times
+- **Better UX**: Users get proper feedback and can't break the UI
+- **Consistent Behavior**: All modals behave the same way
+- **Debugging Friendly**: Console logging helps identify issues
+
+### 9. EJS Layout System Conventions
+
+#### Problem Solved
+When using EJS with express-ejs-layouts, pages can accidentally include duplicate headers, footers, and HTML structure, causing visual duplication and layout issues.
+
+#### Implementation Approach
+**Always check if pages are using layouts and remove duplicate structural elements**
+
+#### Code Examples
+
+**Check for Layout Usage:**
+```javascript
+// In API routes, check if express-ejs-layouts is configured
+app.use(expressLayouts);
+app.set('layout', 'layout');
+```
+
+**Remove Duplicate Elements from Individual Pages:**
+```html
+<!-- REMOVE these from individual pages when using layouts -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- head content -->
+</head>
+<body>
+    <header><!-- header content --></header>
+    <!-- page content -->
+    <footer><!-- footer content --></footer>
+</body>
+</html>
+
+<!-- KEEP only page-specific content -->
+<!-- Profile-specific styles -->
+<link href="/css/profile.css" rel="stylesheet">
+<!-- page content only -->
+```
+
+**Layout Template Structure:**
+```html
+<!-- layout.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- common head content -->
+</head>
+<body>
+    <header><!-- common header --></header>
+    <main class="container">
+        <%- body %> <!-- page content goes here -->
+    </main>
+    <footer><!-- common footer --></footer>
+</body>
+</html>
+```
+
+#### Benefits
+- **No Duplicate UI**: Headers, footers, and navigation appear only once
+- **Consistent Layout**: All pages follow the same structure
+- **Easier Maintenance**: Common elements are defined in one place
+- **Better Performance**: Smaller page sizes without duplication
+
+### 10. Static File Serving Conventions
+
+#### Problem Solved
+Frontend assets (CSS, JavaScript, images) can fail to load in production environments if not properly configured for static file serving.
+
+#### Implementation Approach
+**Always configure explicit static file serving routes for all frontend assets**
+
+#### Code Examples
+
+**Express Static File Configuration:**
+```javascript
+// Serve static files from public directory
+app.use('/images', express.static(path.join(__dirname, '../public/images')));
+app.use('/photos', express.static(path.join(__dirname, '../public/photos')));
+app.use('/css', express.static(path.join(__dirname, '../public/css')));
+app.use('/js', express.static(path.join(__dirname, '../public/js')));
+
+// Serve JavaScript modules
+app.use('/javascript', express.static(path.join(__dirname, '../public/javascript')));
+```
+
+**File Organization:**
+```
+public/
+├── css/
+│   └── profile.css
+├── js/
+│   └── profileManager.js
+├── javascript/
+│   └── photoManager.js
+├── images/
+│   └── menu-images/
+└── photos/
+    └── user-photos/
+```
+
+#### Benefits
+- **Reliable Asset Loading**: All frontend files load consistently
+- **Organized Structure**: Clear separation of different asset types
+- **Production Ready**: Works in both development and production environments
+- **Performance**: Proper caching and serving of static assets
+
 These conventions ensure consistent, high-quality development with proper planning, testing, and implementation practices.
 
 # Languages and Frameworks
@@ -2629,3 +2836,1126 @@ const mockProfileData = {
 - ✅ Accessible to all users
 
 This implementation plan ensures a robust, secure, and user-friendly profile management system that follows our established conventions and maintains high quality standards throughout the development process.
+
+### 11. Database Setup Conventions
+
+#### Problem Solved
+Database setup on Vercel/Neon PostgreSQL can fail due to schema mismatches, environment variable issues, and foreign key constraint errors when working with existing databases.
+
+#### Implementation Approach
+**Always follow the systematic database inspection and setup process to ensure reliable deployments**
+
+#### Step-by-Step Process
+
+**1. Pre-Setup Inspection**
+```bash
+# Always check existing database structure first
+psql "$DATABASE_URL" -c "\dt"  # List all tables
+psql "$DATABASE_URL" -c "\d \"TableName\""  # Inspect specific table structure
+```
+
+**2. Environment Variable Handling**
+```bash
+# Use direct assignment instead of sourcing for Node.js processes
+DATABASE_URL="your-url" node script.js
+
+# NOT: source .env.local && node script.js (doesn't work)
+```
+
+**3. Incremental Table Creation**
+```sql
+-- Use IF NOT EXISTS for all table creation
+CREATE TABLE IF NOT EXISTS new_table (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  -- other columns
+);
+```
+
+**4. Foreign Key Verification**
+```sql
+-- Always verify column names before creating references
+-- Check: psql -c "\d \"ExistingTable\""
+-- Then use correct column names in foreign keys
+author_id INTEGER REFERENCES "Users"(id) ON DELETE CASCADE
+-- NOT: REFERENCES "Users"(user_id) unless that column actually exists
+```
+
+**5. Error Handling Strategy**
+- Check for partial table existence
+- Continue with missing tables only
+- Use `ON CONFLICT DO NOTHING` for data insertion
+- Handle SSL configuration properly for different environments
+
+**6. SSL Configuration for Neon/PostgreSQL**
+```javascript
+const client = new Client({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }  // For Vercel/Neon databases
+});
+```
+
+#### Code Examples
+
+**Database Setup Script Template:**
+```javascript
+async function setupDatabase() {
+  const client = new Client({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+  });
+
+  try {
+    await client.connect();
+    console.log('✅ Database connection successful');
+    
+    // 1. Check existing tables
+    const existingTables = await client.query(`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND table_name LIKE 'new_table_%'
+    `);
+    
+    console.log('📋 Existing tables:', existingTables.rows.map(r => r.table_name));
+    
+    // 2. Create tables incrementally
+    if (existingTables.rows.length === 0) {
+      console.log('📝 Creating new tables...');
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS new_table (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+      console.log('✅ Tables created');
+    }
+    
+    // 3. Insert sample data with conflict handling
+    await client.query(`
+      INSERT INTO new_table (name) 
+      VALUES ($1) 
+      ON CONFLICT (name) DO NOTHING;
+    `, ['Sample Data']);
+    
+    console.log('🎉 Database setup completed successfully!');
+    
+  } catch (error) {
+    console.error('❌ Database setup error:', error);
+    throw error;
+  } finally {
+    await client.end();
+  }
+}
+```
+
+#### Common Pitfalls to Avoid
+- **Schema Mismatch**: Always inspect existing database structure before creating foreign keys
+- **Environment Variables**: Don't rely on `source .env.local` for Node.js processes
+- **SSL Issues**: Use proper SSL configuration for production databases
+- **Partial Creation**: Handle cases where some tables exist but others don't
+- **Column Names**: Verify actual column names vs. expected names in foreign key references
+
+#### Success Criteria
+- All tables created successfully with proper foreign key relationships
+- Sample data inserted without conflicts
+- Database connection works reliably in both development and production
+- Setup process is reproducible and documented
+
+This process ensures reliable database deployments and prevents common issues when working with existing database structures on Vercel/Neon PostgreSQL.
+
+## Blog Page Design System
+
+### Overview
+The blog page system allows users to create, manage, and view blog posts related to specific Thanksgiving events. This system provides a comprehensive blogging experience with rich text editing, categorization, and content management capabilities.
+
+### Design Goals
+1. **Content Creation**: Easy-to-use blog post creation and editing interface
+2. **Content Organization**: Categorization and tagging system for better content discovery
+3. **Rich Media Support**: Support for images, formatting, and embedded content
+4. **User Experience**: Intuitive navigation and content management
+5. **Content Discovery**: Search, filter, and browse functionality
+6. **Responsive Design**: Works seamlessly across all devices
+
+### Database Schema
+
+#### Blog Posts Table
+```sql
+CREATE TABLE "BlogPosts" (
+    id SERIAL PRIMARY KEY,
+    event_id INTEGER REFERENCES "Events"(id) ON DELETE CASCADE,
+    author_id INTEGER REFERENCES "Users"(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) UNIQUE NOT NULL,
+    content TEXT NOT NULL,
+    excerpt TEXT,
+    featured_image_url VARCHAR(500),
+    status VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+    published_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    view_count INTEGER DEFAULT 0,
+    is_featured BOOLEAN DEFAULT FALSE
+);
+
+-- Indexes for performance
+CREATE INDEX idx_blog_posts_event_id ON "BlogPosts"(event_id);
+CREATE INDEX idx_blog_posts_author_id ON "BlogPosts"(author_id);
+CREATE INDEX idx_blog_posts_status ON "BlogPosts"(status);
+CREATE INDEX idx_blog_posts_published_at ON "BlogPosts"(published_at);
+CREATE INDEX idx_blog_posts_slug ON "BlogPosts"(slug);
+```
+
+#### Blog Categories Table
+```sql
+CREATE TABLE "BlogCategories" (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    slug VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT,
+    color VARCHAR(7) DEFAULT '#007bff', -- Hex color for UI
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Sample categories
+INSERT INTO "BlogCategories" (name, slug, description, color) VALUES
+('Memories', 'memories', 'Personal stories and memories', '#ff6b6b'),
+('Recipes', 'recipes', 'Cooking and recipe discussions', '#4ecdc4'),
+('Traditions', 'traditions', 'Family traditions and customs', '#45b7d1'),
+('Tips', 'tips', 'Helpful tips and advice', '#96ceb4'),
+('General', 'general', 'General Thanksgiving topics', '#feca57');
+```
+
+#### Blog Tags Table
+```sql
+CREATE TABLE "BlogTags" (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    slug VARCHAR(50) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Junction table for blog post tags
+CREATE TABLE "BlogPostTags" (
+    blog_post_id INTEGER REFERENCES "BlogPosts"(id) ON DELETE CASCADE,
+    tag_id INTEGER REFERENCES "BlogTags"(id) ON DELETE CASCADE,
+    PRIMARY KEY (blog_post_id, tag_id)
+);
+```
+
+### User Interface Design
+
+#### Blog List Page Layout
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Thanksgiving Blog                        │
+├─────────────────────────────────────────────────────────────┤
+│ [Search Box] [Category Filter] [Status Filter] [New Post]  │
+├─────────────────────────────────────────────────────────────┤
+│ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐ │
+│ │   Featured Post │ │   Recent Post   │ │   Popular Post  │ │
+│ │                 │ │                 │ │                 │ │
+│ │ [Featured Image]│ │ [Post Image]    │ │ [Post Image]    │ │
+│ │                 │ │                 │ │                 │ │
+│ │ Title: "Best    │ │ Title: "Family  │ │ Title: "Thanks- │ │
+│ │  Thanksgiving   │ │  Traditions"    │ │  giving Tips"   │ │
+│ │  Recipes"       │ │                 │ │                 │ │
+│ │                 │ │ By: Sarah       │ │ By: Bob         │ │
+│ │ By: Bob         │ │ 2 days ago      │ │ 1 week ago      │ │
+│ │ 3 days ago      │ │ [Read More]     │ │ [Read More]     │ │
+│ │ [Read More]     │ └─────────────────┘ └─────────────────┘ │
+│ └─────────────────┘                                         │
+├─────────────────────────────────────────────────────────────┤
+│                    All Blog Posts                           │
+├─────────────────────────────────────────────────────────────┤
+│ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐ │
+│ │   Post Card 1   │ │   Post Card 2   │ │   Post Card 3   │ │
+│ │ [Image]         │ │ [Image]         │ │ [Image]         │ │
+│ │ Title           │ │ Title           │ │ Title           │ │
+│ │ Excerpt...      │ │ Excerpt...      │ │ Excerpt...      │ │
+│ │ [Tags] [Author] │ │ [Tags] [Author] │ │ [Tags] [Author] │ │
+│ │ [Read More]     │ │ [Read More]     │ │ [Read More]     │ │
+│ └─────────────────┘ └─────────────────┘ └─────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Blog Post Editor Layout
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Create New Blog Post                     │
+├─────────────────────────────────────────────────────────────┤
+│ Title: [________________________________] [Save Draft] [Publish] │
+│                                                             │
+│ Category: [Memories ▼] Tags: [#family, #recipes, #2024]    │
+│                                                             │
+│ Featured Image: [Upload Image] [Remove]                     │
+│ ┌─────────────────────────────────────────────────────────┐ │
+│ │                                                         │ │
+│ │                [Featured Image Preview]                 │ │
+│ │                                                         │ │
+│ └─────────────────────────────────────────────────────────┘ │
+│                                                             │
+│ Content:                                                     │
+│ ┌─────────────────────────────────────────────────────────┐ │
+│ │ [B] [I] [U] [Link] [Image] [List] [Quote] [Code]       │ │
+│ │                                                         │ │
+│ │ Start writing your blog post here...                    │ │
+│ │                                                         │ │
+│ │ You can use rich text formatting, add images,          │ │
+│ │ create lists, and more!                                 │ │
+│ │                                                         │ │
+│ │                                                         │ │
+│ └─────────────────────────────────────────────────────────┘ │
+│                                                             │
+│ Excerpt: [Optional preview text...]                         │
+│                                                             │
+│ [Cancel] [Save Draft] [Preview] [Publish]                   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Blog Post Detail Page Layout
+```
+┌─────────────────────────────────────────────────────────────┐
+│ [← Back to Blog] [Edit] [Delete] [Share]                    │
+├─────────────────────────────────────────────────────────────┤
+│                    Blog Post Title                          │
+│                                                             │
+│ By: [Author Name] | [Category] | [Published Date] | [Views] │
+│                                                             │
+│ ┌─────────────────────────────────────────────────────────┐ │
+│ │                [Featured Image]                         │ │
+│ └─────────────────────────────────────────────────────────┘ │
+│                                                             │
+│ [Tag1] [Tag2] [Tag3]                                        │
+│                                                             │
+│ Blog post content goes here...                              │
+│                                                             │
+│ This is where the main content of the blog post will be    │
+│ displayed. It can include rich text formatting, images,    │
+│ lists, quotes, and other content elements.                 │
+│                                                             │
+│ The content is fully responsive and will adapt to          │
+│ different screen sizes.                                     │
+│                                                             │
+├─────────────────────────────────────────────────────────────┤
+│                    Related Posts                            │
+├─────────────────────────────────────────────────────────────┤
+│ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐ │
+│ │   Related 1     │ │   Related 2     │ │   Related 3     │ │
+│ │ [Image]         │ │ [Image]         │ │ [Image]         │ │
+│ │ Title           │ │ Title           │ │ Title           │ │
+│ │ [Read More]     │ │ [Read More]     │ │ [Read More]     │ │
+│ └─────────────────┘ └─────────────────┘ └─────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### API Endpoints Design
+
+#### Blog Management Endpoints
+```javascript
+// Blog Posts
+GET    /api/v1/blog/posts              // Get all blog posts with pagination
+GET    /api/v1/blog/posts/:id          // Get specific blog post
+POST   /api/v1/blog/posts              // Create new blog post
+PUT    /api/v1/blog/posts/:id          // Update blog post
+DELETE /api/v1/blog/posts/:id          // Delete blog post
+GET    /api/v1/blog/posts/event/:eventId // Get posts for specific event
+
+// Blog Categories
+GET    /api/v1/blog/categories         // Get all categories
+POST   /api/v1/blog/categories         // Create category (admin only)
+PUT    /api/v1/blog/categories/:id     // Update category (admin only)
+DELETE /api/v1/blog/categories/:id     // Delete category (admin only)
+
+// Blog Tags
+GET    /api/v1/blog/tags               // Get all tags
+POST   /api/v1/blog/tags               // Create tag (admin only)
+GET    /api/v1/blog/tags/popular       // Get popular tags
+
+// Search and Filter
+GET    /api/v1/blog/search             // Search blog posts
+GET    /api/v1/blog/posts/featured     // Get featured posts
+GET    /api/v1/blog/posts/recent       // Get recent posts
+GET    /api/v1/blog/posts/popular      // Get popular posts
+```
+
+### Frontend Implementation
+
+#### Blog Manager JavaScript Class
+```javascript
+class BlogManager {
+    constructor(eventId, authToken) {
+        this.eventId = eventId;
+        this.authToken = authToken;
+        this.posts = [];
+        this.categories = [];
+        this.tags = [];
+        this.currentPost = null;
+        this.isEditing = false;
+    }
+
+    // Initialize blog system
+    async initialize() {
+        await this.loadCategories();
+        await this.loadTags();
+        await this.loadPosts();
+        this.setupEventListeners();
+    }
+
+    // Load blog posts
+    async loadPosts(filters = {}) {
+        // Implementation for loading posts with filters
+    }
+
+    // Create new blog post
+    async createPost(postData) {
+        // Implementation for creating new posts
+    }
+
+    // Update existing blog post
+    async updatePost(postId, postData) {
+        // Implementation for updating posts
+    }
+
+    // Delete blog post
+    async deletePost(postId) {
+        // Implementation for deleting posts
+    }
+
+    // Search and filter posts
+    async searchPosts(query, filters) {
+        // Implementation for search functionality
+    }
+}
+```
+
+#### Rich Text Editor Integration
+```javascript
+// Rich text editor configuration
+const editorConfig = {
+    toolbar: [
+        'bold', 'italic', 'underline', 'strikethrough',
+        '|', 'link', 'image', 'blockquote', 'code',
+        '|', 'unorderedList', 'orderedList',
+        '|', 'heading1', 'heading2', 'heading3',
+        '|', 'undo', 'redo'
+    ],
+    placeholder: 'Start writing your blog post...',
+    height: 400,
+    theme: 'snow'
+};
+```
+
+### Security Implementation
+
+#### Content Validation
+```javascript
+// Blog post validation
+const validateBlogPost = (postData) => {
+    const errors = [];
+    
+    if (!postData.title || postData.title.trim().length < 5) {
+        errors.push('Title must be at least 5 characters long');
+    }
+    
+    if (!postData.content || postData.content.trim().length < 50) {
+        errors.push('Content must be at least 50 characters long');
+    }
+    
+    if (postData.title && postData.title.length > 255) {
+        errors.push('Title must be less than 255 characters');
+    }
+    
+    return errors;
+};
+```
+
+#### Permission System
+```javascript
+// Blog post permissions
+const canEditPost = (user, post) => {
+    return user.role === 'admin' || user.id === post.author_id;
+};
+
+const canDeletePost = (user, post) => {
+    return user.role === 'admin' || user.id === post.author_id;
+};
+
+const canPublishPost = (user) => {
+    return user.role === 'admin' || user.role === 'editor';
+};
+```
+
+### Implementation Phases
+
+#### Phase 1: Database and API Foundation
+1. Create blog database tables
+2. Implement blog API endpoints
+3. Add authentication and authorization
+4. Create comprehensive test suite
+
+#### Phase 2: Basic Blog Interface
+1. Create blog list page
+2. Implement blog post creation form
+3. Add basic rich text editor
+4. Implement post viewing functionality
+
+#### Phase 3: Advanced Features
+1. Add search and filtering
+2. Implement categories and tags
+3. Add featured posts functionality
+4. Implement post editing and deletion
+
+#### Phase 4: Polish and Optimization
+1. Add responsive design improvements
+2. Implement image upload and management
+3. Add social sharing features
+4. Performance optimization and caching
+
+### Future Enhancements
+
+#### Planned Features
+- **Comment System**: Allow readers to comment on blog posts
+- **Social Sharing**: Share posts on social media platforms
+- **Email Notifications**: Notify users of new posts
+- **RSS Feed**: Generate RSS feed for blog posts
+- **SEO Optimization**: Meta tags, sitemaps, and SEO-friendly URLs
+- **Analytics**: Track post views and engagement
+- **Content Scheduling**: Schedule posts for future publication
+- **Multi-author Support**: Advanced author management
+- **Content Moderation**: Review and approval workflow
+
+#### Technical Improvements
+- **Caching**: Implement Redis caching for better performance
+- **CDN Integration**: Serve images and assets via CDN
+- **Search Engine**: Implement Elasticsearch for advanced search
+- **Content Backup**: Automated content backup system
+- **Version Control**: Track content changes and revisions
+
+This blog page design provides a comprehensive foundation for creating and managing Thanksgiving-related blog content, with room for future enhancements and scalability.
+
+## Blog Functionality Implementation Plan
+
+### Overview
+This implementation plan follows our established Test-Driven Development (TDD) approach and gradual implementation strategy to build a comprehensive blog system for the Thanksgiving website.
+
+### Implementation Strategy
+Following our conventions:
+1. **Design-First**: Complete design already documented
+2. **Test-Driven Development**: Create comprehensive test suite first
+3. **Gradual Implementation**: Database → API → JavaScript → UI
+4. **Quality Assurance**: Thorough testing at each phase
+
+### Phase 1: Test Suite Creation (TDD Foundation)
+
+#### 1.1 Database Tests
+**File**: `tests/models/BlogPost.test.js`
+```javascript
+describe('BlogPost Model', () => {
+  // Test blog post creation
+  // Test blog post validation
+  // Test blog post relationships
+  // Test blog post status management
+  // Test slug generation
+  // Test featured post functionality
+});
+```
+
+**File**: `tests/models/BlogCategory.test.js`
+```javascript
+describe('BlogCategory Model', () => {
+  // Test category creation
+  // Test category validation
+  // Test category color handling
+  // Test category slug generation
+});
+```
+
+**File**: `tests/models/BlogTag.test.js`
+```javascript
+describe('BlogTag Model', () => {
+  // Test tag creation
+  // Test tag validation
+  // Test tag slug generation
+  // Test tag relationships
+});
+```
+
+#### 1.2 API Endpoint Tests
+**File**: `tests/controllers/blogController.test.js`
+```javascript
+describe('Blog API Endpoints', () => {
+  // Test GET /api/v1/blog/posts
+  // Test POST /api/v1/blog/posts
+  // Test PUT /api/v1/blog/posts/:id
+  // Test DELETE /api/v1/blog/posts/:id
+  // Test GET /api/v1/blog/posts/event/:eventId
+  // Test authentication requirements
+  // Test validation errors
+  // Test permission checks
+});
+```
+
+**File**: `tests/controllers/blogCategoryController.test.js`
+```javascript
+describe('Blog Category API Endpoints', () => {
+  // Test GET /api/v1/blog/categories
+  // Test POST /api/v1/blog/categories (admin only)
+  // Test PUT /api/v1/blog/categories/:id (admin only)
+  // Test DELETE /api/v1/blog/categories/:id (admin only)
+  // Test admin permission requirements
+});
+```
+
+**File**: `tests/controllers/blogTagController.test.js`
+```javascript
+describe('Blog Tag API Endpoints', () => {
+  // Test GET /api/v1/blog/tags
+  // Test POST /api/v1/blog/tags (admin only)
+  // Test GET /api/v1/blog/tags/popular
+  // Test admin permission requirements
+});
+```
+
+#### 1.3 Integration Tests
+**File**: `tests/integration/blogIntegration.test.js`
+```javascript
+describe('Blog System Integration', () => {
+  // Test complete blog post workflow
+  // Test category and tag associations
+  // Test search and filtering
+  // Test event integration
+  // Test user permissions
+});
+```
+
+#### 1.4 Frontend Tests
+**File**: `tests/frontend/blog.spec.js` (Playwright)
+```javascript
+describe('Blog Frontend', () => {
+  // Test blog list page loading
+  // Test blog post creation
+  // Test blog post editing
+  // Test search and filtering
+  // Test responsive design
+  // Test user interactions
+});
+```
+
+### Phase 2: Database Implementation
+
+#### 2.1 Database Schema Creation
+**File**: `admin/database/create_blog_tables.sql`
+```sql
+-- Create blog tables
+-- Add indexes
+-- Insert sample data
+-- Create relationships
+```
+
+#### 2.2 Database Migration
+**File**: `scripts/setup-blog-database.js`
+```javascript
+// Create blog tables
+// Insert sample categories and tags
+// Create sample blog posts
+// Verify database setup
+```
+
+#### 2.3 Model Implementation
+**File**: `models/BlogPost.js`
+```javascript
+// Sequelize model for blog posts
+// Validation rules
+// Instance methods
+// Class methods
+// Relationships
+```
+
+**File**: `models/BlogCategory.js`
+```javascript
+// Sequelize model for categories
+// Validation rules
+// Instance methods
+// Relationships
+```
+
+**File**: `models/BlogTag.js`
+```javascript
+// Sequelize model for tags
+// Validation rules
+// Instance methods
+// Relationships
+```
+
+### Phase 3: API Implementation
+
+#### 3.1 Blog Controller
+**File**: `src/controllers/blogController.js`
+```javascript
+// GET /api/v1/blog/posts
+// POST /api/v1/blog/posts
+// PUT /api/v1/blog/posts/:id
+// DELETE /api/v1/blog/posts/:id
+// GET /api/v1/blog/posts/event/:eventId
+// GET /api/v1/blog/search
+// GET /api/v1/blog/posts/featured
+// GET /api/v1/blog/posts/recent
+// GET /api/v1/blog/posts/popular
+```
+
+#### 3.2 Category Controller
+**File**: `src/controllers/blogCategoryController.js`
+```javascript
+// GET /api/v1/blog/categories
+// POST /api/v1/blog/categories
+// PUT /api/v1/blog/categories/:id
+// DELETE /api/v1/blog/categories/:id
+```
+
+#### 3.3 Tag Controller
+**File**: `src/controllers/blogTagController.js`
+```javascript
+// GET /api/v1/blog/tags
+// POST /api/v1/blog/tags
+// GET /api/v1/blog/tags/popular
+```
+
+#### 3.4 Blog Routes
+**File**: `src/routes/blogRoutes.js`
+```javascript
+// Define all blog routes
+// Add authentication middleware
+// Add validation middleware
+// Add rate limiting
+```
+
+#### 3.5 API Integration
+**File**: `src/routes/apiRoutes.js`
+```javascript
+// Add blog routes to main API
+// Configure route prefixes
+```
+
+### Phase 4: Frontend Implementation
+
+#### 4.1 Blog Manager JavaScript
+**File**: `public/js/blogManager.js`
+```javascript
+class BlogManager {
+  // Initialize blog system
+  // Load blog posts
+  // Create blog post
+  // Update blog post
+  // Delete blog post
+  // Search and filter
+  // Handle categories and tags
+}
+```
+
+#### 4.2 Blog UI Controller
+**File**: `public/js/blogUIController.js`
+```javascript
+class BlogUIController {
+  // Display blog posts
+  // Handle blog post forms
+  // Manage rich text editor
+  // Handle image uploads
+  // Manage modals and interactions
+}
+```
+
+#### 4.3 Rich Text Editor
+**File**: `public/js/richTextEditor.js`
+```javascript
+class RichTextEditor {
+  // Initialize Quill.js
+  // Handle toolbar actions
+  // Manage content formatting
+  // Handle image insertion
+  // Content validation
+}
+```
+
+#### 4.4 EJS Templates
+**File**: `views/blog/index.ejs`
+```javascript
+// Blog list page template
+// Search and filter interface
+// Blog post cards
+// Pagination
+```
+
+**File**: `views/blog/create.ejs`
+```javascript
+// Blog post creation form
+// Rich text editor
+// Category and tag selection
+// Image upload
+```
+
+**File**: `views/blog/edit.ejs`
+```javascript
+// Blog post editing form
+// Pre-populated data
+// Update functionality
+```
+
+**File**: `views/blog/detail.ejs`
+```javascript
+// Blog post detail view
+// Full content display
+// Related posts
+// Social sharing
+```
+
+#### 4.5 CSS Styling
+**File**: `public/css/blog.css`
+```css
+/* Blog list styles */
+/* Blog post card styles */
+/* Rich text editor styles */
+/* Modal styles */
+/* Responsive design */
+```
+
+### Phase 5: Integration and Testing
+
+#### 5.1 End-to-End Testing
+**File**: `tests/e2e/blogWorkflow.test.js`
+```javascript
+describe('Blog Workflow E2E', () => {
+  // Test complete blog post creation workflow
+  // Test blog post editing workflow
+  // Test blog post deletion workflow
+  // Test search and filtering workflow
+  // Test user permission workflows
+});
+```
+
+#### 5.2 Performance Testing
+**File**: `tests/performance/blogPerformance.test.js`
+```javascript
+describe('Blog Performance', () => {
+  // Test page load times
+  // Test API response times
+  // Test database query performance
+  // Test image loading performance
+});
+```
+
+#### 5.3 Security Testing
+**File**: `tests/security/blogSecurity.test.js`
+```javascript
+describe('Blog Security', () => {
+  // Test authentication requirements
+  // Test authorization checks
+  // Test input validation
+  // Test XSS prevention
+  // Test CSRF protection
+});
+```
+
+### Phase 6: Deployment and Monitoring
+
+#### 6.1 Database Setup
+1. Run database migration scripts
+2. Create blog tables in production
+3. Insert sample data
+4. Verify database integrity
+
+#### 6.2 API Deployment
+1. Deploy API endpoints to Vercel
+2. Test all endpoints in production
+3. Verify authentication and authorization
+4. Monitor API performance
+
+#### 6.3 Frontend Deployment
+1. Deploy frontend templates and assets
+2. Test responsive design
+3. Verify rich text editor functionality
+4. Test user interactions
+
+#### 6.4 Monitoring and Analytics
+1. Set up error monitoring
+2. Track API performance
+3. Monitor user engagement
+4. Set up alerts for issues
+
+### Implementation Timeline
+
+#### Week 1: Foundation
+- **Days 1-2**: Create comprehensive test suite
+- **Days 3-4**: Implement database schema and models
+- **Day 5**: Run tests and fix any issues
+
+#### Week 2: API Development
+- **Days 1-3**: Implement all API endpoints
+- **Days 4-5**: Test API endpoints and fix issues
+
+#### Week 3: Frontend Development
+- **Days 1-2**: Create blog templates and basic UI
+- **Days 3-4**: Implement JavaScript functionality
+- **Day 5**: Integrate rich text editor
+
+#### Week 4: Integration and Deployment
+- **Days 1-2**: End-to-end testing and bug fixes
+- **Days 3-4**: Deploy to test environment
+- **Day 5**: Deploy to production and monitor
+
+### Success Criteria
+
+#### Functional Requirements
+- ✅ **Phase 1: Database Layer** - Blog tables created with sample data
+- ✅ **Phase 2: API Endpoints** - REST API implemented with authentication
+- ✅ **Phase 3: JavaScript/Backend** - Working API with direct SQL queries
+- 🔄 **Phase 4: User Interface** - Ready to implement
+- ❌ Users can create, edit, and delete blog posts (API ready, UI pending)
+- ❌ Blog posts are properly categorized and tagged (API ready, UI pending)
+- ❌ Search and filtering functionality works (API ready, UI pending)
+- ❌ Rich text editor is fully functional (Pending)
+- ❌ Image upload and management works (Pending)
+- ✅ All user permissions are enforced (API level)
+
+#### Non-Functional Requirements
+- ✅ **API Performance**: API responses in under 500ms
+- ✅ **Database Performance**: Direct SQL queries optimized
+- ❌ Page loads in under 2 seconds (UI pending)
+- ❌ 100% test coverage (Database tests failing due to test DB setup)
+- ❌ Mobile responsive design (UI pending)
+- ❌ Accessible to all users (UI pending)
+
+#### User Experience
+- ❌ Intuitive blog creation interface (Pending)
+- ❌ Smooth editing experience (Pending)
+- ❌ Easy content discovery (Pending)
+- ❌ Consistent styling (Pending)
+- ❌ Error handling and feedback (Pending)
+
+### Current Implementation Status
+
+#### ✅ **Completed Phases:**
+
+**Phase 1: Database Implementation**
+- ✅ Blog tables created: `blog_categories`, `blog_tags`, `blog_posts`, `blog_post_tags`
+- ✅ Sample data inserted: 5 categories, 10 tags, 2 blog posts
+- ✅ Foreign key relationships established
+- ✅ Indexes created for performance
+- ✅ Database setup script: `scripts/setup-blog-simple.js`
+
+**Phase 2: API Implementation**
+- ✅ REST API endpoints implemented using direct SQL queries
+- ✅ Authentication and authorization middleware
+- ✅ Error handling and validation
+- ✅ Working endpoints:
+  - `GET /api/v1/blog/posts` - List published posts
+  - `GET /api/v1/blog/categories` - List categories with post counts
+  - `GET /api/v1/blog/tags` - List tags with usage counts
+- ✅ Deployed and tested on Vercel preview environment
+
+**Phase 3: Backend Logic**
+- ✅ Direct SQL queries instead of ORM (more reliable for Vercel)
+- ✅ Case-insensitive username handling
+- ✅ JWT authentication integration
+- ✅ Database connection with SSL support
+
+#### 🔄 **In Progress:**
+
+**Phase 4: Frontend Implementation**
+- 🔄 EJS templates for blog pages
+- 🔄 JavaScript classes for blog management
+- 🔄 Rich text editor integration
+- 🔄 Image upload functionality
+- 🔄 Search and filtering UI
+
+#### ❌ **Pending:**
+
+**Phase 5: Integration and Testing**
+- ❌ End-to-end testing
+- ❌ Performance testing
+- ❌ Security testing
+- ❌ Cross-browser testing
+
+**Phase 6: Deployment and Monitoring**
+- ❌ Production deployment
+- ❌ Monitoring and logging
+- ❌ Error tracking
+
+### Risk Mitigation
+
+#### Technical Risks
+- **Rich Text Editor Complexity**: Use proven library (Quill.js)
+- **Image Upload Performance**: Implement compression and optimization
+- **Database Performance**: Proper indexing and query optimization
+- **Browser Compatibility**: Test across all major browsers
+
+#### User Experience Risks
+- **Complex Interface**: Keep UI simple and intuitive
+- **Data Loss**: Implement auto-save functionality
+- **Performance Issues**: Optimize images and code
+- **Mobile Experience**: Ensure responsive design
+
+### Quality Assurance
+
+#### Code Quality
+- Follow established coding standards
+- Implement proper error handling
+- Add comprehensive logging
+- Use TypeScript for type safety (optional)
+
+#### Testing Strategy
+- Unit tests for all models and functions
+- Integration tests for API endpoints
+- End-to-end tests for user workflows
+- Performance tests for scalability
+- Security tests for vulnerabilities
+
+#### Documentation
+- Update API documentation
+- Create user guides
+- Document deployment procedures
+- Maintain changelog
+
+This implementation plan ensures a robust, scalable, and user-friendly blog system that follows our established conventions and maintains high quality standards throughout the development process.
+
+## 12. Vercel Deployment Debugging Conventions
+
+### Problem Solved
+Vercel deployments failing with `FUNCTION_INVOCATION_FAILED` errors due to complex dependency issues, particularly with ORM libraries (Prisma) that have schema mismatches with existing databases.
+
+### Root Causes Identified
+1. **ORM Schema Mismatches**: Prisma schema definitions don't perfectly match actual database structure
+2. **Complex Dependencies**: Heavy ORM libraries can cause initialization failures in serverless environments
+3. **Database Connection Issues**: ORM connection pooling conflicts with Vercel's serverless architecture
+4. **Import Chain Failures**: One failing import can crash the entire API
+
+### Debugging Strategy
+1. **Start with Minimal API**: Create a basic API with no database dependencies first
+2. **Gradually Add Components**: Add database connection, then controllers, then complex features
+3. **Test Each Layer**: Verify each component works before adding the next
+4. **Use Direct SQL**: When ORM fails, fall back to direct SQL queries with `pg` client
+5. **Isolate Problems**: Create separate API files to test specific functionality
+
+### Implementation Approach
+1. **Minimal Working API First**:
+   ```javascript
+   // Start with basic endpoints that don't require database
+   app.get('/api/test', (req, res) => {
+     res.json({ message: 'API working' });
+   });
+   ```
+
+2. **Add Database Connection**:
+   ```javascript
+   // Test direct pg connection before adding ORM
+   const { Client } = require('pg');
+   const client = new Client({
+     connectionString: process.env.DATABASE_URL,
+     ssl: { rejectUnauthorized: false }
+   });
+   ```
+
+3. **Add Controllers Gradually**:
+   ```javascript
+   // Add one controller at a time, test each
+   app.get('/api/v1/blog/posts', async (req, res) => {
+     // Direct SQL queries instead of ORM
+   });
+   ```
+
+4. **Fallback Strategy**:
+   - If ORM fails → Use direct SQL queries
+   - If complex imports fail → Simplify dependencies
+   - If entire API fails → Start with minimal version
+
+### Code Examples
+
+#### Minimal API Template
+```javascript
+const express = require('express');
+const app = express();
+
+app.use(express.json());
+
+// Basic health check
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    message: 'API working',
+    timestamp: new Date().toISOString()
+  });
+});
+
+module.exports = app;
+```
+
+#### Database Test Template
+```javascript
+app.get('/api/db-test', async (req, res) => {
+  try {
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }
+    });
+    
+    await client.connect();
+    const result = await client.query('SELECT COUNT(*) FROM "Users"');
+    await client.end();
+    
+    res.json({ status: 'OK', count: result.rows[0].count });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+```
+
+#### Direct SQL Controller Template
+```javascript
+app.get('/api/v1/blog/posts', async (req, res) => {
+  try {
+    const { Client } = require('pg');
+    const client = new Client({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }
+    });
+    
+    await client.connect();
+    const result = await client.query(`
+      SELECT bp.*, u.username as author_name
+      FROM blog_posts bp
+      LEFT JOIN "Users" u ON bp.author_id = u.id
+      WHERE bp.status = 'published'
+      ORDER BY bp.created_at DESC
+    `);
+    await client.end();
+    
+    res.json({ success: true, data: result.rows });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+```
+
+### Common Pitfalls to Avoid
+1. **Don't start with complex ORM**: Begin with direct SQL, add ORM later if needed
+2. **Don't import everything at once**: Add imports gradually and test each
+3. **Don't assume database structure**: Always verify actual table/column names
+4. **Don't ignore SSL requirements**: Always use `ssl: { rejectUnauthorized: false }` for Vercel/Neon
+5. **Don't skip minimal testing**: Test basic functionality before adding complexity
+
+### Success Criteria
+- ✅ API responds to basic health checks
+- ✅ Database connection works with direct SQL
+- ✅ All endpoints return expected data
+- ✅ No `FUNCTION_INVOCATION_FAILED` errors
+- ✅ Deployment completes successfully
+
+### When to Use This Approach
+- **Vercel deployments failing** with function invocation errors
+- **ORM libraries causing issues** with schema mismatches
+- **Complex dependency chains** causing import failures
+- **Database connection problems** in serverless environments
+- **Need for reliable, simple API** that works consistently
+
+This debugging approach ensures reliable Vercel deployments by starting simple and building complexity gradually, with fallback strategies for when complex dependencies fail.
