@@ -87,35 +87,40 @@ app.get('/', async (req, res) => {
       id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
-        autoIncrement: true,
-        field: 'id'
+        autoIncrement: true
       },
       event_name: {
-        type: Sequelize.STRING,
-        field: 'event_name'
+        type: Sequelize.STRING
       },
       event_date: {
-        type: Sequelize.DATE,
-        field: 'event_date'
+        type: Sequelize.DATEONLY
       },
       description: {
-        type: Sequelize.TEXT,
-        field: 'description'
+        type: Sequelize.TEXT
       },
       menu_image_url: {
-        type: Sequelize.STRING,
-        field: 'menu_image_url'
+        type: Sequelize.STRING
+      },
+      created_at: {
+        type: Sequelize.DATE
+      },
+      updated_at: {
+        type: Sequelize.DATE
       }
     }, {
       tableName: 'Events',
-      timestamps: false
+      timestamps: true,
+      createdAt: 'created_at',
+      updatedAt: 'updated_at'
     });
     
     // Get events
+    console.log('Fetching events...');
     const events = await Event.findAll({
       order: [['event_date', 'DESC']],
       limit: 20
     });
+    console.log(`Found ${events.length} events`);
     
     res.render('index', {
       title: 'Thanksgiving Menus',
@@ -182,16 +187,31 @@ app.get('/api/db-test', async (req, res) => {
       id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
-        autoIncrement: true,
-        field: 'id'
+        autoIncrement: true
       },
       event_name: {
-        type: Sequelize.STRING,
-        field: 'event_name'
+        type: Sequelize.STRING
+      },
+      event_date: {
+        type: Sequelize.DATEONLY
+      },
+      description: {
+        type: Sequelize.TEXT
+      },
+      menu_image_url: {
+        type: Sequelize.STRING
+      },
+      created_at: {
+        type: Sequelize.DATE
+      },
+      updated_at: {
+        type: Sequelize.DATE
       }
     }, {
       tableName: 'Events',
-      timestamps: false
+      timestamps: true,
+      createdAt: 'created_at',
+      updatedAt: 'updated_at'
     });
     
     // Get some basic stats
