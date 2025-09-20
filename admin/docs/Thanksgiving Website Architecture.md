@@ -2128,3 +2128,504 @@ document.addEventListener('DOMContentLoaded', () => {
 5. **Data Export**: Allow users to export their data
 
 This design provides a comprehensive, secure, and user-friendly profile management system that maintains proper security boundaries while giving users control over their account information.
+
+---
+
+# User Profile Management Implementation Plan
+
+## Overview
+
+This implementation plan follows our established Test-Driven Development (TDD) approach and design-first conventions. The plan is structured in 4 phases, with comprehensive testing at each stage.
+
+## Implementation Strategy
+
+### TDD Approach
+1. **Write Tests First**: Create comprehensive test suites before implementing functionality
+2. **Red-Green-Refactor**: Write failing tests, implement to pass, then refactor
+3. **Test Coverage**: Aim for 100% test coverage of all functionality
+4. **Integration Testing**: Test complete user workflows end-to-end
+
+### Development Phases
+
+## Phase 1: Test Suite Creation (Week 1)
+
+### 1.1 Database Tests
+**File**: `tests/models/UserProfile.test.js`
+
+```javascript
+describe('User Profile Management', () => {
+  describe('User Model Profile Methods', () => {
+    test('should update user email', async () => {
+      // Test email update functionality
+    });
+    
+    test('should update user first and last name', async () => {
+      // Test name update functionality
+    });
+    
+    test('should validate email format', async () => {
+      // Test email validation
+    });
+    
+    test('should hash password correctly', async () => {
+      // Test password hashing
+    });
+    
+    test('should verify password correctly', async () => {
+      // Test password verification
+    });
+  });
+});
+```
+
+### 1.2 API Endpoint Tests
+**File**: `tests/controllers/profileController.test.js`
+
+```javascript
+describe('Profile API Endpoints', () => {
+  describe('GET /api/v1/profile', () => {
+    test('should return current user profile', async () => {
+      // Test profile retrieval
+    });
+    
+    test('should require authentication', async () => {
+      // Test authentication requirement
+    });
+  });
+  
+  describe('PUT /api/v1/profile', () => {
+    test('should update user profile with valid data', async () => {
+      // Test profile update
+    });
+    
+    test('should require current password verification', async () => {
+      // Test password verification requirement
+    });
+    
+    test('should validate email format', async () => {
+      // Test email validation
+    });
+    
+    test('should reject invalid current password', async () => {
+      // Test password verification failure
+    });
+  });
+  
+  describe('PUT /api/v1/profile/password', () => {
+    test('should change password with valid current password', async () => {
+      // Test password change
+    });
+    
+    test('should require password confirmation', async () => {
+      // Test password confirmation requirement
+    });
+    
+    test('should validate password strength', async () => {
+      // Test password strength validation
+    });
+  });
+});
+```
+
+### 1.3 Admin Endpoint Tests
+**File**: `tests/controllers/adminProfileController.test.js`
+
+```javascript
+describe('Admin Profile Endpoints', () => {
+  describe('GET /api/v1/admin/users', () => {
+    test('should return all users for admin', async () => {
+      // Test admin user listing
+    });
+    
+    test('should require admin role', async () => {
+      // Test admin role requirement
+    });
+  });
+  
+  describe('PUT /api/v1/admin/users/:userId/role', () => {
+    test('should update user role for admin', async () => {
+      // Test role update
+    });
+    
+    test('should prevent admin from changing own role', async () => {
+      // Test self-role-change prevention
+    });
+  });
+});
+```
+
+### 1.4 Integration Tests
+**File**: `tests/integration/profileIntegration.test.js`
+
+```javascript
+describe('Profile Management Integration', () => {
+  test('complete profile update workflow', async () => {
+    // Test complete user profile update flow
+  });
+  
+  test('password change workflow', async () => {
+    // Test complete password change flow
+  });
+  
+  test('admin role management workflow', async () => {
+    // Test complete admin role management flow
+  });
+});
+```
+
+### 1.5 Frontend Tests
+**File**: `tests/frontend/profilePage.test.js`
+
+```javascript
+describe('Profile Page Frontend', () => {
+  test('should display user profile information', () => {
+    // Test profile page rendering
+  });
+  
+  test('should open edit modals correctly', () => {
+    // Test modal functionality
+  });
+  
+  test('should validate form inputs', () => {
+    // Test client-side validation
+  });
+  
+  test('should handle API responses', () => {
+    // Test API response handling
+  });
+});
+```
+
+## Phase 2: API Implementation (Week 2)
+
+### 2.1 Create Profile Controller
+**File**: `src/controllers/profileController.js`
+
+```javascript
+// Profile management controller
+class ProfileController {
+  // Get current user profile
+  async getProfile(req, res) {
+    // Implementation following TDD
+  }
+  
+  // Update user profile
+  async updateProfile(req, res) {
+    // Implementation following TDD
+  }
+  
+  // Change password
+  async changePassword(req, res) {
+    // Implementation following TDD
+  }
+}
+```
+
+### 2.2 Create Admin Profile Controller
+**File**: `src/controllers/adminProfileController.js`
+
+```javascript
+// Admin profile management controller
+class AdminProfileController {
+  // Get all users
+  async getAllUsers(req, res) {
+    // Implementation following TDD
+  }
+  
+  // Update user role
+  async updateUserRole(req, res) {
+    // Implementation following TDD
+  }
+}
+```
+
+### 2.3 Add Profile Routes
+**File**: `src/routes/profileRoutes.js`
+
+```javascript
+// Profile management routes
+router.get('/profile', requireAuth, profileController.getProfile);
+router.put('/profile', requireAuth, profileController.updateProfile);
+router.put('/profile/password', requireAuth, profileController.changePassword);
+
+// Admin routes
+router.get('/admin/users', requireAuth, requireAdmin, adminProfileController.getAllUsers);
+router.put('/admin/users/:userId/role', requireAuth, requireAdmin, adminProfileController.updateUserRole);
+```
+
+### 2.4 Update User Model
+**File**: `models/User.js`
+
+```javascript
+// Add profile management methods to User model
+User.prototype.updateProfile = async function(updateData) {
+  // Implementation following TDD
+};
+
+User.prototype.changePassword = async function(currentPassword, newPassword) {
+  // Implementation following TDD
+};
+
+User.prototype.verifyPassword = async function(password) {
+  // Implementation following TDD
+};
+```
+
+## Phase 3: Frontend Implementation (Week 3)
+
+### 3.1 Create Profile Page Template
+**File**: `views/auth/profile.ejs`
+
+```html
+<!-- Complete profile page following design mockup -->
+<div class="profile-container">
+  <!-- Profile information section -->
+  <!-- Account settings section -->
+  <!-- Admin section (conditional) -->
+</div>
+```
+
+### 3.2 Create Edit Modals
+**File**: `views/partials/profileModals.ejs`
+
+```html
+<!-- Email edit modal -->
+<!-- Password change modal -->
+<!-- Name edit modals -->
+```
+
+### 3.3 Implement JavaScript Classes
+**File**: `public/javascript/profileManager.js`
+
+```javascript
+class ProfileManager {
+  constructor() {
+    // Initialize profile management
+  }
+  
+  openEditModal(field) {
+    // Modal management
+  }
+  
+  handleEditSubmit(e) {
+    // Form submission handling
+  }
+  
+  handlePasswordSubmit(e) {
+    // Password change handling
+  }
+}
+```
+
+### 3.4 Add CSS Styling
+**File**: `public/css/profile.css`
+
+```css
+/* Profile page styling following design */
+.profile-container { }
+.profile-info { }
+.account-settings { }
+.admin-section { }
+/* Modal styling */
+/* Form styling */
+```
+
+## Phase 4: Integration & Deployment (Week 4)
+
+### 4.1 End-to-End Testing
+**File**: `tests/e2e/profileWorkflow.test.js`
+
+```javascript
+describe('Profile Management E2E', () => {
+  test('user can update profile information', async () => {
+    // Complete user workflow test
+  });
+  
+  test('user can change password', async () => {
+    // Complete password change workflow
+  });
+  
+  test('admin can manage user roles', async () => {
+    // Complete admin workflow test
+  });
+});
+```
+
+### 4.2 Security Testing
+**File**: `tests/security/profileSecurity.test.js`
+
+```javascript
+describe('Profile Security', () => {
+  test('prevents unauthorized profile access', async () => {
+    // Test unauthorized access prevention
+  });
+  
+  test('validates input sanitization', async () => {
+    // Test XSS prevention
+  });
+  
+  test('enforces password requirements', async () => {
+    // Test password strength enforcement
+  });
+});
+```
+
+### 4.3 Performance Testing
+**File**: `tests/performance/profilePerformance.test.js`
+
+```javascript
+describe('Profile Performance', () => {
+  test('profile page loads within acceptable time', async () => {
+    // Test page load performance
+  });
+  
+  test('API responses are fast', async () => {
+    // Test API response times
+  });
+});
+```
+
+## Testing Strategy
+
+### Test Categories
+
+#### 1. Unit Tests
+- **Model Methods**: Test individual User model methods
+- **Controller Functions**: Test individual controller functions
+- **Validation Logic**: Test input validation functions
+- **Utility Functions**: Test helper functions
+
+#### 2. Integration Tests
+- **API Endpoints**: Test complete API workflows
+- **Database Operations**: Test database interactions
+- **Authentication Flow**: Test auth integration
+- **Error Handling**: Test error scenarios
+
+#### 3. Frontend Tests
+- **Component Rendering**: Test EJS template rendering
+- **JavaScript Functionality**: Test client-side logic
+- **Form Validation**: Test form validation
+- **Modal Management**: Test modal interactions
+
+#### 4. End-to-End Tests
+- **Complete Workflows**: Test full user journeys
+- **Cross-Browser Testing**: Test in different browsers
+- **Mobile Responsiveness**: Test on mobile devices
+- **Accessibility**: Test accessibility compliance
+
+### Test Data Management
+
+#### Test Database Setup
+```javascript
+// tests/helpers/profileTestData.js
+const createTestUser = async () => {
+  // Create test user for profile tests
+};
+
+const createTestAdmin = async () => {
+  // Create test admin for admin tests
+};
+
+const cleanupTestData = async () => {
+  // Clean up test data after tests
+};
+```
+
+#### Mock Data
+```javascript
+// tests/mocks/profileMocks.js
+const mockProfileData = {
+  validUser: {
+    username: 'testuser',
+    email: 'test@example.com',
+    first_name: 'Test',
+    last_name: 'User'
+  },
+  invalidData: {
+    invalidEmail: 'invalid-email',
+    weakPassword: '123',
+    emptyFields: {}
+  }
+};
+```
+
+## Implementation Timeline
+
+### Week 1: Test Suite Creation
+- **Day 1-2**: Database and model tests
+- **Day 3-4**: API endpoint tests
+- **Day 5**: Integration and frontend tests
+
+### Week 2: API Implementation
+- **Day 1-2**: Profile controller implementation
+- **Day 3-4**: Admin controller implementation
+- **Day 5**: Route integration and testing
+
+### Week 3: Frontend Implementation
+- **Day 1-2**: EJS template creation
+- **Day 3-4**: JavaScript functionality
+- **Day 5**: CSS styling and responsive design
+
+### Week 4: Integration & Deployment
+- **Day 1-2**: End-to-end testing
+- **Day 3**: Security and performance testing
+- **Day 4-5**: Deployment and monitoring
+
+## Quality Assurance
+
+### Code Quality
+- **ESLint**: Enforce coding standards
+- **Prettier**: Consistent code formatting
+- **JSDoc**: Comprehensive documentation
+- **Type Checking**: TypeScript or JSDoc types
+
+### Security Review
+- **Input Validation**: Comprehensive input sanitization
+- **Authentication**: Proper JWT token handling
+- **Authorization**: Role-based access control
+- **SQL Injection**: Parameterized queries only
+
+### Performance Monitoring
+- **Response Times**: API response time monitoring
+- **Database Queries**: Query performance optimization
+- **Frontend Loading**: Page load time optimization
+- **Memory Usage**: Memory leak detection
+
+## Deployment Strategy
+
+### Staging Environment
+1. Deploy to Vercel preview environment
+2. Run full test suite
+3. Perform security testing
+4. User acceptance testing
+
+### Production Deployment
+1. Deploy to production Vercel environment
+2. Monitor for errors and performance
+3. Verify all functionality works
+4. Update documentation
+
+## Success Criteria
+
+### Functional Requirements
+- ✅ Users can update their profile information
+- ✅ Users can change their passwords
+- ✅ Admins can manage user roles
+- ✅ All operations require proper authentication
+- ✅ Input validation prevents invalid data
+
+### Non-Functional Requirements
+- ✅ Page loads in under 2 seconds
+- ✅ API responses in under 500ms
+- ✅ 100% test coverage
+- ✅ Zero security vulnerabilities
+- ✅ Mobile responsive design
+
+### User Experience
+- ✅ Intuitive interface design
+- ✅ Clear error messages
+- ✅ Smooth modal interactions
+- ✅ Consistent styling
+- ✅ Accessible to all users
+
+This implementation plan ensures a robust, secure, and user-friendly profile management system that follows our established conventions and maintains high quality standards throughout the development process.
