@@ -3,6 +3,130 @@
 Bob Maguire  
 September 2025
 
+## Table of Contents
+
+### 1. [Purpose](#purpose)
+### 2. [Development Conventions](#development-conventions)
+- 2.1 [AI Assistant Development Workflow](#ai-assistant-development-workflow)
+  - 2.1.1 [Design-First Approach](#1-design-first-approach)
+  - 2.1.2 [Test-Driven Development (TDD)](#2-test-driven-development-tdd)
+  - 2.1.3 [Gradual Implementation Strategy](#3-gradual-implementation-strategy)
+  - 2.1.4 [Case-Insensitive Username Handling](#4-case-insensitive-username-handling)
+  - 2.1.5 [Documentation Standards](#4-documentation-standards)
+  - 2.1.6 [Quality Assurance](#5-quality-assurance)
+  - 2.1.7 [Communication Protocol](#6-communication-protocol)
+  - 2.1.8 [Debugging and Troubleshooting Conventions](#7-debugging-and-troubleshooting-conventions)
+
+### 3. [Languages and Frameworks](#languages-and-frameworks)
+- 3.1 [Client Side](#client-side)
+- 3.2 [Server Side](#server-side)
+
+### 4. [Security & Authentication](#security--authentication)
+- 4.1 [What's Been Created](#whats-been-created)
+- 4.2 [Database Tables](#database-tables)
+- 4.3 [User Models](#user-models)
+- 4.4 [Authentication Middleware](#authentication-middleware)
+- 4.5 [Authentication Routes & Controllers](#authentication-routes--controllers)
+- 4.6 [Admin Dashboard and User Management Views](#admin-dashboard-and-user-management-views)
+- 4.7 [Security Features](#security-features)
+- 4.8 [Sample Login Credentials](#-sample-login-credentials)
+- 4.9 [How to Use](#-how-to-use)
+- 4.10 [Security Features](#️-security-features)
+- 4.11 [User Interface](#-user-interface)
+- 4.12 [Production Environment (Vercel) - NEW FEATURES](#production-environment-vercel---new-features)
+
+### 5. [Testing](#testing)
+- 5.1 [Testing Recommendations](#testing-recommendations)
+- 5.2 [JWT Authentication Testing (Production)](#jwt-authentication-testing-production)
+- 5.3 [Testing Configuration](#testing-configuration)
+
+### 6. [Current Status & Next Steps](#current-status--next-steps)
+- 6.1 [Completed Features](#-completed-features)
+- 6.2 [In Progress](#-in-progress)
+
+### 7. [Photo Management System Design](#photo-management-system-design)
+- 7.1 [Overview](#overview)
+- 7.2 [Database Schema](#database-schema)
+- 7.3 [API Endpoints](#api-endpoints)
+- 7.4 [User Interface Design](#user-interface-design)
+- 7.5 [JavaScript Functionality](#javascript-functionality)
+- 7.6 [Security Considerations](#security-considerations)
+- 7.7 [Performance Optimizations](#performance-optimizations)
+- 7.8 [Error Handling](#error-handling)
+- 7.9 [Future Enhancements](#future-enhancements)
+- 7.10 [Testing Strategy](#testing-strategy)
+
+### 8. [Photo JavaScript/Backend Logic Design](#photo-javascriptbackend-logic-design)
+- 8.1 [Overview](#overview-1)
+- 8.2 [Core JavaScript Modules](#core-javascript-modules)
+- 8.3 [API Communication Layer](#api-communication-layer)
+- 8.4 [File Processing Utilities](#file-processing-utilities)
+- 8.5 [Error Handling System](#error-handling-system)
+- 8.6 [State Management](#state-management)
+- 8.7 [Event System](#event-system)
+- 8.8 [Integration Points](#integration-points)
+- 8.9 [Performance Optimizations](#performance-optimizations-1)
+- 8.10 [Security Considerations](#security-considerations-1)
+- 8.11 [Testing Strategy](#testing-strategy-1)
+- 8.12 [Browser Compatibility](#browser-compatibility)
+
+### 9. [Enhanced Menu Details Page Design Options](#enhanced-menu-details-page-design-options)
+- 9.1 [Overview](#overview-2)
+- 9.2 [Design Option 1: Single Page with Tabbed Navigation](#design-option-1-single-page-with-tabbed-navigation)
+- 9.3 [Design Option 2: Multi-Page Approach](#design-option-2-multi-page-approach)
+- 9.4 [Design Option 3: Dashboard-Style Layout](#design-option-3-dashboard-style-layout)
+- 9.5 [Design Option 4: Mobile-First Card Layout](#design-option-4-mobile-first-card-layout)
+- 9.6 [Design Option 5: Timeline-Based Layout](#design-option-5-timeline-based-layout)
+- 9.7 [Design Option 6: Magazine-Style Layout](#design-option-6-magazine-style-layout)
+- 9.8 [Recommended Approach: Hybrid Design](#recommended-approach-hybrid-design)
+- 9.9 [Implementation Strategy](#implementation-strategy)
+- 9.10 [Database Schema Additions](#database-schema-additions)
+- 9.11 [Future Enhancements](#-future-enhancements)
+- 9.12 [Current URLs](#-current-urls)
+- 9.13 [Database Status](#-database-status)
+
+### 10. [User Profile Management System](#user-profile-management-system)
+- 10.1 [Overview](#overview-3)
+- 10.2 [Design Goals](#design-goals)
+- 10.3 [User Interface Design](#user-interface-design-1)
+- 10.4 [Database Schema Updates](#database-schema-updates)
+- 10.5 [API Endpoints Design](#api-endpoints-design)
+- 10.6 [Security Implementation](#security-implementation)
+- 10.7 [Frontend Implementation](#frontend-implementation)
+- 10.8 [Implementation Phases](#implementation-phases)
+- 10.9 [Security Considerations](#security-considerations-2)
+- 10.10 [Future Enhancements](#future-enhancements-1)
+
+### 11. [User Profile Management Implementation Plan](#user-profile-management-implementation-plan)
+- 11.1 [Overview](#overview-4)
+- 11.2 [Implementation Strategy](#implementation-strategy-1)
+- 11.3 [Phase 1: Test Suite Creation (Week 1)](#phase-1-test-suite-creation-week-1)
+- 11.4 [Phase 2: API Implementation (Week 2)](#phase-2-api-implementation-week-2)
+- 11.5 [Phase 3: Frontend Implementation (Week 3)](#phase-3-frontend-implementation-week-3)
+- 11.6 [Phase 4: Integration & Deployment (Week 4)](#phase-4-integration--deployment-week-4)
+- 11.7 [Testing Strategy](#testing-strategy-2)
+- 11.8 [Implementation Timeline](#implementation-timeline)
+- 11.9 [Quality Assurance](#quality-assurance)
+- 11.10 [Deployment Strategy](#deployment-strategy)
+- 11.11 [Success Criteria](#success-criteria)
+
+### 12. [Environment Management and Deployment Strategy](#13-environment-management-and-deployment-strategy)
+- 12.1 [Overview](#overview-5)
+- 12.2 [Environment Architecture](#environment-architecture)
+- 12.3 [Environment Configuration](#environment-configuration)
+- 12.4 [Database Management Strategy](#database-management-strategy)
+- 12.5 [Deployment Pipeline](#deployment-pipeline)
+- 12.6 [Environment Variables Management](#environment-variables-management)
+- 12.7 [Database Migration Strategy](#database-migration-strategy)
+- 12.8 [Testing Strategy by Environment](#testing-strategy-by-environment)
+- 12.9 [Rollback Strategy](#rollback-strategy)
+- 12.10 [Monitoring and Alerting](#monitoring-and-alerting)
+- 12.11 [Best Practices](#best-practices)
+- 12.12 [Troubleshooting Guide](#troubleshooting-guide)
+- 12.13 [Success Metrics](#success-metrics)
+
+---
+
 # Purpose
 
 * The purpose of this document is to explain the structure and design of the Thanksgiving Website that I am building to document our Thanksgiving Memories.
@@ -2629,3 +2753,856 @@ const mockProfileData = {
 - ✅ Accessible to all users
 
 This implementation plan ensures a robust, secure, and user-friendly profile management system that follows our established conventions and maintains high quality standards throughout the development process.
+
+## 13. Environment Management and Deployment Strategy
+
+### Overview
+Comprehensive approach for managing three distinct environments: Development (local), Test (Vercel Preview), and Production (Vercel Production), each with their own PostgreSQL database instances.
+
+### Environment Architecture
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   DEVELOPMENT   │    │      TEST       │    │   PRODUCTION    │
+│                 │    │                 │    │                 │
+│ Local Machine   │    │ Vercel Preview  │    │ Vercel Prod     │
+│ macOS           │    │ Serverless      │    │ Serverless      │
+│                 │    │                 │    │                 │
+│ PostgreSQL      │    │ Neon PostgreSQL │    │ Neon PostgreSQL │
+│ Local Instance  │    │ Test Database   │    │ Prod Database   │
+│ Port 5432       │    │ Shared Instance │    │ Dedicated       │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+### Environment Configuration
+
+#### 1. Development Environment
+- **Platform**: Local macOS machine
+- **Database**: Local PostgreSQL instance
+- **Port**: 5432 (default)
+- **Database Name**: `thanksgiving_dev`
+- **Connection**: Direct local connection
+- **SSL**: Not required
+- **Data**: Development/test data, can be reset frequently
+
+#### 2. Test Environment
+- **Platform**: Vercel Preview Deployments
+- **Database**: Neon PostgreSQL (shared instance)
+- **Connection**: `DATABASE_URL` environment variable
+- **SSL**: Required (`rejectUnauthorized: false`)
+- **Data**: Test data, mirrors production schema
+- **Purpose**: Integration testing, feature validation
+
+#### 3. Production Environment
+- **Platform**: Vercel Production
+- **Database**: Neon PostgreSQL (dedicated instance)
+- **Connection**: `DATABASE_URL` environment variable
+- **SSL**: Required (`rejectUnauthorized: false`)
+- **Data**: Live production data
+- **Purpose**: Live user-facing application
+
+### Database Management Strategy
+
+#### Database Connection Configuration
+
+```javascript
+// config/database.js
+const config = {
+  development: {
+    username: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || 'password',
+    database: process.env.DB_NAME || 'thanksgiving_dev',
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 5432,
+    dialect: 'postgres',
+    logging: console.log,
+    ssl: false
+  },
+  test: {
+    url: process.env.DATABASE_URL || process.env.POSTGRES_URL,
+    dialect: 'postgres',
+    logging: false,
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    },
+    pool: {
+      max: 1,
+      min: 0,
+      acquire: 30000,
+      idle: 10000
+    }
+  },
+  production: {
+    url: process.env.DATABASE_URL,
+    dialect: 'postgres',
+    logging: false,
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    },
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 30000,
+      idle: 10000
+    }
+  }
+};
+
+module.exports = config;
+```
+
+#### Environment-Specific Database Setup
+
+```bash
+# Development Database Setup
+# 1. Install PostgreSQL locally
+brew install postgresql
+brew services start postgresql
+
+# 2. Create development database
+createdb thanksgiving_dev
+
+# 3. Run migrations
+NODE_ENV=development npm run db:migrate
+
+# 4. Seed development data
+NODE_ENV=development npm run db:seed
+```
+
+```bash
+# Test Database Setup (Vercel Preview)
+# 1. Set up Neon test database
+# 2. Run migrations via Vercel API
+curl -X POST https://your-preview-url.vercel.app/api/setup-db
+
+# 3. Verify test data
+curl https://your-preview-url.vercel.app/api/db-test
+```
+
+```bash
+# Production Database Setup (Vercel Production)
+# 1. Set up Neon production database
+# 2. Run migrations via Vercel API
+curl -X POST https://your-prod-url.vercel.app/api/setup-db
+
+# 3. Verify production data
+curl https://your-prod-url.vercel.app/api/db-test
+```
+
+### Deployment Pipeline
+
+#### 1. Development Workflow
+```bash
+# Local development
+npm run dev                    # Start local server
+npm run test                   # Run test suite
+npm run db:migrate            # Apply database changes
+npm run db:seed               # Seed test data
+npm run lint                  # Code quality checks
+```
+
+#### 2. Test Deployment Workflow
+```bash
+# Deploy to Vercel Preview
+git checkout -b feature/new-feature
+# ... make changes ...
+git add .
+git commit -m "Add new feature"
+vercel                        # Deploy to preview
+# Test on preview URL
+# Verify database changes
+# Run integration tests
+```
+
+#### 3. Production Deployment Workflow
+```bash
+# Deploy to Production
+git checkout main
+git merge feature/new-feature
+git push origin main
+vercel --prod                 # Deploy to production
+# Monitor production health
+# Verify database integrity
+```
+
+### Environment Variables Management
+
+#### Development (.env)
+```bash
+NODE_ENV=development
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=thanksgiving_dev
+DB_USER=postgres
+DB_PASSWORD=password
+SESSION_SECRET=dev-secret-key
+JWT_SECRET=dev-jwt-secret
+```
+
+#### Test Environment (Vercel)
+```bash
+NODE_ENV=test
+DATABASE_URL=postgresql://user:pass@host:port/dbname?sslmode=require
+SESSION_SECRET=test-secret-key
+JWT_SECRET=test-jwt-secret
+```
+
+#### Production Environment (Vercel)
+```bash
+NODE_ENV=production
+DATABASE_URL=postgresql://user:pass@host:port/dbname?sslmode=require
+SESSION_SECRET=prod-secret-key
+JWT_SECRET=prod-jwt-secret
+```
+
+### Database Migration Strategy
+
+#### 1. Migration File Structure
+```
+migrations/
+├── 001_create_events_table.sql
+├── 002_create_users_table.sql
+├── 003_create_photos_table.sql
+├── 004_add_user_roles.sql
+├── 005_create_blog_tables.sql
+├── rollback_001_drop_blog_tables.sql
+└── rollback_002_remove_user_roles.sql
+```
+
+#### 2. Migration Management System
+
+##### Migration Runner Script
+```javascript
+// scripts/migrate.js
+const { Client } = require('pg');
+const fs = require('fs');
+const path = require('path');
+
+class MigrationRunner {
+  constructor(environment) {
+    this.environment = environment;
+    this.config = require('../config/database')[environment];
+    this.migrationsDir = path.join(__dirname, '../migrations');
+  }
+
+  async run() {
+    const client = new Client(this.config);
+    
+    try {
+      await client.connect();
+      
+      // Create migrations tracking table
+      await this.createMigrationsTable(client);
+      
+      // Get applied migrations
+      const appliedMigrations = await this.getAppliedMigrations(client);
+      
+      // Get pending migrations
+      const pendingMigrations = await this.getPendingMigrations(appliedMigrations);
+      
+      // Run pending migrations
+      for (const migration of pendingMigrations) {
+        await this.runMigration(client, migration);
+      }
+      
+      console.log(`✅ Migrations completed for ${this.environment}`);
+    } catch (error) {
+      console.error(`❌ Migration failed for ${this.environment}:`, error);
+      throw error;
+    } finally {
+      await client.end();
+    }
+  }
+
+  async createMigrationsTable(client) {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS schema_migrations (
+        id SERIAL PRIMARY KEY,
+        filename VARCHAR(255) UNIQUE NOT NULL,
+        applied_at TIMESTAMP DEFAULT NOW(),
+        checksum VARCHAR(64)
+      )
+    `);
+  }
+
+  async getAppliedMigrations(client) {
+    const result = await client.query('SELECT filename FROM schema_migrations ORDER BY id');
+    return result.rows.map(row => row.filename);
+  }
+
+  async getPendingMigrations(appliedMigrations) {
+    const files = fs.readdirSync(this.migrationsDir)
+      .filter(file => file.endsWith('.sql') && !file.startsWith('rollback_'))
+      .sort();
+    
+    return files.filter(file => !appliedMigrations.includes(file));
+  }
+
+  async runMigration(client, filename) {
+    console.log(`🔄 Running migration: ${filename}`);
+    
+    const migrationPath = path.join(this.migrationsDir, filename);
+    const sql = fs.readFileSync(migrationPath, 'utf8');
+    
+    // Run migration in transaction
+    await client.query('BEGIN');
+    
+    try {
+      await client.query(sql);
+      
+      // Record migration
+      const checksum = require('crypto').createHash('md5').update(sql).digest('hex');
+      await client.query(
+        'INSERT INTO schema_migrations (filename, checksum) VALUES ($1, $2)',
+        [filename, checksum]
+      );
+      
+      await client.query('COMMIT');
+      console.log(`✅ Migration completed: ${filename}`);
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error(`❌ Migration failed: ${filename}`, error);
+      throw error;
+    }
+  }
+}
+
+// Usage
+const environment = process.env.NODE_ENV || 'development';
+const runner = new MigrationRunner(environment);
+runner.run().catch(console.error);
+```
+
+#### 3. Schema Migration Examples
+
+##### Create Tables
+```sql
+-- migrations/001_create_events_table.sql
+CREATE TABLE IF NOT EXISTS "Events" (
+  id SERIAL PRIMARY KEY,
+  event_name VARCHAR(255) NOT NULL,
+  event_date DATE NOT NULL,
+  menu_image_url VARCHAR(500),
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_events_date ON "Events"(event_date);
+CREATE INDEX IF NOT EXISTS idx_events_name ON "Events"(event_name);
+```
+
+##### Add Columns
+```sql
+-- migrations/002_add_user_roles.sql
+ALTER TABLE "Users" 
+ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'user',
+ADD COLUMN IF NOT EXISTS last_login TIMESTAMP,
+ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
+
+CREATE INDEX IF NOT EXISTS idx_users_role ON "Users"(role);
+CREATE INDEX IF NOT EXISTS idx_users_active ON "Users"(is_active);
+```
+
+##### Create Foreign Keys
+```sql
+-- migrations/003_add_foreign_keys.sql
+ALTER TABLE "Photos" 
+ADD CONSTRAINT fk_photos_event 
+FOREIGN KEY (event_id) REFERENCES "Events"(id) ON DELETE CASCADE;
+
+ALTER TABLE "Photos" 
+ADD CONSTRAINT fk_photos_user 
+FOREIGN KEY (user_id) REFERENCES "Users"(id) ON DELETE SET NULL;
+```
+
+#### 4. Data Migration Examples
+
+##### Seed Data
+```sql
+-- migrations/004_seed_events.sql
+INSERT INTO "Events" (event_name, event_date, menu_image_url) VALUES
+('Thanksgiving 2024', '2024-11-28', '/images/2024_Menu.jpeg'),
+('Thanksgiving 2023', '2023-11-23', '/images/2023_Menu.jpeg'),
+('Thanksgiving 2022', '2022-11-24', '/images/2022_Menu.jpeg')
+ON CONFLICT (event_name) DO NOTHING;
+```
+
+##### Data Transformation
+```sql
+-- migrations/005_normalize_usernames.sql
+-- Convert all usernames to lowercase
+UPDATE "Users" 
+SET username = LOWER(username) 
+WHERE username != LOWER(username);
+
+-- Update email to lowercase
+UPDATE "Users" 
+SET email = LOWER(email) 
+WHERE email != LOWER(email);
+```
+
+#### 5. Rollback Migrations
+
+##### Rollback Script
+```javascript
+// scripts/rollback.js
+const { Client } = require('pg');
+const fs = require('fs');
+const path = require('path');
+
+class RollbackRunner {
+  constructor(environment, steps = 1) {
+    this.environment = environment;
+    this.steps = steps;
+    this.config = require('../config/database')[environment];
+    this.migrationsDir = path.join(__dirname, '../migrations');
+  }
+
+  async run() {
+    const client = new Client(this.config);
+    
+    try {
+      await client.connect();
+      
+      // Get recent migrations
+      const recentMigrations = await this.getRecentMigrations(client);
+      
+      // Run rollback migrations
+      for (let i = 0; i < this.steps && i < recentMigrations.length; i++) {
+        const migration = recentMigrations[i];
+        await this.runRollback(client, migration);
+      }
+      
+      console.log(`✅ Rollback completed for ${this.environment}`);
+    } catch (error) {
+      console.error(`❌ Rollback failed for ${this.environment}:`, error);
+      throw error;
+    } finally {
+      await client.end();
+    }
+  }
+
+  async getRecentMigrations(client) {
+    const result = await client.query(`
+      SELECT filename FROM schema_migrations 
+      ORDER BY applied_at DESC 
+      LIMIT $1
+    `, [this.steps]);
+    
+    return result.rows.map(row => row.filename);
+  }
+
+  async runRollback(client, filename) {
+    const rollbackFile = filename.replace('.sql', '_rollback.sql');
+    const rollbackPath = path.join(this.migrationsDir, rollbackFile);
+    
+    if (!fs.existsSync(rollbackPath)) {
+      console.log(`⚠️  No rollback file found for: ${filename}`);
+      return;
+    }
+    
+    console.log(`🔄 Running rollback: ${rollbackFile}`);
+    
+    const sql = fs.readFileSync(rollbackPath, 'utf8');
+    
+    await client.query('BEGIN');
+    
+    try {
+      await client.query(sql);
+      
+      // Remove migration record
+      await client.query('DELETE FROM schema_migrations WHERE filename = $1', [filename]);
+      
+      await client.query('COMMIT');
+      console.log(`✅ Rollback completed: ${rollbackFile}`);
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error(`❌ Rollback failed: ${rollbackFile}`, error);
+      throw error;
+    }
+  }
+}
+
+// Usage
+const environment = process.env.NODE_ENV || 'development';
+const steps = parseInt(process.argv[2]) || 1;
+const runner = new RollbackRunner(environment, steps);
+runner.run().catch(console.error);
+```
+
+##### Rollback Examples
+```sql
+-- migrations/001_create_events_table_rollback.sql
+DROP TABLE IF EXISTS "Events";
+```
+
+```sql
+-- migrations/002_add_user_roles_rollback.sql
+ALTER TABLE "Users" 
+DROP COLUMN IF EXISTS role,
+DROP COLUMN IF EXISTS last_login,
+DROP COLUMN IF EXISTS is_active;
+```
+
+#### 6. Environment-Specific Migration Commands
+
+##### Package.json Scripts
+```json
+{
+  "scripts": {
+    "db:migrate": "node scripts/migrate.js",
+    "db:migrate:dev": "NODE_ENV=development node scripts/migrate.js",
+    "db:migrate:test": "NODE_ENV=test node scripts/migrate.js",
+    "db:migrate:prod": "NODE_ENV=production node scripts/migrate.js",
+    "db:rollback": "node scripts/rollback.js",
+    "db:rollback:dev": "NODE_ENV=development node scripts/rollback.js",
+    "db:rollback:test": "NODE_ENV=test node scripts/rollback.js",
+    "db:rollback:prod": "NODE_ENV=production node scripts/rollback.js",
+    "db:status": "node scripts/migration-status.js",
+    "db:reset": "node scripts/reset-database.js"
+  }
+}
+```
+
+#### 7. Migration Status and Validation
+
+##### Status Checker
+```javascript
+// scripts/migration-status.js
+const { Client } = require('pg');
+
+async function checkStatus(environment) {
+  const config = require('../config/database')[environment];
+  const client = new Client(config);
+  
+  try {
+    await client.connect();
+    
+    const result = await client.query(`
+      SELECT 
+        filename,
+        applied_at,
+        checksum
+      FROM schema_migrations 
+      ORDER BY applied_at DESC
+    `);
+    
+    console.log(`\n📊 Migration Status for ${environment.toUpperCase()}`);
+    console.log('=' .repeat(50));
+    
+    if (result.rows.length === 0) {
+      console.log('No migrations applied');
+    } else {
+      result.rows.forEach((row, index) => {
+        console.log(`${index + 1}. ${row.filename}`);
+        console.log(`   Applied: ${row.applied_at}`);
+        console.log(`   Checksum: ${row.checksum.substring(0, 8)}...`);
+        console.log('');
+      });
+    }
+    
+  } catch (error) {
+    console.error('Error checking migration status:', error);
+  } finally {
+    await client.end();
+  }
+}
+
+const environment = process.env.NODE_ENV || 'development';
+checkStatus(environment);
+```
+
+#### 8. Database Reset and Seeding
+
+##### Reset Script
+```javascript
+// scripts/reset-database.js
+const { Client } = require('pg');
+
+async function resetDatabase(environment) {
+  if (environment === 'production') {
+    console.error('❌ Cannot reset production database!');
+    process.exit(1);
+  }
+  
+  const config = require('../config/database')[environment];
+  const client = new Client(config);
+  
+  try {
+    await client.connect();
+    
+    console.log(`🔄 Resetting ${environment} database...`);
+    
+    // Drop all tables
+    await client.query(`
+      DROP SCHEMA public CASCADE;
+      CREATE SCHEMA public;
+      GRANT ALL ON SCHEMA public TO postgres;
+      GRANT ALL ON SCHEMA public TO public;
+    `);
+    
+    console.log('✅ Database reset completed');
+    
+    // Run migrations
+    console.log('🔄 Running migrations...');
+    const { exec } = require('child_process');
+    
+    exec(`NODE_ENV=${environment} npm run db:migrate`, (error, stdout, stderr) => {
+      if (error) {
+        console.error('Migration error:', error);
+        return;
+      }
+      console.log('✅ Migrations completed');
+      
+      // Run seeds
+      console.log('🔄 Seeding database...');
+      exec(`NODE_ENV=${environment} npm run db:seed`, (seedError, seedStdout, seedStderr) => {
+        if (seedError) {
+          console.error('Seeding error:', seedError);
+          return;
+        }
+        console.log('✅ Database seeded');
+        console.log('🎉 Database reset and setup completed!');
+      });
+    });
+    
+  } catch (error) {
+    console.error('Reset error:', error);
+  } finally {
+    await client.end();
+  }
+}
+
+const environment = process.env.NODE_ENV || 'development';
+resetDatabase(environment);
+```
+
+#### 9. Migration Best Practices
+
+##### 1. Naming Convention
+- Use sequential numbers: `001_`, `002_`, etc.
+- Descriptive names: `001_create_events_table.sql`
+- Rollback files: `001_create_events_table_rollback.sql`
+
+##### 2. Migration Safety
+- Always use `IF NOT EXISTS` for tables
+- Always use `IF EXISTS` for drops
+- Use transactions for complex migrations
+- Test on development first
+
+##### 3. Data Integrity
+- Backup before major changes
+- Use `ON CONFLICT` for data migrations
+- Validate data before and after migration
+- Test rollback procedures
+
+##### 4. Environment Considerations
+- Development: Can be reset frequently
+- Test: Should mirror production schema
+- Production: Requires careful planning and validation
+
+This comprehensive migration strategy ensures safe, reliable, and trackable database changes across all environments!
+
+### Testing Strategy by Environment
+
+#### 1. Development Testing
+```bash
+# Unit tests
+npm run test
+
+# Integration tests
+npm run test:integration
+
+# Database tests
+npm run test:db
+
+# End-to-end tests
+npm run test:e2e
+```
+
+#### 2. Test Environment Validation
+```bash
+# API health check
+curl https://preview-url.vercel.app/health
+
+# Database connectivity
+curl https://preview-url.vercel.app/api/db-test
+
+# Authentication flow
+curl -X POST https://preview-url.vercel.app/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"testuser","password":"testpass"}'
+
+# Feature-specific tests
+curl https://preview-url.vercel.app/api/events
+```
+
+#### 3. Production Monitoring
+```bash
+# Health monitoring
+curl https://prod-url.vercel.app/health
+
+# Database monitoring
+curl https://prod-url.vercel.app/api/db-test
+
+# Performance monitoring
+curl -w "@curl-format.txt" https://prod-url.vercel.app/
+```
+
+### Rollback Strategy
+
+#### 1. Code Rollback
+```bash
+# Rollback to specific commit
+git reset --hard <commit-hash>
+vercel --prod
+
+# Rollback to previous deployment
+vercel rollback <deployment-url>
+```
+
+#### 2. Database Rollback
+```sql
+-- Create rollback migration
+-- migrations/rollback_001_remove_feature.sql
+DROP TABLE IF EXISTS "FeatureTable";
+ALTER TABLE "Events" DROP COLUMN IF EXISTS feature_column;
+```
+
+#### 3. Environment-Specific Rollback
+```bash
+# Development rollback
+git reset --hard HEAD~1
+npm run db:migrate:rollback
+
+# Test rollback
+vercel rollback <test-deployment-url>
+
+# Production rollback
+vercel rollback <prod-deployment-url>
+```
+
+### Monitoring and Alerting
+
+#### 1. Health Checks
+```javascript
+// Health check endpoint
+app.get('/health', async (req, res) => {
+  const health = {
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+    database: 'unknown'
+  };
+  
+  try {
+    // Test database connection
+    const client = new Client({ connectionString: process.env.DATABASE_URL });
+    await client.connect();
+    await client.query('SELECT 1');
+    await client.end();
+    health.database = 'connected';
+  } catch (error) {
+    health.status = 'ERROR';
+    health.database = 'disconnected';
+    health.error = error.message;
+  }
+  
+  res.status(health.status === 'OK' ? 200 : 500).json(health);
+});
+```
+
+#### 2. Environment-Specific Monitoring
+```javascript
+// Environment-specific logging
+const logger = {
+  development: console.log,
+  test: (msg) => console.log(`[TEST] ${msg}`),
+  production: (msg) => {
+    // Send to monitoring service
+    console.log(`[PROD] ${msg}`);
+  }
+};
+```
+
+### Best Practices
+
+#### 1. Environment Isolation
+- Never use production data in development
+- Use different database instances for each environment
+- Implement proper access controls
+- Use environment-specific secrets
+
+#### 2. Database Management
+- Always backup before migrations
+- Test migrations on test environment first
+- Use transactions for complex migrations
+- Implement rollback procedures
+
+#### 3. Deployment Safety
+- Deploy to test environment first
+- Run comprehensive tests before production
+- Use feature flags for gradual rollouts
+- Monitor production metrics closely
+
+#### 4. Security Considerations
+- Use different secrets for each environment
+- Implement proper SSL/TLS
+- Use environment-specific CORS settings
+- Regular security audits
+
+### Troubleshooting Guide
+
+#### Common Issues and Solutions
+
+1. **Database Connection Failures**
+   - Check connection strings
+   - Verify SSL settings
+   - Test network connectivity
+   - Validate credentials
+
+2. **Environment Variable Issues**
+   - Verify variable names
+   - Check Vercel environment settings
+   - Test variable access in code
+   - Use fallback values
+
+3. **Migration Failures**
+   - Check database permissions
+   - Verify migration order
+   - Test on development first
+   - Use transaction rollbacks
+
+4. **Deployment Failures**
+   - Check build logs
+   - Verify dependencies
+   - Test locally first
+   - Use incremental deployments
+
+### Success Metrics
+
+#### 1. Development Metrics
+- Local development setup time < 5 minutes
+- Test suite runs in < 2 minutes
+- Database migrations complete in < 30 seconds
+- Zero configuration drift between environments
+
+#### 2. Test Environment Metrics
+- Preview deployment time < 3 minutes
+- Test database setup time < 1 minute
+- Integration test pass rate > 95%
+- Feature validation time < 10 minutes
+
+#### 3. Production Metrics
+- Production deployment time < 5 minutes
+- Zero downtime deployments
+- Database migration success rate > 99%
+- Rollback time < 2 minutes
+
+This comprehensive environment management strategy ensures reliable, scalable, and maintainable deployments across all three environments while maintaining data integrity and security.
