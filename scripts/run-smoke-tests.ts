@@ -73,9 +73,9 @@ class SmokeTestRunner {
     await this.runTest('Version API Endpoint', async () => {
       const response = await this.makeRequest('GET', '/api/v1/version/display');
       
-      if (!response.success || response.data.version !== '2.1.0') {
-        throw new Error('Version API returned unexpected response');
-      }
+        if (!response.success || response.data.version !== '2.2.1') {
+          throw new Error('Version API returned unexpected response');
+        }
     });
 
     await this.runTest('Database Setup API', async () => {
@@ -106,7 +106,7 @@ class SmokeTestRunner {
     // Menu Detail Tests
     await this.runTest('Menu Detail Page Loads', async () => {
       // Use a known menu ID from the test environment
-      const response = await this.makeRequest('GET', '/menu/31');
+      const response = await this.makeRequest('GET', '/menu/79');
       
       if (!response.includes('enhanced-detail-container')) {
         throw new Error('Menu detail page does not contain expected content');
