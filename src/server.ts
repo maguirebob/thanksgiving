@@ -131,25 +131,23 @@ app.get('/api/setup-database', async (_req, res) => {
     console.log('🚀 Setting up database...');
     
     // First, ensure the database schema exists
-    console.log('📋 Running Prisma migrations...');
+    console.log('📋 Creating database schema...');
     const { execSync } = require('child_process');
     try {
-      execSync('npx prisma migrate deploy', { stdio: 'inherit' });
-      console.log('✅ Prisma migrations completed');
-    } catch (migrationError) {
-      console.log('⚠️ Migration failed, trying to generate and apply...');
-      try {
-        execSync('npx prisma generate', { stdio: 'inherit' });
-        execSync('npx prisma db push', { stdio: 'inherit' });
-        console.log('✅ Database schema created');
-      } catch (pushError) {
-        console.error('❌ Failed to create database schema:', pushError);
-        return res.status(500).json({
-          success: false,
-          error: 'Database schema creation failed',
-          message: pushError instanceof Error ? pushError.message : 'Unknown error'
-        });
-      }
+      // Generate Prisma client
+      execSync('npx prisma generate', { stdio: 'inherit' });
+      console.log('✅ Prisma client generated');
+      
+      // Push schema to database (creates tables)
+      execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' });
+      console.log('✅ Database schema created');
+    } catch (schemaError) {
+      console.error('❌ Failed to create database schema:', schemaError);
+      return res.status(500).json({
+        success: false,
+        error: 'Database schema creation failed',
+        message: schemaError instanceof Error ? schemaError.message : 'Unknown error'
+      });
     }
     
     // Check if we already have data
