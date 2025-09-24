@@ -7,10 +7,10 @@
  * is working correctly in the test environment.
  */
 
-import { execSync } from 'child_process';
-import { PrismaClient } from '@prisma/client';
+// import { execSync } from 'child_process'; // Not used in this version
+// import { PrismaClient } from '@prisma/client'; // Not used in this version
 
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient(); // Not used in this version
 
 interface TestResult {
   name: string;
@@ -48,27 +48,25 @@ class SmokeTestRunner {
   async runAllTests(): Promise<void> {
     console.log('🚀 Starting Smoke Tests for Test Environment...\n');
 
-    // Database Connection Tests
+    // Database Connection Tests (via API)
     await this.runTest('Database Connection', async () => {
-      await prisma.$connect();
-      await prisma.$disconnect();
+      const response = await this.makeRequest('GET', '/api/setup-database');
+      if (!response.success) {
+        throw new Error('Database connection failed');
+      }
     });
 
     await this.runTest('Database Schema Exists', async () => {
-      await prisma.$connect();
-      
-      // Check if all required tables exist
-      const eventCount = await prisma.event.count();
-      const userCount = await prisma.user.count();
-      const photoCount = await prisma.photo.count();
-      const sessionCount = await prisma.session.count();
-      
-      // If we can count, the tables exist
-      if (typeof eventCount !== 'number' || typeof userCount !== 'number') {
-        throw new Error('Required database tables do not exist');
+      const response = await this.makeRequest('GET', '/api/setup-database');
+      if (!response.success) {
+        throw new Error('Database schema does not exist');
       }
       
-      await prisma.$disconnect();
+      // Check if we have data
+      const data = response.data;
+      if (data.eventCount === undefined || data.userCount === undefined) {
+        throw new Error('Database tables not properly initialized');
+      }
     });
 
     // API Endpoint Tests
@@ -107,16 +105,8 @@ class SmokeTestRunner {
 
     // Menu Detail Tests
     await this.runTest('Menu Detail Page Loads', async () => {
-      // First get a menu ID from the database
-      await prisma.$connect();
-      const event = await prisma.event.findFirst();
-      await prisma.$disconnect();
-      
-      if (!event) {
-        throw new Error('No events found in database');
-      }
-      
-      const response = await this.makeRequest('GET', `/menu/${event.event_id}`);
+      // Use a known menu ID from the test environment
+      const response = await this.makeRequest('GET', '/menu/31');
       
       if (!response.includes('enhanced-detail-container')) {
         throw new Error('Menu detail page does not contain expected content');
@@ -132,14 +122,23 @@ class SmokeTestRunner {
       }
     });
 
-    // Environment Tests
+    // Environment Tests (skip for remote testing)
     await this.runTest('Environment Variables', async () => {
-      const requiredVars = ['DATABASE_URL', 'NODE_ENV'];
+      // For remote testing, we don't need local environment variables
+      // The Railway environment has its own variables
+      const baseUrl = process.env['TEST_BASE_URL'];
+      if (!baseUrl) {
+        throw new Error('TEST_BASE_URL environment variable is not set');
+      }
       
-      for (const varName of requiredVars) {
-        if (!process.env[varName]) {
-          throw new Error(`Required environment variable ${varName} is not set`);
+      // Verify the base URL is accessible
+      try {
+        const response = await fetch(baseUrl);
+        if (!response.ok) {
+          throw new Error(`Base URL ${baseUrl} is not accessible`);
         }
+      } catch (error) {
+        throw new Error(`Cannot reach base URL ${baseUrl}: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     });
 
@@ -148,7 +147,7 @@ class SmokeTestRunner {
   }
 
   private async makeRequest(method: string, path: string): Promise<any> {
-    const baseUrl = process.env.TEST_BASE_URL || 'http://localhost:3000';
+    const baseUrl = process.env['TEST_BASE_URL'] || 'http://localhost:3000';
     const url = `${baseUrl}${path}`;
     
     try {
@@ -217,13 +216,11 @@ async function main() {
 // Handle graceful shutdown
 process.on('SIGINT', async () => {
   console.log('\n🛑 Smoke tests interrupted');
-  await prisma.$disconnect();
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
   console.log('\n🛑 Smoke tests terminated');
-  await prisma.$disconnect();
   process.exit(0);
 });
 
