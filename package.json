@@ -21,7 +21,6 @@
     "db:studio": "prisma studio",
     "db:seed": "ts-node scripts/seed.ts",
     "clean": "rimraf dist",
-    "prebuild": "npm run clean",
     "postbuild": "npm run db:generate"
   },
   "keywords": [
