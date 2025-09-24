@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 export class AdminController {
   // Show admin dashboard
-  showDashboard = async (req: Request, res: Response) => {
+  showDashboard = async (_req: Request, res: Response) => {
     try {
       // Get statistics for the dashboard
       const totalUsers = await prisma.user.count();
@@ -37,13 +37,13 @@ export class AdminController {
       res.status(500).render('error', {
         title: 'Error',
         message: 'Failed to load admin dashboard',
-        error: process.env.NODE_ENV === 'development' ? error : {}
+        error: process.env['NODE_ENV'] === 'development' ? error : {}
       });
     }
   };
 
   // Show user management page
-  showUsers = async (req: Request, res: Response) => {
+  showUsers = async (_req: Request, res: Response) => {
     try {
       const users = await prisma.user.findMany({
         orderBy: { created_at: 'desc' },
@@ -67,7 +67,7 @@ export class AdminController {
       res.status(500).render('error', {
         title: 'Error',
         message: 'Failed to load users',
-        error: process.env.NODE_ENV === 'development' ? error : {}
+        error: process.env['NODE_ENV'] === 'development' ? error : {}
       });
     }
   };
@@ -88,7 +88,7 @@ export class AdminController {
 
       // Check if user exists
       const user = await prisma.user.findUnique({
-        where: { user_id: parseInt(userId) }
+        where: { user_id: parseInt(userId || '0') }
       });
       
       if (!user) {
@@ -108,11 +108,11 @@ export class AdminController {
 
       // Update user role
       const updatedUser = await prisma.user.update({
-        where: { user_id: parseInt(userId) },
+        where: { user_id: parseInt(userId || '0') },
         data: { role: role as 'user' | 'admin' }
       });
 
-      res.json({
+      return res.json({
         success: true,
         message: 'User role updated successfully',
         data: {
@@ -123,7 +123,7 @@ export class AdminController {
       });
     } catch (error) {
       console.error('Error updating user role:', error);
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         error: 'Failed to update user role'
       });
@@ -137,7 +137,7 @@ export class AdminController {
 
       // Check if user exists
       const user = await prisma.user.findUnique({
-        where: { user_id: parseInt(userId) }
+        where: { user_id: parseInt(userId || '0') }
       });
       
       if (!user) {
@@ -157,16 +157,16 @@ export class AdminController {
 
       // Delete user (cascade will handle related records)
       await prisma.user.delete({
-        where: { user_id: parseInt(userId) }
+        where: { user_id: parseInt(userId || '0') }
       });
 
-      res.json({
+      return res.json({
         success: true,
         message: 'User deleted successfully'
       });
     } catch (error) {
       console.error('Error deleting user:', error);
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         error: 'Failed to delete user'
       });
