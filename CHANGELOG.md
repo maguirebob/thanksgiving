@@ -2,6 +2,13 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.2.0] - 2025-09-24
+
+- Added complete authentication system
+- Implemented admin dashboard and user management
+- Fixed login/logout functionality
+- Added profile management with JavaScript
+- Created admin routes and controllers
 ## [2.1.0] - 2025-09-24
 
 - Added version management system
