@@ -6,6 +6,10 @@ module.exports = {
     '**/__tests__/**/*.ts',
     '**/?(*.)+(spec|test).ts'
   ],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/tests/e2e/' // Exclude Playwright tests
+  ],
   transform: {
     '^.+\\.ts$': 'ts-jest',
   },

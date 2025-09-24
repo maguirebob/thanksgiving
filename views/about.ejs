@@ -1,0 +1,79 @@
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="text-center mb-5">
+                <h1 class="main-title">About the Thanksgiving Menu Collection</h1>
+                <p class="lead text-muted">Preserving family memories through decades of Thanksgiving celebrations</p>
+            </div>
+
+            <div class="content-section mb-5">
+                <h2 class="section-title">About This Website</h2>
+                <p class="text-muted">
+                    This website was created to digitally preserve and share our family's Thanksgiving menu collection, spanning from 1994 to today. Each menu tells a story of the year, the family members who gathered, and the traditions that have been passed down through generations.
+                </p>
+                <p class="text-muted">
+                    Built with modern web technologies including TypeScript, Express.js, and Prisma ORM, this application ensures that these precious memories are preserved for future generations while being easily accessible to family members around the world.
+                </p>
+            </div>
+
+            <div class="content-section mb-5">
+                <h2 class="section-title">Technical Details</h2>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4>Frontend</h4>
+                        <ul class="list-unstyled text-muted">
+                            <li>• Bootstrap 5 for responsive design</li>
+                            <li>• EJS templating engine</li>
+                            <li>• Custom CSS for family branding</li>
+                            <li>• Mobile-first responsive layout</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h4>Backend</h4>
+                        <ul class="list-unstyled text-muted">
+                            <li>• TypeScript for type safety</li>
+                            <li>• Express.js web framework</li>
+                            <li>• Prisma ORM for database access</li>
+                            <li>• PostgreSQL database</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-section mb-5">
+                <h2 class="section-title">Application Information</h2>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4>Version History</h4>
+                        <ul class="list-unstyled text-muted">
+                            <li><strong>v2.0.0</strong> - TypeScript Migration (Dec 2024)</li>
+                            <li><strong>v1.0.0</strong> - Original JavaScript/Sequelize</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h4>Current Status</h4>
+                        <ul class="list-unstyled text-muted">
+                            <li><strong>Version:</strong> <%= typeof version !== 'undefined' ? version : '2.0.0' %></li>
+                            <li><strong>Environment:</strong> <%= typeof environment !== 'undefined' ? environment : 'production' %></li>
+                            <li><strong>Build Date:</strong> <%= typeof buildDate !== 'undefined' ? buildDate : 'December 2024' %></li>
+                            <li><strong>Database:</strong> <%= typeof dbStatus !== 'undefined' ? dbStatus : 'Connected' %></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-section mb-5">
+                <h2 class="section-title">Contact & Support</h2>
+                <p class="text-muted">
+                    This website is maintained by the Maguire family. If you have questions about the collection or would like to contribute additional menus or photos, please reach out through the family channels.
+                </p>
+            </div>
+
+            <div class="text-center mt-5">
+                <a href="/" class="btn btn-primary btn-lg">
+                    <i class="fas fa-home me-2"></i>Back to Menu Collection
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

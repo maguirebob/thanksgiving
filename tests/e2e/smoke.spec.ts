@@ -15,7 +15,7 @@ test.describe('Smoke Tests - End-to-End', () => {
     
     // Check that menu cards are displayed
     const menuCards = page.locator('.menu-card');
-    await expect(menuCards).toHaveCountGreaterThan(0);
+    await expect(menuCards).toHaveCount(1);
     
     // Check that at least one menu card has expected content
     const firstCard = menuCards.first();
@@ -123,11 +123,11 @@ test.describe('Smoke Tests - End-to-End', () => {
     
     // Check that Bootstrap JS is loaded
     const bootstrapJS = page.locator('script[src*="bootstrap"]');
-    await expect(bootstrapJS).toHaveCountGreaterThan(0);
+    await expect(bootstrapJS).toHaveCount(1);
     
     // Check that Font Awesome is loaded
     const fontAwesome = page.locator('link[href*="font-awesome"]');
-    await expect(fontAwesome).toHaveCountGreaterThan(0);
+    await expect(fontAwesome).toHaveCount(1);
   });
 
   test('should have proper meta tags', async ({ page }) => {
