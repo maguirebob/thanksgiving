@@ -29,6 +29,7 @@ const menuRoutes = require('./src/routes/menuRoutes');
 const apiRoutes = require('./src/routes/apiRoutes');
 const authRoutes = require('./src/routes/authRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
+const aboutRoutes = require('./src/routes/aboutRoutes');
 
 const app = express();
 const PORT = appConfig.port;
@@ -93,6 +94,7 @@ app.use(addUserToLocals);
 
 // Routes
 app.use('/', menuRoutes);
+app.use('/about', aboutRoutes);
 app.use('/auth', authRoutes);
 app.use('/admin', adminRoutes);
 app.use(`${appConfig.apiPrefix}/${appConfig.apiVersion}`, apiRoutes);

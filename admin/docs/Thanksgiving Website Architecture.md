@@ -40,11 +40,17 @@ September 2025
 - 5.2 [JWT Authentication Testing (Production)](#jwt-authentication-testing-production)
 - 5.3 [Testing Configuration](#testing-configuration)
 
-### 6. [Current Status & Next Steps](#current-status--next-steps)
-- 6.1 [Completed Features](#-completed-features)
-- 6.2 [In Progress](#-in-progress)
+### 6. [Version Management & About System](#version-management--about-system)
+- 6.1 [Version Strategy](#version-strategy)
+- 6.2 [About Page Features](#about-page-features)
+- 6.3 [Version API Endpoints](#version-api-endpoints)
+- 6.4 [Implementation Details](#implementation-details)
 
-### 7. [Photo Management System Design](#photo-management-system-design)
+### 7. [Current Status & Next Steps](#current-status--next-steps)
+- 7.1 [Completed Features](#-completed-features)
+- 7.2 [In Progress](#-in-progress)
+
+### 8. [Photo Management System Design](#photo-management-system-design)
 - 7.1 [Overview](#overview)
 - 7.2 [Database Schema](#database-schema)
 - 7.3 [API Endpoints](#api-endpoints)
@@ -528,6 +534,139 @@ npm run test:coverage
 Watch mode for development
 npm run test:watch
 
+# Version Management & About System
+
+## Version Strategy
+
+The Thanksgiving Menu application implements **Semantic Versioning (SemVer)** with the format `MAJOR.MINOR.PATCH`:
+
+### Version Components:
+- **MAJOR**: Breaking changes, major feature additions, or architectural changes
+- **MINOR**: New features, enhancements, or significant improvements (backward compatible)
+- **PATCH**: Bug fixes, small improvements, or minor updates
+
+### Current Version: `1.1.0`
+- **1.0.0**: Initial release (September 2024)
+- **1.1.0**: Added About page with version information (September 2024)
+
+### Version Increment Guidelines:
+- **PATCH** (`1.1.1`): Bug fixes, small improvements, documentation updates
+- **MINOR** (`1.2.0`): New features, enhancements, UI improvements
+- **MAJOR** (`2.0.0`): Breaking changes, major architectural updates, database schema changes
+
+## About Page Features
+
+The About page (`/about`) provides comprehensive application information:
+
+### Application Information:
+- **Name**: thanksgiving-menu-app
+- **Version**: Current semantic version
+- **Author**: Bob Maguire
+- **License**: ISC
+- **Description**: A web application to display Thanksgiving menus
+
+### Technical Details:
+- **Node.js Version**: Runtime version information
+- **Environment**: Development/Production status
+- **Build Date**: Application build timestamp
+- **Backend Technologies**: Node.js, Express.js, PostgreSQL, Sequelize ORM
+- **Frontend Technologies**: HTML5, CSS3, JavaScript ES6+, Bootstrap 5
+
+### Version History:
+- Complete changelog with dates and feature descriptions
+- Automatic tracking of version changes
+- Detailed feature descriptions for each release
+
+### Version Strategy Explanation:
+- Educational content about Semantic Versioning
+- Current version and environment display
+- Interactive API testing functionality
+
+## Version API Endpoints
+
+### Complete Version Information
+```
+GET /api/v1/version
+```
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "version": "1.1.0",
+    "name": "thanksgiving-menu-app",
+    "description": "A web application to display Thanksgiving menus",
+    "author": "Bob Maguire",
+    "license": "ISC",
+    "nodeVersion": "v24.5.0",
+    "buildDate": "2024-09-23T13:36:33.732Z",
+    "environment": "development",
+    "changelog": {
+      "date": "2024-09-23",
+      "changes": [
+        "Added About page with version information",
+        "Implemented semantic versioning strategy",
+        "Enhanced navigation with About menu",
+        "Added version API endpoint",
+        "Improved footer with version display"
+      ]
+    }
+  }
+}
+```
+
+### Version Display for UI Components
+```
+GET /api/v1/version/display
+```
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "version": "v1.1.0",
+    "environment": "development",
+    "buildDate": "2024-09-23T13:36:33.732Z"
+  }
+}
+```
+
+## Implementation Details
+
+### Files Created/Modified:
+
+#### Version Management:
+- `src/utils/version.js` - Version utility class with SemVer logic
+- `package.json` - Updated version to 1.1.0
+
+#### About System:
+- `src/controllers/aboutController.js` - About page controller
+- `src/routes/aboutRoutes.js` - About routes configuration
+- `views/about.ejs` - About page template
+
+#### UI Enhancements:
+- `views/layout.ejs` - Added About menu item and footer version display
+- `server.js` - Registered About routes
+
+### Key Features:
+- **Dynamic Version Loading**: Footer version updates automatically via API
+- **Authentication Required**: About page requires user login (family-only access)
+- **Responsive Design**: Works on all screen sizes
+- **API Testing**: Interactive API endpoint testing on About page
+- **Version History**: Complete changelog tracking
+- **Environment Awareness**: Displays current environment (dev/prod)
+
+### Security Considerations:
+- About page requires authentication (`requireAuthView` middleware)
+- API endpoints are public but return limited information
+- Version information doesn't expose sensitive configuration
+
+### Future Enhancements:
+- Automated version bumping in CI/CD pipeline
+- Version comparison and update notifications
+- Detailed deployment history tracking
+- Integration with GitHub releases
+
 # Current Status & Next Steps
 
 ## ✅ Completed Features:
@@ -536,6 +675,8 @@ npm run test:watch
 - **Menu CRUD**: Create, read, update, delete Thanksgiving events
 - **Database Setup**: 26 Thanksgiving menus (1994-2024) loaded
 - **API Endpoints**: Complete REST API for all operations
+- **Version Management**: Semantic versioning (SemVer) with About page and API endpoints
+- **About System**: Comprehensive application information, version history, and technical details
 - **Security**: Password hashing, role-based access control, input validation
 - **Deployment**: Vercel production deployment with serverless functions
 
