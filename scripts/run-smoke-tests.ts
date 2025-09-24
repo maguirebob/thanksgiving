@@ -106,7 +106,7 @@ class SmokeTestRunner {
     // Menu Detail Tests
     await this.runTest('Menu Detail Page Loads', async () => {
       // Use a known menu ID from the test environment
-      const response = await this.makeRequest('GET', '/menu/79');
+      const response = await this.makeRequest('GET', '/menu/31');
       
       if (!response.includes('enhanced-detail-container')) {
         throw new Error('Menu detail page does not contain expected content');
