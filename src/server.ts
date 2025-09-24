@@ -212,7 +212,7 @@ app.get('/api/setup-database', async (_req, res) => {
 
   } catch (error) {
     console.error('❌ Error setting up database:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Database setup failed',
       message: error instanceof Error ? error.message : 'Unknown error'
