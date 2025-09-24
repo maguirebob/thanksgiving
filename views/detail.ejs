@@ -10,23 +10,23 @@
 <div class="enhanced-detail-container">
     <!-- Hero Section -->
     <div class="hero-section mb-5">
-        <div class="row">
-            <!-- Menu Image -->
+<div class="row">
+        <!-- Menu Image -->
             <div class="col-lg-6">
                 <div class="menu-image-container" style="height: 400px; border-radius: 12px; background-color: #f8f9fa; border: 1px solid #e5e5e5; display: flex; align-items: center; justify-content: center; padding: 2rem; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
                     <img src="<%= event.menu_image_url %>" 
                          alt="<%= event.event_name %>" 
-                         id="menuImage"
+                     id="menuImage"
                          style="max-width: 100%; max-height: 100%; object-fit: contain; object-position: center; border-radius: 8px; cursor: zoom-in; transition: transform 0.3s ease;"
-                         onerror="this.src='/images/placeholder-menu.jpg'"
-                         onclick="toggleZoom()">
-                    
-                    <!-- Zoom overlay -->
-                    <div id="zoomOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); z-index: 9999; display: none; align-items: center; justify-content: center; cursor: zoom-out;" onclick="toggleZoom()">
+                     onerror="this.src='/images/placeholder-menu.jpg'"
+                     onclick="toggleZoom()">
+                
+                <!-- Zoom overlay -->
+                <div id="zoomOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); z-index: 9999; display: none; align-items: center; justify-content: center; cursor: zoom-out;" onclick="toggleZoom()">
                         <img src="<%= event.menu_image_url %>" 
                              alt="<%= event.event_name %>" 
-                             style="max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 8px;"
-                             onerror="this.src='/images/placeholder-menu.jpg'">
+                         style="max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 8px;"
+                         onerror="this.src='/images/placeholder-menu.jpg'">
                     </div>
                 </div>
             </div>
@@ -53,107 +53,37 @@
                         </div>
                     </div>
                     
-                    <!-- Quick Stats -->
-                    <div class="quick-stats mt-4">
-                        <div class="row text-center">
-                            <div class="col-3">
-                                <div class="stat-item">
-                                    <div class="stat-number" id="photoCount" style="font-size: 1.8rem; font-weight: bold; color: #007bff;">0</div>
-                                    <div class="stat-label" style="font-size: 0.9rem; color: #6c757d;">Photos</div>
-                                </div>
-                            </div>
-                            <div class="col-3">
-                                <div class="stat-item">
-                                    <div class="stat-number" id="recipeCount" style="font-size: 1.8rem; font-weight: bold; color: #28a745;">0</div>
-                                    <div class="stat-label" style="font-size: 0.9rem; color: #6c757d;">Recipes</div>
-                                </div>
-                            </div>
-                            <div class="col-3">
-                                <div class="stat-item">
-                                    <div class="stat-number" id="blogCount" style="font-size: 1.8rem; font-weight: bold; color: #ffc107;">0</div>
-                                    <div class="stat-label" style="font-size: 0.9rem; color: #6c757d;">Blog Posts</div>
-                                </div>
-                            </div>
-                            <div class="col-3">
-                                <div class="stat-item">
-                                    <div class="stat-number" id="commentCount" style="font-size: 1.8rem; font-weight: bold; color: #dc3545;">0</div>
-                                    <div class="stat-label" style="font-size: 0.9rem; color: #6c757d;">Comments</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Quick Actions -->
-                    <div class="quick-actions mt-4">
-                        <button class="btn btn-primary me-2" onclick="openPhotoUpload()">
-                            <i class="fas fa-camera me-2"></i>Add Photo
-                        </button>
-                        <button class="btn btn-success me-2" onclick="addRecipe()">
-                            <i class="fas fa-utensils me-2"></i>Add Recipe
-                        </button>
-                        <button class="btn btn-warning" onclick="writeBlog()">
-                            <i class="fas fa-pen me-2"></i>Write Blog
-                        </button>
-                    </div>
+
                 </div>
             </div>
+            </div>
         </div>
-    </div>
 
-    <!-- Tabbed Navigation -->
-    <div class="tabbed-navigation mb-4">
-        <ul class="nav nav-tabs" id="contentTabs" role="tablist" style="border-bottom: 2px solid #e9ecef;">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="photos-tab" data-bs-toggle="tab" data-bs-target="#photos" type="button" role="tab" aria-controls="photos" aria-selected="true">
-                    <i class="fas fa-images me-2"></i>Photos
-                    <span class="badge bg-primary ms-2" id="photosBadge">0</span>
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="recipes-tab" data-bs-toggle="tab" data-bs-target="#recipes" type="button" role="tab" aria-controls="recipes" aria-selected="false">
-                    <i class="fas fa-utensils me-2"></i>Recipes
-                    <span class="badge bg-success ms-2" id="recipesBadge">0</span>
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="blog-tab" data-bs-toggle="tab" data-bs-target="#blog" type="button" role="tab" aria-controls="blog" aria-selected="false">
-                    <i class="fas fa-pen me-2"></i>Blog
-                    <span class="badge bg-warning ms-2" id="blogBadge">0</span>
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="comments-tab" data-bs-toggle="tab" data-bs-target="#comments" type="button" role="tab" aria-controls="comments" aria-selected="false">
-                    <i class="fas fa-comments me-2"></i>Comments
-                    <span class="badge bg-danger ms-2" id="commentsBadge">0</span>
-                </button>
-            </li>
-        </ul>
-    </div>
 
-    <!-- Tab Content -->
-    <div class="tab-content" id="contentTabContent">
-        <!-- Photos Tab -->
-        <div class="tab-pane fade show active" id="photos" role="tabpanel" aria-labelledby="photos-tab">
+    <!-- Content Sections -->
+    <div class="content-sections">
+        <!-- Photos Section -->
+        <div class="content-section mb-5" id="photos">
             <!-- Photo Upload Section -->
             <div class="photo-upload-section mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
                     <h3 class="mb-0">
                         <i class="fas fa-images me-2"></i>Photos
                     </h3>
                     <div class="upload-controls">
                         <button class="btn btn-primary me-2" onclick="openPhotoUpload()">
                             <i class="fas fa-upload me-2"></i>Upload Photo
-                        </button>
+                    </button>
                         <button class="btn btn-success" onclick="openCameraCapture()">
                             <i class="fas fa-camera me-2"></i>Take Photo
-                        </button>
-                    </div>
+                    </button>
                 </div>
-                
+            </div>
+            
                 <!-- Photo Grid -->
                 <div id="photosGrid" class="row">
                     <!-- Photos will be dynamically loaded here -->
-                </div>
+                        </div>
                 
                 <!-- No Photos Message -->
                 <div id="noPhotosMessage" class="text-center text-muted py-5" style="display: none;">
@@ -164,161 +94,11 @@
                         <i class="fas fa-upload me-2"></i>Upload First Photo
                     </button>
                 </div>
-            </div>
-        </div>
+                        </div>
+                    </div>
+                    
 
-        <!-- Recipes Tab -->
-        <div class="tab-pane fade" id="recipes" role="tabpanel" aria-labelledby="recipes-tab">
-            <div class="recipes-section">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="mb-0">
-                        <i class="fas fa-utensils me-2"></i>Recipes
-                    </h3>
-                    <button class="btn btn-success" onclick="addRecipe()">
-                        <i class="fas fa-plus me-2"></i>Add Recipe
-                    </button>
-                </div>
-                
-                <!-- Recipe Search/Filter -->
-                <div class="recipe-controls mb-4">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <input type="text" class="form-control" placeholder="Search recipes..." id="recipeSearch">
-                        </div>
-                        <div class="col-md-3">
-                            <select class="form-select" id="recipeCategory">
-                                <option value="">All Categories</option>
-                                <option value="appetizer">Appetizer</option>
-                                <option value="main">Main Course</option>
-                                <option value="side">Side Dish</option>
-                                <option value="dessert">Dessert</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <select class="form-select" id="recipeDifficulty">
-                                <option value="">All Levels</option>
-                                <option value="easy">Easy</option>
-                                <option value="medium">Medium</option>
-                                <option value="hard">Hard</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Recipe Grid -->
-                <div id="recipesGrid" class="row">
-                    <!-- Placeholder for recipes -->
-                    <div class="col-12">
-                        <div class="text-center text-muted py-5">
-                            <i class="fas fa-utensils fa-3x mb-3" style="color: #dee2e6;"></i>
-                            <h4>No recipes yet</h4>
-                            <p>Add some delicious recipes from this Thanksgiving!</p>
-                            <button class="btn btn-success" onclick="addRecipe()">
-                                <i class="fas fa-plus me-2"></i>Add First Recipe
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Blog Tab -->
-        <div class="tab-pane fade" id="blog" role="tabpanel" aria-labelledby="blog-tab">
-            <div class="blog-section">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="mb-0">
-                        <i class="fas fa-pen me-2"></i>Blog Posts
-                    </h3>
-                    <button class="btn btn-warning" onclick="writeBlog()">
-                        <i class="fas fa-plus me-2"></i>Write Blog Post
-                    </button>
-                </div>
-                
-                <!-- Blog Search/Filter -->
-                <div class="blog-controls mb-4">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <input type="text" class="form-control" placeholder="Search blog posts..." id="blogSearch">
-                        </div>
-                        <div class="col-md-4">
-                            <select class="form-select" id="blogStatus">
-                                <option value="">All Posts</option>
-                                <option value="published">Published</option>
-                                <option value="draft">Draft</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Blog Posts List -->
-                <div id="blogPostsList">
-                    <!-- Placeholder for blog posts -->
-                    <div class="text-center text-muted py-5">
-                        <i class="fas fa-pen fa-3x mb-3" style="color: #dee2e6;"></i>
-                        <h4>No blog posts yet</h4>
-                        <p>Share stories and memories from this Thanksgiving!</p>
-                        <button class="btn btn-warning" onclick="writeBlog()">
-                            <i class="fas fa-plus me-2"></i>Write First Blog Post
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Comments Tab -->
-        <div class="tab-pane fade" id="comments" role="tabpanel" aria-labelledby="comments-tab">
-            <div class="comments-section">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h3 class="mb-0">
-                        <i class="fas fa-comments me-2"></i>Comments
-                    </h3>
-                    <button class="btn btn-primary" onclick="addComment()">
-                        <i class="fas fa-plus me-2"></i>Add Comment
-                    </button>
-                </div>
-                
-                <!-- Add Comment Form -->
-                <div class="add-comment-form mb-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Add a Comment</h5>
-                            <form id="commentForm">
-                                <div class="mb-3">
-                                    <textarea class="form-control" rows="3" placeholder="Share your thoughts about this Thanksgiving..." id="commentText" required></textarea>
-                                </div>
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <select class="form-select" id="commentType" style="width: auto; display: inline-block;">
-                                            <option value="general">General Comment</option>
-                                            <option value="photo">About a Photo</option>
-                                            <option value="recipe">About a Recipe</option>
-                                            <option value="blog">About a Blog Post</option>
-                                        </select>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-paper-plane me-2"></i>Post Comment
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Comments List -->
-                <div id="commentsList">
-                    <!-- Placeholder for comments -->
-                    <div class="text-center text-muted py-5">
-                        <i class="fas fa-comments fa-3x mb-3" style="color: #dee2e6;"></i>
-                        <h4>No comments yet</h4>
-                        <p>Be the first to share your thoughts!</p>
-                        <button class="btn btn-primary" onclick="addComment()">
-                            <i class="fas fa-plus me-2"></i>Add First Comment
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                    
 </div>
 
 
@@ -390,11 +170,11 @@
                 <i class="fas fa-video me-2"></i>
                 Start Camera
             </button>
-            <button type="button" class="btn-view-details" onclick="if(window.photoManager && window.photoManager.uiController) window.photoManager.uiController.capturePhoto()" id="captureBtn" style="display: none;">
+            <button type="button" class="btn-view-details" onclick="alert('Camera capture functionality coming soon!')" id="captureBtn" style="display: none;">
                 <i class="fas fa-camera me-2"></i>
                 Capture
             </button>
-            <button type="button" class="btn-view-details" onclick="if(window.photoManager && window.photoManager.uiController) window.photoManager.uiController.saveCapturedPhoto()" id="saveBtn" style="display: none;">
+            <button type="button" class="btn-view-details" onclick="alert('Save photo functionality coming soon!')" id="saveBtn" style="display: none;">
                 <i class="fas fa-save me-2"></i>
                 Save Photo
             </button>
@@ -504,6 +284,12 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
         console.log('DOM loaded, initializing PhotoManager...');
         
+        // Check if Bootstrap is available
+        console.log('Bootstrap available:', typeof bootstrap !== 'undefined');
+        if (typeof bootstrap !== 'undefined') {
+            console.log('Bootstrap version:', bootstrap.Tooltip.VERSION || 'unknown');
+        }
+        
         // Check if required elements exist
         const photosGrid = document.getElementById('photosGrid');
         const noPhotosMessage = document.getElementById('noPhotosMessage');
@@ -516,181 +302,69 @@ document.addEventListener('DOMContentLoaded', function() {
         const authToken = getAuthToken();
         console.log('Auth token found:', !!authToken);
         
-        // Check if PhotoManager class is available
-        if (typeof PhotoManager === 'undefined') {
-            console.error('PhotoManager class not found. Check if scripts are loading correctly.');
-            return;
-        }
-        
-        // Initialize photo manager
-        photoManager = new PhotoManager(<%= event.id %>, authToken);
-        window.photoManager = photoManager; // Make it globally accessible
-        
-        console.log('PhotoManager created:', photoManager);
-        
-        // Initialize UI
-        photoManager.initializeUI();
-        
-        console.log('UI initialized, loading photos...');
-        
-        // Load photos
-        photoManager.loadPhotos();
-        
-        // Setup event listeners
-        setupPhotoEventListeners();
-        
-        console.log('PhotoManager initialized successfully:', photoManager);
+        // Simple photo functionality - no PhotoManager needed
+        console.log('Simple photo functionality ready');
         
         // Initialize stats
         updateStats();
+        
+        // Initialize content sections
+        initializeContentSections();
+        
     } catch (error) {
         console.error('Error initializing PhotoManager:', error);
         console.error('Error stack:', error.stack);
+        
+        // Still initialize content sections even if PhotoManager fails
+        initializeContentSections();
     }
 });
 
 // Enhanced Details Page Functions
 
+// Initialize content sections
+function initializeContentSections() {
+    try {
+        console.log('Initializing content sections...');
+        
+        // Load content for photo section
+        console.log('Photo functionality ready');
+        
+        console.log('Content sections initialized successfully');
+    } catch (error) {
+        console.error('Error initializing content sections:', error);
+    }
+}
+
 // Update stats counters
 async function updateStats() {
     try {
-        // Update photo count
-        if (window.photoManager && window.photoManager.photos) {
-            const photoCount = window.photoManager.photos.length;
-            document.getElementById('photoCount').textContent = photoCount;
-            document.getElementById('photosBadge').textContent = photoCount;
-        }
+        // Update photo count - simple approach
+        const photoCount = 0; // Will be updated when photos are actually loaded
+        const photoCountElement = document.getElementById('photoCount');
+        const photosBadgeElement = document.getElementById('photosBadge');
+        if (photoCountElement) photoCountElement.textContent = photoCount;
+        if (photosBadgeElement) photosBadgeElement.textContent = photoCount;
         
-        // TODO: Update recipe count when recipes are implemented
-        document.getElementById('recipeCount').textContent = '0';
-        document.getElementById('recipesBadge').textContent = '0';
-        
-        // TODO: Update blog count when blog is implemented
-        document.getElementById('blogCount').textContent = '0';
-        document.getElementById('blogBadge').textContent = '0';
-        
-        // TODO: Update comment count when comments are implemented
-        document.getElementById('commentCount').textContent = '0';
-        document.getElementById('commentsBadge').textContent = '0';
+        // Only photo functionality - other sections removed
     } catch (error) {
         console.error('Error updating stats:', error);
     }
 }
 
 // Quick action functions
-function addRecipe() {
-    alert('Recipe functionality coming soon! This will open a recipe creation form.');
-    // TODO: Implement recipe creation
-}
 
-function writeBlog() {
-    alert('Blog functionality coming soon! This will open a blog post editor.');
-    // TODO: Implement blog creation
-}
 
-function addComment() {
-    // Focus on comment form
-    document.getElementById('commentText').focus();
-    // Switch to comments tab
-    const commentsTab = new bootstrap.Tab(document.getElementById('comments-tab'));
-    commentsTab.show();
-}
 
-// Tab change handlers
+// Content section handlers
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle tab changes
-    const tabTriggerList = [].slice.call(document.querySelectorAll('#contentTabs button[data-bs-toggle="tab"]'));
-    tabTriggerList.forEach(function (tabTriggerEl) {
-        tabTriggerEl.addEventListener('shown.bs.tab', function (event) {
-            const target = event.target.getAttribute('data-bs-target');
-            console.log('Tab changed to:', target);
-            
-            // Load content based on active tab
-            switch(target) {
-                case '#photos':
-                    // Photos are already loaded by PhotoManager
-                    break;
-                case '#recipes':
-                    loadRecipes();
-                    break;
-                case '#blog':
-                    loadBlogPosts();
-                    break;
-                case '#comments':
-                    loadComments();
-                    break;
-            }
-        });
-    });
     
-    // Handle comment form submission
-    const commentForm = document.getElementById('commentForm');
-    if (commentForm) {
-        commentForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            submitComment();
-        });
-    }
-    
-    // Handle recipe search/filter
-    const recipeSearch = document.getElementById('recipeSearch');
-    const recipeCategory = document.getElementById('recipeCategory');
-    const recipeDifficulty = document.getElementById('recipeDifficulty');
-    
-    if (recipeSearch) recipeSearch.addEventListener('input', filterRecipes);
-    if (recipeCategory) recipeCategory.addEventListener('change', filterRecipes);
-    if (recipeDifficulty) recipeDifficulty.addEventListener('change', filterRecipes);
-    
-    // Handle blog search/filter
-    const blogSearch = document.getElementById('blogSearch');
-    const blogStatus = document.getElementById('blogStatus');
-    
-    if (blogSearch) blogSearch.addEventListener('input', filterBlogPosts);
-    if (blogStatus) blogStatus.addEventListener('change', filterBlogPosts);
+    // Photo functionality event listeners are handled by PhotoManager
 });
 
-// Placeholder functions for future implementation
-function loadRecipes() {
-    console.log('Loading recipes...');
-    // TODO: Implement recipe loading
-}
+// Photo functionality only
 
-function loadBlogPosts() {
-    console.log('Loading blog posts...');
-    // TODO: Implement blog post loading
-}
 
-function loadComments() {
-    console.log('Loading comments...');
-    // TODO: Implement comment loading
-}
-
-function filterRecipes() {
-    console.log('Filtering recipes...');
-    // TODO: Implement recipe filtering
-}
-
-function filterBlogPosts() {
-    console.log('Filtering blog posts...');
-    // TODO: Implement blog post filtering
-}
-
-function submitComment() {
-    const commentText = document.getElementById('commentText').value;
-    const commentType = document.getElementById('commentType').value;
-    
-    if (!commentText.trim()) {
-        alert('Please enter a comment.');
-        return;
-    }
-    
-    console.log('Submitting comment:', { text: commentText, type: commentType });
-    // TODO: Implement comment submission
-    
-    // Clear form
-    document.getElementById('commentText').value = '';
-    alert('Comment functionality coming soon!');
-}
 
 // Photo loading is now handled by PhotoManager.loadPhotos()
 
@@ -698,7 +372,13 @@ function submitComment() {
 
 // Photo Upload Functions
 function openPhotoUpload() {
-    document.getElementById('photoUploadModal').style.display = 'flex';
+    console.log('Opening photo upload modal...');
+    const modal = document.getElementById('photoUploadModal');
+    if (modal) {
+        modal.style.display = 'flex';
+    } else {
+        alert('Photo upload functionality coming soon!');
+    }
 }
 
 function closePhotoUpload() {
@@ -710,7 +390,13 @@ function closePhotoUpload() {
 
 // Camera Functions
 function openCameraCapture() {
-    document.getElementById('cameraModal').style.display = 'flex';
+    console.log('Opening camera capture...');
+    const modal = document.getElementById('cameraModal');
+    if (modal) {
+        modal.style.display = 'flex';
+    } else {
+        alert('Camera capture functionality coming soon!');
+    }
 }
 
 function closeCamera() {
@@ -895,30 +581,17 @@ document.addEventListener('click', function(event) {
 </script>
 
 <!-- Scripts -->
-<script src="/javascript/photoApiClient.js"></script>
-<script src="/javascript/fileUtils.js"></script>
-<script src="/javascript/errorHandler.js"></script>
-<script src="/javascript/photoUIController.js"></script>
-<script src="/javascript/photoManager.js"></script>
+<!-- Photo functionality scripts removed - using simple modal approach -->
 
 <script>
-// Setup event listeners for forms
+// Simple photo form handling
 function setupPhotoEventListeners() {
-    // Photo upload form
+    // Photo upload form - simple alert for now
     const uploadForm = document.getElementById('photoUploadForm');
     if (uploadForm) {
-        uploadForm.addEventListener('submit', async function(e) {
+        uploadForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            await photoManager.handleFileUpload(e);
-        });
-    }
-
-    // Photo edit form
-    const editForm = document.getElementById('photoEditForm');
-    if (editForm) {
-        editForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            await photoManager.handlePhotoEdit(e);
+            alert('Photo upload functionality coming soon!');
         });
     }
 }

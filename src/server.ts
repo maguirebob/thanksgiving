@@ -4,20 +4,25 @@ import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import session from 'express-session';
-// import expressLayouts from 'express-ejs-layouts';
+import expressLayouts from 'express-ejs-layouts';
 import path from 'path';
 import { config } from './lib/config';
+import { PrismaClient } from '@prisma/client';
 
 const app = express();
+const prisma = new PrismaClient();
 
 // Security middleware
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+      scriptSrcAttr: ["'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
+      connectSrc: ["'self'", "https://cdn.jsdelivr.net"],
     },
   },
 }));
@@ -60,88 +65,44 @@ app.use(session({
 app.use(express.static(path.join(__dirname, '../public')));
 
 // View engine setup
-// app.use(expressLayouts);
+app.use(expressLayouts);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '../views'));
-// app.set('layout', 'layout');
+app.set('layout', 'layout');
 
 // Basic routes
-app.get('/', (req, res) => {
-  // Sample data for now - will be replaced with database queries
-  const sampleEvents = [
-    {
-      id: 1,
-      event_name: 'Thanksgiving 2024',
-      event_type: 'Thanksgiving',
-      event_location: 'Family Home',
-      event_date: new Date('2024-11-28'),
-      event_description: 'Annual Thanksgiving celebration',
-      menu_title: 'Thanksgiving Feast 2024',
-      menu_image_filename: '2024_Menu.jpeg',
-      menu_image_url: '/images/2024_Menu.jpeg'
-    },
-    {
-      id: 2,
-      event_name: 'Thanksgiving 2023',
-      event_type: 'Thanksgiving',
-      event_location: 'Family Home',
-      event_date: new Date('2023-11-23'),
-      event_description: 'Thanksgiving celebration',
-      menu_title: 'Thanksgiving Feast 2023',
-      menu_image_filename: '2023_Menu.jpeg',
-      menu_image_url: '/images/2023_Menu.jpeg'
-    },
-    {
-      id: 3,
-      event_name: 'Thanksgiving 2022',
-      event_type: 'Thanksgiving',
-      event_location: 'Family Home',
-      event_date: new Date('2022-11-24'),
-      event_description: 'Thanksgiving celebration',
-      menu_title: 'Thanksgiving Feast 2022',
-      menu_image_filename: '2022_Menu.jpeg',
-      menu_image_url: '/images/2022_Menu.jpeg'
-    },
-    {
-      id: 4,
-      event_name: 'Thanksgiving 2021',
-      event_type: 'Thanksgiving',
-      event_location: 'Family Home',
-      event_date: new Date('2021-11-25'),
-      event_description: 'Thanksgiving celebration',
-      menu_title: 'Thanksgiving Feast 2021',
-      menu_image_filename: '2021_Menu.jpeg',
-      menu_image_url: '/images/2021_Menu.jpeg'
-    },
-    {
-      id: 5,
-      event_name: 'Thanksgiving 2020',
-      event_type: 'Thanksgiving',
-      event_location: 'Family Home',
-      event_date: new Date('2020-11-26'),
-      event_description: 'Thanksgiving celebration',
-      menu_title: 'Thanksgiving Feast 2020',
-      menu_image_filename: '2020_Menu.jpeg',
-      menu_image_url: '/images/2020_Menu.jpeg'
-    },
-    {
-      id: 6,
-      event_name: 'Thanksgiving 2019',
-      event_type: 'Thanksgiving',
-      event_location: 'Family Home',
-      event_date: new Date('2019-11-28'),
-      event_description: 'Thanksgiving celebration',
-      menu_title: 'Thanksgiving Feast 2019',
-      menu_image_filename: '2019_Menu.jpeg',
-      menu_image_url: '/images/2019_Menu.jpeg'
-    }
-  ];
+app.get('/', async (req, res) => {
+  try {
+    // Fetch events from database using Prisma
+    const events = await prisma.event.findMany({
+      orderBy: { event_date: 'desc' },
+      take: 6 // Limit to 6 most recent events for homepage
+    });
 
-  res.render('index', { 
-    title: 'Thanksgiving Menu Collection',
-    message: 'Welcome to the Thanksgiving Menu Collection!',
-    events: sampleEvents
-  });
+    // Transform data to include menu_image_url
+    const transformedEvents = events.map(event => ({
+      ...event,
+      id: event.event_id,
+      title: event.event_name,
+      description: event.event_description,
+      date: event.event_date,
+      location: event.event_location,
+      menu_image_url: `/images/${event.menu_image_filename}`
+    }));
+
+    res.render('index', {
+      title: 'Thanksgiving Menu Collection',
+      message: 'Welcome to the Thanksgiving Menu Collection!',
+      events: transformedEvents
+    });
+  } catch (error) {
+    console.error('Error fetching events for homepage:', error);
+    res.status(500).render('error', {
+      title: 'Error',
+      message: 'Failed to load menus.',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 app.get('/health', (req, res) => {
@@ -150,6 +111,69 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: config.getConfig().nodeEnv
   });
+});
+
+// Version API endpoint
+app.get('/api/v1/version/display', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      version: '2.0.0',
+      environment: config.getConfig().nodeEnv,
+      buildDate: new Date().toISOString()
+    }
+  });
+});
+
+// Menu detail route
+app.get('/menu/:id', async (req, res) => {
+  try {
+    const menuId = parseInt(req.params.id);
+    
+    if (isNaN(menuId)) {
+      return res.status(400).render('error', {
+        title: 'Invalid Menu ID',
+        message: 'Please provide a valid menu ID.',
+        error: 'Invalid menu ID format'
+      });
+    }
+
+    // Fetch event from database using Prisma
+    const event = await prisma.event.findUnique({
+      where: { event_id: menuId }
+    });
+
+    if (!event) {
+      return res.status(404).render('error', {
+        title: 'Menu Not Found',
+        message: 'The requested menu could not be found.',
+        error: 'Menu not found'
+      });
+    }
+
+    // Transform data for the template
+    const transformedEvent = {
+      ...event,
+      id: event.event_id,
+      title: event.event_name,
+      description: event.event_description,
+      date: event.event_date,
+      location: event.event_location,
+      menu_image_url: `/images/${event.menu_image_filename}`
+    };
+
+    res.render('detail', {
+      title: `${event.event_name} - Menu Details`,
+      event: transformedEvent
+    });
+  } catch (error) {
+    console.error('Error fetching menu details:', error);
+    res.status(500).render('error', {
+      title: 'Error',
+      message: 'Failed to load menu details.',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 // Error handling middleware

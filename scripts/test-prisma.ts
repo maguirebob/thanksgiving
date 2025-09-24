@@ -1,20 +1,15 @@
 import { PrismaClient } from '@prisma/client';
-import dotenv from 'dotenv';
-
-// Load environment variables
-dotenv.config();
 
 const prisma = new PrismaClient({
   datasources: {
     db: {
-      url: process.env.DATABASE_URL
+      url: process.env['DATABASE_URL'] || 'postgresql://localhost:5432/thanksgiving_dev'
     }
   }
 });
 
 async function main() {
   console.log('🚀 Testing Prisma connection...');
-  console.log('📊 DATABASE_URL:', process.env.DATABASE_URL);
   
   try {
     await prisma.$connect();
