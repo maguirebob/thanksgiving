@@ -15,7 +15,7 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '../views'));
 
 // Test route without layouts
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.render('index', { 
     title: 'Thanksgiving Menu Collection',
     message: 'Welcome to the Thanksgiving Menu Collection!',
@@ -36,7 +36,7 @@ app.get('/', (req, res) => {
 });
 
 // Health check
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
@@ -46,7 +46,7 @@ app.get('/health', (req, res) => {
 });
 
 // Database test endpoint
-app.get('/api/db-test', async (req, res) => {
+app.get('/api/db-test', async (_req, res) => {
   try {
     const { PrismaClient } = await import('@prisma/client');
     const prisma = new PrismaClient();

@@ -71,7 +71,7 @@ app.set('views', path.join(__dirname, '../views'));
 app.set('layout', 'layout');
 
 // Basic routes
-app.get('/', async (req, res) => {
+app.get('/', async (_req, res) => {
   try {
     // Fetch events from database using Prisma
     const events = await prisma.event.findMany({
@@ -105,7 +105,7 @@ app.get('/', async (req, res) => {
   }
 });
 
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
@@ -114,7 +114,7 @@ app.get('/health', (req, res) => {
 });
 
 // Version API endpoint
-app.get('/api/v1/version/display', (req, res) => {
+app.get('/api/v1/version/display', (_req, res) => {
   res.json({
     success: true,
     data: {
@@ -177,7 +177,7 @@ app.get('/menu/:id', async (req, res) => {
 });
 
 // Error handling middleware
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Error:', err);
   res.status(500).json({ 
     error: 'Internal Server Error',
@@ -186,7 +186,7 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 });
 
 // 404 handler
-app.use((req, res) => {
+app.use((_req, res) => {
   res.status(404).json({ error: 'Not Found' });
 });
 

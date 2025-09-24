@@ -3726,6 +3726,17 @@ const logger = {
    - Test locally first
    - Use incremental deployments
 
+5. **Railway/GitHub Integration Issues**
+   - **Problem**: Cannot access repository or deployment fails due to GitHub permissions
+   - **Solution**: Delete the Railway app from GitHub and reinstall it
+   - **Steps**:
+     1. Go to GitHub Settings → Applications → Installed GitHub Apps
+     2. Find "Railway" in the list
+     3. Click "Configure" → "Uninstall"
+     4. Reinstall Railway app from Railway dashboard
+     5. Reconnect repository permissions
+   - **Prevention**: Regularly check GitHub app permissions and Railway service status
+
 ### Success Metrics
 
 #### 1. Development Metrics
