@@ -35,12 +35,12 @@ describe('Smoke Tests - Database Operations', () => {
     });
 
     test('should find events by date range', async () => {
-      const event1 = await testUtils.createTestEvent(prisma, {
+      await testUtils.createTestEvent(prisma, {
         event_date: new Date('2024-11-28'),
         event_name: 'Thanksgiving 2024'
       });
       
-      const event2 = await testUtils.createTestEvent(prisma, {
+      await testUtils.createTestEvent(prisma, {
         event_date: new Date('2023-11-23'),
         event_name: 'Thanksgiving 2023'
       });
@@ -55,7 +55,7 @@ describe('Smoke Tests - Database Operations', () => {
       });
 
       expect(recentEvents).toHaveLength(1);
-      expect(recentEvents[0].event_name).toBe('Thanksgiving 2024');
+      expect(recentEvents[0]?.event_name).toBe('Thanksgiving 2024');
     });
 
     test('should update an event', async () => {

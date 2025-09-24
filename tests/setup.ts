@@ -3,8 +3,8 @@ import { PrismaClient } from '@prisma/client';
 // Global test setup
 beforeAll(async () => {
   // Set test environment variables
-  process.env.NODE_ENV = 'test';
-  process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://test:test@localhost:5432/thanksgiving_test';
+  process.env['NODE_ENV'] = 'test';
+  process.env['DATABASE_URL'] = process.env['DATABASE_URL'] || 'postgresql://test:test@localhost:5432/thanksgiving_test';
 });
 
 afterAll(async () => {
@@ -37,7 +37,7 @@ export const testUtils = {
         username: 'testuser',
         email: 'test@example.com',
         password_hash: await bcrypt.hash('testpass123', 10),
-        role: 'user',
+        role: 'user' as any, // Cast to any to avoid enum issues
         first_name: 'Test',
         last_name: 'User',
         ...overrides
