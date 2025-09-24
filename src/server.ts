@@ -199,7 +199,7 @@ app.get('/api/setup-database', async (_req, res) => {
     const finalEventCount = await prisma.event.count();
     const finalUserCount = await prisma.user.count();
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Database setup completed successfully!',
       data: {
