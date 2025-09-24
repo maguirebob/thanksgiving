@@ -1,0 +1,112 @@
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow">
+        <div class="card-body">
+          <h2 class="card-title text-center mb-4">Login</h2>
+          
+          <% if (error) { %>
+            <div class="alert alert-danger" role="alert">
+              <%= error %>
+            </div>
+          <% } %>
+          
+          <% if (success) { %>
+            <div class="alert alert-success" role="alert">
+              <%= success %>
+            </div>
+          <% } %>
+
+          <form id="loginForm">
+            <div class="mb-3">
+              <label for="username" class="form-label">Username</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="username" 
+                name="username" 
+                required
+                value="<%= typeof username !== 'undefined' ? username : '' %>"
+              >
+            </div>
+            
+            <div class="mb-3">
+              <label for="password" class="form-label">Password</label>
+              <input 
+                type="password" 
+                class="form-control" 
+                id="password" 
+                name="password" 
+                required
+              >
+            </div>
+            
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">Login</button>
+            </div>
+          </form>
+          
+          <div class="text-center mt-3">
+            <p class="mb-0">Don't have an account? <a href="/auth/register">Register here</a></p>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+  
+  try {
+    const response = await fetch('/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, password })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      // Store JWT token in localStorage
+      localStorage.setItem('authToken', data.token);
+      
+      // Redirect to homepage
+      window.location.href = '/';
+    } else {
+      // Show error message
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'alert alert-danger';
+      errorDiv.textContent = data.message || 'Login failed';
+      
+      const form = document.getElementById('loginForm');
+      form.insertBefore(errorDiv, form.firstChild);
+      
+      // Remove error after 5 seconds
+      setTimeout(() => {
+        errorDiv.remove();
+      }, 5000);
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'alert alert-danger';
+    errorDiv.textContent = 'Network error. Please try again.';
+    
+    const form = document.getElementById('loginForm');
+    form.insertBefore(errorDiv, form.firstChild);
+    
+    setTimeout(() => {
+      errorDiv.remove();
+    }, 5000);
+  }
+});
+</script>
+

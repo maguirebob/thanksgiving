@@ -16,6 +16,14 @@ const login = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      if (req.headers.accept?.indexOf('application/json') > -1) {
+        return res.status(400).json({
+          success: false,
+          error: 'Validation failed',
+          message: 'Please check your input and try again.',
+          errors: errors.array()
+        });
+      }
       return res.render('auth/login', {
         title: 'Login',
         error: 'Please check your input and try again.',
@@ -35,11 +43,34 @@ const login = async (req, res) => {
       
       console.log(`User ${user.username} logged in successfully`);
       
+      if (req.headers.accept?.indexOf('application/json') > -1) {
+        const jwt = require('jsonwebtoken');
+        const JWT_SECRET = process.env.JWT_SECRET || 'thanksgiving-jwt-secret-key-change-in-production';
+        const token = jwt.sign(
+          { id: user.user_id, username: user.username, email: user.email, role: user.role },
+          JWT_SECRET,
+          { expiresIn: '24h' }
+        );
+        return res.json({
+          success: true,
+          message: 'Login successful',
+          token: token,
+          user: { id: user.user_id, username: user.username, email: user.email, role: user.role }
+        });
+      }
+      
       // Redirect based on role or return URL
       const returnUrl = req.query.return || '/';
       res.redirect(returnUrl);
     } catch (error) {
       console.log(`Login failed for username: ${username}`);
+      if (req.headers.accept?.indexOf('application/json') > -1) {
+        return res.status(401).json({
+          success: false,
+          error: 'Invalid credentials',
+          message: 'Invalid username or password'
+        });
+      }
       res.render('auth/login', {
         title: 'Login',
         error: 'Invalid username or password',
@@ -48,6 +79,13 @@ const login = async (req, res) => {
     }
   } catch (error) {
     console.error('Login error:', error);
+    if (req.headers.accept?.indexOf('application/json') > -1) {
+      return res.status(500).json({
+        success: false,
+        error: 'Server error',
+        message: 'An error occurred during login. Please try again.'
+      });
+    }
     res.render('auth/login', {
       title: 'Login',
       error: 'An error occurred during login. Please try again.',

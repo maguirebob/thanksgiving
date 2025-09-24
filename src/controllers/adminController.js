@@ -12,11 +12,11 @@ const showDashboard = async (req, res) => {
     
     // Get recent events
     const recentEvents = await db.Event.findAll({
-      order: [['created_at', 'DESC']],
+      order: [['event_date', 'DESC']], // Changed from 'created_at' since Event model has timestamps: false
       limit: 5,
       include: [{
         model: db.Photo,
-        as: 'photos',
+        as: 'Photos', // Changed from 'photos' to 'Photos' to match Sequelize's default pluralization
         limit: 1
       }]
     });

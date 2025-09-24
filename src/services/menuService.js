@@ -46,7 +46,21 @@ class MenuService {
       queryOptions.limit = parseInt(limit);
     }
 
-    return await Event.findAll(queryOptions);
+    const events = await Event.findAll(queryOptions);
+    
+    // Transform the data to include menu_image_url
+    return events.map(event => {
+      const eventData = event.toJSON();
+      return {
+        ...eventData,
+        id: eventData.event_id,
+        title: eventData.event_name,
+        description: eventData.event_description,
+        date: eventData.event_date,
+        location: eventData.event_location,
+        menu_image_url: `/images/${eventData.menu_image_filename}`
+      };
+    });
   }
 
   /**
@@ -59,7 +73,22 @@ class MenuService {
       throw new Error('Invalid menu ID');
     }
     
-    return await Event.findByPk(id);
+    const event = await Event.findByPk(id);
+    if (!event) {
+      return null;
+    }
+    
+    // Transform the data to include menu_image_url
+    const eventData = event.toJSON();
+    return {
+      ...eventData,
+      id: eventData.event_id,
+      title: eventData.event_name,
+      description: eventData.event_description,
+      date: eventData.event_date,
+      location: eventData.event_location,
+      menu_image_url: `/images/${eventData.menu_image_filename}`
+    };
   }
 
   /**
@@ -74,13 +103,27 @@ class MenuService {
 
     const yearStart = `${year}-01-01`;
     const yearEnd = `${year}-12-31`;
-    return await Event.findAll({
+    const events = await Event.findAll({
       where: {
         event_date: {
           [Op.between]: [yearStart, yearEnd]
         }
       },
       order: [['event_date', 'DESC']]
+    });
+    
+    // Transform the data to include menu_image_url
+    return events.map(event => {
+      const eventData = event.toJSON();
+      return {
+        ...eventData,
+        id: eventData.event_id,
+        title: eventData.event_name,
+        description: eventData.event_description,
+        date: eventData.event_date,
+        location: eventData.event_location,
+        menu_image_url: `/images/${eventData.menu_image_filename}`
+      };
     });
   }
 
