@@ -17,7 +17,7 @@
             </div>
           <% } %>
 
-          <form id="loginForm">
+          <form id="loginForm" method="POST" action="/auth/login">
             <div class="mb-3">
               <label for="username" class="form-label">Username</label>
               <input 
@@ -57,56 +57,19 @@
 </div>
 
 <script>
-document.getElementById('loginForm').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  
-  const username = document.getElementById('username').value;
+// Simple form validation - let the form submit naturally to the server
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+  const username = document.getElementById('username').value.trim();
   const password = document.getElementById('password').value;
   
-  try {
-    const response = await fetch('/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ username, password })
-    });
-    
-    const data = await response.json();
-    
-    if (data.success) {
-      // Store JWT token in localStorage
-      localStorage.setItem('authToken', data.token);
-      
-      // Redirect to homepage
-      window.location.href = '/';
-    } else {
-      // Show error message
-      const errorDiv = document.createElement('div');
-      errorDiv.className = 'alert alert-danger';
-      errorDiv.textContent = data.message || 'Login failed';
-      
-      const form = document.getElementById('loginForm');
-      form.insertBefore(errorDiv, form.firstChild);
-      
-      // Remove error after 5 seconds
-      setTimeout(() => {
-        errorDiv.remove();
-      }, 5000);
-    }
-  } catch (error) {
-    console.error('Login error:', error);
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'alert alert-danger';
-    errorDiv.textContent = 'Network error. Please try again.';
-    
-    const form = document.getElementById('loginForm');
-    form.insertBefore(errorDiv, form.firstChild);
-    
-    setTimeout(() => {
-      errorDiv.remove();
-    }, 5000);
+  if (!username || !password) {
+    e.preventDefault();
+    alert('Please enter both username and password.');
+    return false;
   }
+  
+  // Form will submit naturally to /auth/login via POST
+  // Server will handle authentication and redirect
 });
 </script>
 
