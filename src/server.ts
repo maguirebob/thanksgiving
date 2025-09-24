@@ -192,10 +192,21 @@ app.use((_req, res) => {
 
 const PORT = config.getPort();
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server is running on port ${PORT}`);
   console.log(`📊 Environment: ${config.getConfig().nodeEnv}`);
-  console.log(`🌐 Access URL: http://localhost:${PORT}`);
+  console.log(`🌐 Access URL: http://0.0.0.0:${PORT}`);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
 });
 
 export default app;
