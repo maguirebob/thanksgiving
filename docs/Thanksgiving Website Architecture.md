@@ -3758,3 +3758,19 @@ const logger = {
 - Rollback time < 2 minutes
 
 This comprehensive environment management strategy ensures reliable, scalable, and maintainable deployments across all three environments while maintaining data integrity and security.
+
+## Deployment Lessons Learned
+
+For detailed information about deployment issues encountered and solutions implemented during the migration from JavaScript/Sequelize to TypeScript/Prisma, see:
+
+**[RAILWAY_DEPLOYMENT_LESSONS.md](./RAILWAY_DEPLOYMENT_LESSONS.md)**
+
+This document covers:
+- Critical TypeScript compilation errors and fixes
+- Database schema creation strategies
+- Railway-specific deployment considerations
+- Production deployment checklist
+- Common pitfalls to avoid
+- Configuration templates and best practices
+
+Key takeaway: Always run `npx tsc --noEmit` locally before deployment and ensure database initialization is part of the deployment process.
