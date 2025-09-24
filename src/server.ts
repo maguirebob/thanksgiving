@@ -125,6 +125,101 @@ app.get('/api/v1/version/display', (_req, res) => {
   });
 });
 
+// Database setup endpoint (for Railway initialization)
+app.get('/api/setup-database', async (_req, res) => {
+  try {
+    console.log('🚀 Setting up database...');
+    
+    // Check if we already have data
+    const eventCount = await prisma.event.count();
+    const userCount = await prisma.user.count();
+
+    if (eventCount > 0 || userCount > 0) {
+      return res.json({
+        success: true,
+        message: `Database already has data: ${eventCount} events, ${userCount} users`,
+        data: { eventCount, userCount }
+      });
+    }
+
+    console.log('📝 Creating sample data...');
+
+    // Create sample events (Thanksgiving menus from 1994-2024)
+    const events = [];
+    for (let year = 1994; year <= 2024; year++) {
+      events.push({
+        event_name: `Thanksgiving ${year}`,
+        event_type: 'Thanksgiving',
+        event_location: 'Family Home',
+        event_date: new Date(`${year}-11-${year === 2020 ? '26' : '25'}`), // 2020 was on 26th
+        event_description: `Annual Thanksgiving celebration for ${year}`,
+        menu_title: `${year} Thanksgiving Menu`,
+        menu_image_filename: `${year}_Menu.jpeg`
+      });
+    }
+
+    // Insert events
+    const createdEvents = await prisma.event.createMany({
+      data: events,
+      skipDuplicates: true
+    });
+
+    console.log(`✅ Created ${createdEvents.count} events`);
+
+    // Create sample users
+    const bcrypt = require('bcryptjs');
+    
+    const users = [
+      {
+        username: 'admin',
+        email: 'admin@thanksgiving.com',
+        password_hash: await bcrypt.hash('admin123', 10),
+        role: 'admin' as const,
+        first_name: 'Admin',
+        last_name: 'User'
+      },
+      {
+        username: 'testuser',
+        email: 'test@thanksgiving.com',
+        password_hash: await bcrypt.hash('testpass123', 10),
+        role: 'user' as const,
+        first_name: 'Test',
+        last_name: 'User'
+      }
+    ];
+
+    const createdUsers = await prisma.user.createMany({
+      data: users,
+      skipDuplicates: true
+    });
+
+    console.log(`✅ Created ${createdUsers.count} users`);
+
+    // Verify data
+    const finalEventCount = await prisma.event.count();
+    const finalUserCount = await prisma.user.count();
+
+    res.json({
+      success: true,
+      message: 'Database setup completed successfully!',
+      data: {
+        eventsCreated: createdEvents.count,
+        usersCreated: createdUsers.count,
+        totalEvents: finalEventCount,
+        totalUsers: finalUserCount
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error setting up database:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Database setup failed',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // Menu detail route
 app.get('/menu/:id', async (req, res) => {
   try {
