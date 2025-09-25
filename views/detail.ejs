@@ -735,17 +735,28 @@ window.addEventListener('error', function(event) {
         return;
     }
     
-    // Only close modals for specific errors, not Bootstrap selector-engine errors
+    // Don't close modals if Bootstrap error already occurred (prevents interference)
+    if (bootstrapErrorOccurred) {
+        console.log('Ignoring error due to previous Bootstrap error');
+        return;
+    }
+    
+    // Completely ignore Bootstrap selector-engine errors
     if (event.error && event.error.message && 
-        !event.error.message.includes('Illegal invocation') &&
-        !event.error.message.includes('selector-engine') &&
-        !event.error.message.includes('Bootstrap')) {
-        console.log('Closing modals due to non-Bootstrap error');
+        (event.error.message.includes('Illegal invocation') ||
+         event.error.message.includes('selector-engine') ||
+         event.error.message.includes('Bootstrap'))) {
+        console.log('Ignoring Bootstrap-related error');
+        bootstrapErrorOccurred = true;
+        return; // Don't do anything for Bootstrap errors
+    }
+    
+    // Only close modals for genuine application errors
+    if (event.error && event.error.message) {
+        console.log('Closing modals due to application error');
         setTimeout(() => {
             closeAllModals();
         }, 100);
-    } else {
-        console.log('Ignoring Bootstrap-related error');
     }
 });
 
@@ -759,17 +770,28 @@ window.addEventListener('unhandledrejection', function(event) {
         return;
     }
     
-    // Only close modals for specific promise rejections
+    // Don't close modals if Bootstrap error already occurred (prevents interference)
+    if (bootstrapErrorOccurred) {
+        console.log('Ignoring promise rejection due to previous Bootstrap error');
+        return;
+    }
+    
+    // Completely ignore Bootstrap selector-engine promise rejections
     if (event.reason && event.reason.message && 
-        !event.reason.message.includes('Illegal invocation') &&
-        !event.reason.message.includes('selector-engine') &&
-        !event.reason.message.includes('Bootstrap')) {
-        console.log('Closing modals due to promise rejection');
+        (event.reason.message.includes('Illegal invocation') ||
+         event.reason.message.includes('selector-engine') ||
+         event.reason.message.includes('Bootstrap'))) {
+        console.log('Ignoring Bootstrap-related promise rejection');
+        bootstrapErrorOccurred = true;
+        return; // Don't do anything for Bootstrap errors
+    }
+    
+    // Only close modals for genuine application promise rejections
+    if (event.reason && event.reason.message) {
+        console.log('Closing modals due to application promise rejection');
         setTimeout(() => {
             closeAllModals();
         }, 100);
-    } else {
-        console.log('Ignoring Bootstrap-related promise rejection');
     }
 });
 
@@ -819,6 +841,9 @@ window.eventId = <%= eventId %>;
 // Flag to prevent global error handler from closing modals during uploads
 let isUploading = false;
 
+// Flag to prevent Bootstrap errors from interfering with subsequent uploads
+let bootstrapErrorOccurred = false;
+
 // Simple photo form handling
 function setupPhotoEventListeners() {
     console.log('Setting up photo event listeners...');
@@ -860,34 +885,37 @@ function setupPhotoEventListeners() {
                     
                     const result = await response.json();
                     
-                    if (result.success) {
-                        console.log('Upload successful, closing modal...');
-                        alert('Photo uploaded successfully!');
-                        
-                        // Force close all modals and overlays
-                        console.log('Closing all modals after successful upload');
-                        closeAllModals();
-                        
-                        // Reset form
-                        const form = document.getElementById('photoUploadForm');
-                        if (form) {
-                            form.reset();
-                            console.log('Form reset');
-                        }
-                        
-                        loadPhotos(); // Refresh photo list
-                        
-                        // Fallback: ensure modal is closed after a delay
-                        setTimeout(() => {
-                            const modal = document.getElementById('photoUploadModal');
-                            if (modal && modal.style.display !== 'none') {
-                                console.log('Force closing modal after timeout');
-                                modal.style.display = 'none';
-                            }
-                        }, 500);
-                    } else {
-                        alert('Upload failed: ' + result.message);
-                    }
+                                if (result.success) {
+                                    console.log('Upload successful, closing modal...');
+                                    alert('Photo uploaded successfully!');
+                                    
+                                    // Reset form first
+                                    const form = document.getElementById('photoUploadForm');
+                                    if (form) {
+                                        form.reset();
+                                        console.log('Form reset');
+                                    }
+                                    
+                                    // Refresh photo list
+                                    loadPhotos();
+                                    
+                                    // Close modal with a small delay to prevent Bootstrap interference
+                                    setTimeout(() => {
+                                        console.log('Closing all modals after successful upload');
+                                        closeAllModals();
+                                    }, 100);
+                                    
+                                    // Fallback: ensure modal is closed after a longer delay
+                                    setTimeout(() => {
+                                        const modal = document.getElementById('photoUploadModal');
+                                        if (modal && modal.style.display !== 'none') {
+                                            console.log('Force closing modal after timeout');
+                                            modal.style.display = 'none';
+                                        }
+                                    }, 1000);
+                                } else {
+                                    alert('Upload failed: ' + result.message);
+                                }
                 } catch (error) {
                     console.error('Upload error:', error);
                     alert('Upload failed: ' + error.message);
@@ -911,11 +939,19 @@ function setupPhotoEventListeners() {
 
 // Tabbed Navigation Functionality
 function initializeTabbedNavigation() {
-    // Initialize Bootstrap tabs
-    const tabTriggerList = [].slice.call(document.querySelectorAll('#contentTabs button[data-bs-toggle="tab"]'));
-    tabTriggerList.forEach(function (tabTriggerEl) {
-        new bootstrap.Tab(tabTriggerEl);
-    });
+    try {
+        // Initialize Bootstrap tabs with error handling
+        const tabTriggerList = [].slice.call(document.querySelectorAll('#contentTabs button[data-bs-toggle="tab"]'));
+        tabTriggerList.forEach(function (tabTriggerEl) {
+            try {
+                new bootstrap.Tab(tabTriggerEl);
+            } catch (error) {
+                console.log('Bootstrap tab initialization error (ignored):', error);
+            }
+        });
+    } catch (error) {
+        console.log('Bootstrap initialization error (ignored):', error);
+    }
 
     // Add click handlers for tab badges
     const tabButtons = document.querySelectorAll('#contentTabs .nav-link');
