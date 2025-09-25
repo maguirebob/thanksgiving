@@ -1,0 +1,303 @@
+<!-- Tabbed Navigation Design - Task 1.2 -->
+<!-- This is a design mockup for the enhanced detail page with tabbed navigation -->
+
+<!-- Quick Stats Section -->
+<div class="quick-stats-section mb-4">
+    <div class="row g-3">
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card">
+                <div class="stats-icon">
+                    <i class="fas fa-images"></i>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-number" id="photoCount">0</div>
+                    <div class="stats-label">Photos</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card">
+                <div class="stats-icon">
+                    <i class="fas fa-book-open"></i>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-number" id="recipeCount">0</div>
+                    <div class="stats-label">Recipes</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card">
+                <div class="stats-icon">
+                    <i class="fas fa-blog"></i>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-number" id="blogCount">0</div>
+                    <div class="stats-label">Blog Posts</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card">
+                <div class="stats-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-number" id="commentCount">0</div>
+                    <div class="stats-label">Comments</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabbed Navigation -->
+<div class="tabbed-navigation-section">
+    <ul class="nav nav-tabs" id="contentTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="photos-tab" data-bs-toggle="tab" data-bs-target="#photos" type="button" role="tab" aria-controls="photos" aria-selected="true">
+                <i class="fas fa-images me-2"></i>
+                Photos
+                <span class="badge bg-primary ms-2" id="photosBadge">0</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="recipes-tab" data-bs-toggle="tab" data-bs-target="#recipes" type="button" role="tab" aria-controls="recipes" aria-selected="false">
+                <i class="fas fa-book-open me-2"></i>
+                Recipes
+                <span class="badge bg-primary ms-2" id="recipesBadge">0</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="blog-tab" data-bs-toggle="tab" data-bs-target="#blog" type="button" role="tab" aria-controls="blog" aria-selected="false">
+                <i class="fas fa-blog me-2"></i>
+                Blog Posts
+                <span class="badge bg-primary ms-2" id="blogBadge">0</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="comments-tab" data-bs-toggle="tab" data-bs-target="#comments" type="button" role="tab" aria-controls="comments" aria-selected="false">
+                <i class="fas fa-comments me-2"></i>
+                Comments
+                <span class="badge bg-primary ms-2" id="commentsBadge">0</span>
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="contentTabsContent">
+        <!-- Photos Tab -->
+        <div class="tab-pane fade show active" id="photos" role="tabpanel" aria-labelledby="photos-tab">
+            <div class="tab-content-header">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="mb-0">
+                        <i class="fas fa-images me-2"></i>Photos
+                    </h3>
+                    <div class="tab-actions">
+                        <button class="btn btn-primary me-2" onclick="openPhotoUpload()">
+                            <i class="fas fa-upload me-2"></i>Upload Photo
+                        </button>
+                        <button class="btn btn-success" onclick="openCameraCapture()">
+                            <i class="fas fa-camera me-2"></i>Take Photo
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Search and Filter -->
+                <div class="search-filter-section mb-4">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" id="photoSearch" placeholder="Search photos...">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="photoFilter">
+                                <option value="">All Photos</option>
+                                <option value="recent">Recent</option>
+                                <option value="oldest">Oldest</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-secondary w-100" onclick="clearPhotoFilters()">
+                                <i class="fas fa-times me-2"></i>Clear Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Photo Grid -->
+            <div id="photosGrid" class="row g-3">
+                <!-- Photos will be dynamically loaded here -->
+            </div>
+            
+            <!-- No Photos Message -->
+            <div id="noPhotosMessage" class="text-center text-muted py-5" style="display: none;">
+                <i class="fas fa-images fa-3x mb-3" style="color: #dee2e6;"></i>
+                <h4>No photos yet</h4>
+                <p>Upload some memories from this Thanksgiving!</p>
+                <button class="btn btn-primary" onclick="openPhotoUpload()">
+                    <i class="fas fa-upload me-2"></i>Upload First Photo
+                </button>
+            </div>
+        </div>
+
+        <!-- Recipes Tab -->
+        <div class="tab-pane fade" id="recipes" role="tabpanel" aria-labelledby="recipes-tab">
+            <div class="tab-content-header">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="mb-0">
+                        <i class="fas fa-book-open me-2"></i>Recipes
+                    </h3>
+                    <div class="tab-actions">
+                        <button class="btn btn-primary" onclick="addRecipe()">
+                            <i class="fas fa-plus me-2"></i>Add Recipe
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Search and Filter -->
+                <div class="search-filter-section mb-4">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" id="recipeSearch" placeholder="Search recipes...">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="recipeFilter">
+                                <option value="">All Recipes</option>
+                                <option value="appetizer">Appetizers</option>
+                                <option value="main">Main Course</option>
+                                <option value="side">Side Dishes</option>
+                                <option value="dessert">Desserts</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-secondary w-100" onclick="clearRecipeFilters()">
+                                <i class="fas fa-times me-2"></i>Clear Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recipe Cards -->
+            <div id="recipesGrid" class="row g-3">
+                <!-- Recipes will be dynamically loaded here -->
+            </div>
+            
+            <!-- No Recipes Message -->
+            <div id="noRecipesMessage" class="text-center text-muted py-5" style="display: none;">
+                <i class="fas fa-book-open fa-3x mb-3" style="color: #dee2e6;"></i>
+                <h4>No recipes yet</h4>
+                <p>Share your favorite Thanksgiving recipes!</p>
+                <button class="btn btn-primary" onclick="addRecipe()">
+                    <i class="fas fa-plus me-2"></i>Add First Recipe
+                </button>
+            </div>
+        </div>
+
+        <!-- Blog Tab -->
+        <div class="tab-pane fade" id="blog" role="tabpanel" aria-labelledby="blog-tab">
+            <div class="tab-content-header">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="mb-0">
+                        <i class="fas fa-blog me-2"></i>Blog Posts
+                    </h3>
+                    <div class="tab-actions">
+                        <button class="btn btn-primary" onclick="writeBlog()">
+                            <i class="fas fa-edit me-2"></i>Write Post
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Search and Filter -->
+                <div class="search-filter-section mb-4">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" id="blogSearch" placeholder="Search blog posts...">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="blogFilter">
+                                <option value="">All Posts</option>
+                                <option value="recent">Recent</option>
+                                <option value="popular">Popular</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-secondary w-100" onclick="clearBlogFilters()">
+                                <i class="fas fa-times me-2"></i>Clear Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Blog Posts -->
+            <div id="blogGrid" class="row g-3">
+                <!-- Blog posts will be dynamically loaded here -->
+            </div>
+            
+            <!-- No Blog Posts Message -->
+            <div id="noBlogMessage" class="text-center text-muted py-5" style="display: none;">
+                <i class="fas fa-blog fa-3x mb-3" style="color: #dee2e6;"></i>
+                <h4>No blog posts yet</h4>
+                <p>Share your Thanksgiving stories and memories!</p>
+                <button class="btn btn-primary" onclick="writeBlog()">
+                    <i class="fas fa-edit me-2"></i>Write First Post
+                </button>
+            </div>
+        </div>
+
+        <!-- Comments Tab -->
+        <div class="tab-pane fade" id="comments" role="tabpanel" aria-labelledby="comments-tab">
+            <div class="tab-content-header">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="mb-0">
+                        <i class="fas fa-comments me-2"></i>Comments
+                    </h3>
+                    <div class="tab-actions">
+                        <button class="btn btn-primary" onclick="addComment()">
+                            <i class="fas fa-comment me-2"></i>Add Comment
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Search and Filter -->
+                <div class="search-filter-section mb-4">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" id="commentSearch" placeholder="Search comments...">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="commentFilter">
+                                <option value="">All Comments</option>
+                                <option value="recent">Recent</option>
+                                <option value="oldest">Oldest</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-secondary w-100" onclick="clearCommentFilters()">
+                                <i class="fas fa-times me-2"></i>Clear Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Comments List -->
+            <div id="commentsList" class="comments-container">
+                <!-- Comments will be dynamically loaded here -->
+            </div>
+            
+            <!-- No Comments Message -->
+            <div id="noCommentsMessage" class="text-center text-muted py-5" style="display: none;">
+                <i class="fas fa-comments fa-3x mb-3" style="color: #dee2e6;"></i>
+                <h4>No comments yet</h4>
+                <p>Be the first to share your thoughts about this Thanksgiving!</p>
+                <button class="btn btn-primary" onclick="addComment()">
+                    <i class="fas fa-comment me-2"></i>Add First Comment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+

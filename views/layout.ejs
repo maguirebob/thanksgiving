@@ -774,6 +774,113 @@
             color: white;
             margin-top: 1rem;
         }
+
+        /* Quick Stats Section */
+        .quick-stats-section {
+            margin-bottom: 2rem;
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border-gray);
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .stats-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-orange), #ff8c42);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .stats-content {
+            flex: 1;
+        }
+
+        .stats-number {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-black);
+            line-height: 1;
+            margin-bottom: 0.25rem;
+        }
+
+        .stats-label {
+            font-family: 'Source Sans Pro', sans-serif;
+            font-size: 0.9rem;
+            color: var(--secondary-gray);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Responsive Design for Quick Stats */
+        @media (max-width: 768px) {
+            .quick-stats-section .row {
+                margin: 0 -0.5rem;
+            }
+            
+            .quick-stats-section .col-md-3 {
+                padding: 0 0.5rem;
+                margin-bottom: 1rem;
+            }
+            
+            .stats-card {
+                padding: 1rem;
+                flex-direction: column;
+                text-align: center;
+                gap: 0.5rem;
+            }
+            
+            .stats-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+            
+            .stats-number {
+                font-size: 1.5rem;
+            }
+            
+            .stats-label {
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .stats-card {
+                padding: 0.75rem;
+            }
+            
+            .stats-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+            
+            .stats-number {
+                font-size: 1.25rem;
+            }
+        }
     </style>
 </head>
 <body>
