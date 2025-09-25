@@ -673,17 +673,33 @@ function closeAllModals() {
         
         // Look for elements with high z-index that might be modals
         if (zIndex >= 1000 && 
-            (style.position === 'fixed' || style.position === 'absolute') &&
-            (style.backgroundColor === 'rgba(0, 0, 0, 0.5)' || 
-             style.backgroundColor === 'rgba(0,0,0,0.5)' ||
-             element.id.includes('modal') ||
-             element.id.includes('overlay'))) {
+            (style.position === 'fixed' || style.position === 'absolute')) {
             
-            console.log('Found potential modal/overlay:', element.id || element.className, 'z-index:', zIndex);
-            element.style.display = 'none';
-            element.style.visibility = 'hidden';
-            element.style.opacity = '0';
-            element.style.pointerEvents = 'none';
+            // Check for modal-like properties
+            const isModalLike = 
+                style.backgroundColor.includes('rgba(0, 0, 0') ||  // Dark background
+                style.backgroundColor.includes('rgba(0,0,0') ||     // Dark background (no spaces)
+                element.id.includes('modal') ||
+                element.id.includes('overlay') ||
+                element.className.includes('modal') ||
+                element.className.includes('overlay') ||
+                (style.width === '100%' && style.height === '100%' && zIndex > 5000); // Full screen overlay
+            
+            if (isModalLike) {
+                console.log('Found potential modal/overlay:', {
+                    id: element.id,
+                    className: element.className,
+                    zIndex: zIndex,
+                    backgroundColor: style.backgroundColor,
+                    position: style.position,
+                    width: style.width,
+                    height: style.height
+                });
+                element.style.display = 'none';
+                element.style.visibility = 'hidden';
+                element.style.opacity = '0';
+                element.style.pointerEvents = 'none';
+            }
         }
     });
     
@@ -898,6 +914,7 @@ function setupPhotoEventListeners() {
                         
                         // Fallback: ensure modal is closed after a delay
                         setTimeout(() => {
+                            const modal = document.getElementById('photoUploadModal');
                             if (modal && modal.style.display !== 'none') {
                                 console.log('Force closing modal after timeout');
                                 modal.style.display = 'none';
