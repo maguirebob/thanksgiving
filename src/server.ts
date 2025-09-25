@@ -10,6 +10,7 @@ import { config } from './lib/config';
 import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/authRoutes';
 import adminRoutes from './routes/adminRoutes';
+import photoRoutes from './routes/photoRoutes';
 import { addUserToLocals } from './middleware/auth';
 
 const app = express();
@@ -124,7 +125,7 @@ app.get('/api/v1/version/display', (_req, res) => {
   res.json({
     success: true,
     data: {
-      version: '2.4.1',
+      version: '2.4.2',
       environment: config.getConfig().nodeEnv,
       buildDate: new Date().toISOString()
     }
@@ -250,7 +251,7 @@ app.get('/api/setup-database', async (_req, res) => {
 app.get('/about', (_req, res) => {
   res.render('about', {
     title: 'About - Thanksgiving Menu Collection',
-    version: '2.4.1',
+    version: '2.4.2',
     environment: config.getConfig().nodeEnv,
     buildDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
     dbStatus: 'Connected'
@@ -296,7 +297,8 @@ app.get('/menu/:id', async (req, res) => {
 
     res.render('detail', {
       title: `${event.event_name} - Menu Details`,
-      event: transformedEvent
+      event: transformedEvent,
+      eventId: event.event_id
     });
   } catch (error) {
     console.error('Error fetching menu details:', error);
@@ -313,6 +315,9 @@ app.use('/auth', authRoutes);
 
 // Admin routes
 app.use('/admin', adminRoutes);
+
+// API routes
+app.use('/api', photoRoutes);
 
 // Error handling middleware
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

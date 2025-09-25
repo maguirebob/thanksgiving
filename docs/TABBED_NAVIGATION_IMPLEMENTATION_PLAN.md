@@ -127,7 +127,7 @@ This document outlines the complete implementation plan for transforming the cur
 - **Dependencies**: Task 2.4
 
 ### **Phase 3: Backend API Development** ⏳
-**Goal**: Create API endpoints for all content types
+**Goal**: Create API endpoints for Photos and Blog Posts (Recipes deferred to future phase)
 
 #### **Task 3.1: Photo API Endpoints**
 - [ ] Create `src/controllers/photoController.ts`
@@ -148,26 +148,7 @@ This document outlines the complete implementation plan for transforming the cur
 - **Estimated Time**: 2 hours
 - **Dependencies**: Task 3.1
 
-#### **Task 3.3: Recipe API Endpoints**
-- [ ] Create `src/controllers/recipeController.ts`
-- [ ] Implement GET `/api/events/:eventId/recipes`
-- [ ] Implement POST `/api/events/:eventId/recipes`
-- [ ] Implement PUT `/api/recipes/:recipeId`
-- [ ] Implement DELETE `/api/recipes/:recipeId`
-- [ ] Add recipe search endpoint
-- **Estimated Time**: 4 hours
-- **Dependencies**: Task 2.5
-
-#### **Task 3.4: Create Recipe API Tests**
-- [ ] Write unit tests for recipe controller
-- [ ] Test all CRUD operations
-- [ ] Test input validation
-- [ ] Test error handling
-- [ ] Achieve 90%+ test coverage
-- **Estimated Time**: 2 hours
-- **Dependencies**: Task 3.3
-
-#### **Task 3.5: Blog API Endpoints**
+#### **Task 3.3: Blog API Endpoints**
 - [ ] Create `src/controllers/blogController.ts`
 - [ ] Implement GET `/api/events/:eventId/blog`
 - [ ] Implement POST `/api/events/:eventId/blog`
@@ -177,50 +158,30 @@ This document outlines the complete implementation plan for transforming the cur
 - **Estimated Time**: 4 hours
 - **Dependencies**: Task 2.5
 
-#### **Task 3.6: Create Blog API Tests**
+#### **Task 3.4: Create Blog API Tests**
 - [ ] Write unit tests for blog controller
 - [ ] Test all CRUD operations
 - [ ] Test input validation
 - [ ] Test error handling
 - [ ] Achieve 90%+ test coverage
 - **Estimated Time**: 2 hours
-- **Dependencies**: Task 3.5
+- **Dependencies**: Task 3.3
 
-#### **Task 3.7: Comments API Endpoints**
-- [ ] Create `src/controllers/commentController.ts`
-- [ ] Implement GET `/api/events/:eventId/comments`
-- [ ] Implement POST `/api/events/:eventId/comments`
-- [ ] Implement PUT `/api/comments/:commentId`
-- [ ] Implement DELETE `/api/comments/:commentId`
-- [ ] Add comment reply functionality
-- **Estimated Time**: 3 hours
-- **Dependencies**: Task 2.5
-
-#### **Task 3.8: Create Comments API Tests**
-- [ ] Write unit tests for comment controller
-- [ ] Test all CRUD operations
-- [ ] Test input validation
-- [ ] Test error handling
-- [ ] Achieve 90%+ test coverage
-- **Estimated Time**: 2 hours
-- **Dependencies**: Task 3.7
-
-#### **Task 3.9: Update Server Routes**
-- [ ] Add recipe routes to `src/server.ts`
+#### **Task 3.5: Update Server Routes**
+- [ ] Add photo routes to `src/server.ts`
 - [ ] Add blog routes to `src/server.ts`
-- [ ] Add comment routes to `src/server.ts`
 - [ ] Test all new API endpoints
-- **Estimated Time**: 2 hours
-- **Dependencies**: Tasks 3.2, 3.4, 3.6
+- **Estimated Time**: 1 hour
+- **Dependencies**: Tasks 3.1, 3.3
 
-#### **Task 3.10: Deploy API to Test Environment**
+#### **Task 3.6: Deploy API to Test Environment**
 - [ ] Commit and push API changes
 - [ ] Deploy to test environment
 - [ ] Run integration tests
 - [ ] Run smoke tests (API endpoints only)
 - [ ] Verify no regression in existing APIs
 - **Estimated Time**: 1 hour
-- **Dependencies**: Task 3.9
+- **Dependencies**: Task 3.5
 
 ### **Phase 4: Frontend Components** ⏳
 **Goal**: Create user interface components for all content types
@@ -493,16 +454,16 @@ Each phase can be rolled back independently:
 ## 📊 **Progress Tracking**
 
 ### **Overall Progress**
-- **Total Tasks**: 44 (increased from 42 to include Photo API endpoints)
-- **Completed**: 0
+- **Total Tasks**: 38 (Photos & Blog Posts focus, Recipes deferred)
+- **Completed**: 11 (Phase 1 & 2 complete)
 - **In Progress**: 0
-- **Pending**: 44
-- **Completion**: 0%
+- **Pending**: 27
+- **Completion**: 29%
 
 ### **Phase Progress**
-- **Phase 1**: 0/6 tasks (0%) - Foundation & Navigation + Tests + Deploy
-- **Phase 2**: 0/5 tasks (0%) - Database Schema + Tests + Deploy
-- **Phase 3**: 0/10 tasks (0%) - Backend API + Tests + Deploy
+- **Phase 1**: 6/6 tasks (100%) - Foundation & Navigation + Tests + Deploy ✅
+- **Phase 2**: 5/5 tasks (100%) - Database Schema + Tests + Deploy ✅
+- **Phase 3**: 0/6 tasks (0%) - Backend API (Photos & Blog) + Tests + Deploy
 - **Phase 4**: 0/8 tasks (0%) - Frontend Components + Tests + Deploy
 - **Phase 5**: 0/8 tasks (0%) - JavaScript Functionality + Tests + Deploy
 - **Phase 6**: 0/4 tasks (0%) - Integration Testing & QA
