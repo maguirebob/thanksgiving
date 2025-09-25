@@ -1,0 +1,400 @@
+/* Tabbed Navigation Styles - Task 1.2 */
+/* Custom styling for the enhanced detail page with tabbed navigation */
+
+/* Quick Stats Section */
+.quick-stats-section {
+    margin-bottom: 2rem;
+}
+
+.stats-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--border-gray);
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+.stats-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-orange), #ff8c42);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.stats-content {
+    flex: 1;
+}
+
+.stats-number {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-black);
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.stats-label {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 0.9rem;
+    color: var(--secondary-gray);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Tabbed Navigation */
+.tabbed-navigation-section {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--border-gray);
+    overflow: hidden;
+}
+
+/* Custom Tab Styling */
+.nav-tabs {
+    border-bottom: 2px solid var(--border-gray);
+    background: var(--light-gray);
+    margin: 0;
+    padding: 0 1rem;
+}
+
+.nav-tabs .nav-item {
+    margin-bottom: 0;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    border-radius: 0;
+    padding: 1rem 1.5rem;
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 600;
+    color: var(--secondary-gray);
+    background: transparent;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-tabs .nav-link:hover {
+    color: var(--primary-black);
+    background: rgba(255, 255, 255, 0.5);
+    border-bottom-color: var(--accent-orange);
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--primary-black);
+    background: white;
+    border-bottom-color: var(--accent-orange);
+    font-weight: 700;
+}
+
+.nav-tabs .nav-link i {
+    font-size: 1rem;
+}
+
+.nav-tabs .nav-link .badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 10px;
+}
+
+/* Tab Content */
+.tab-content {
+    padding: 2rem;
+    min-height: 400px;
+}
+
+.tab-content-header {
+    margin-bottom: 1.5rem;
+}
+
+.tab-content-header h3 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--primary-black);
+    margin: 0;
+}
+
+.tab-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.tab-actions .btn {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.tab-actions .btn-primary {
+    background-color: var(--accent-orange);
+    border-color: var(--accent-orange);
+}
+
+.tab-actions .btn-primary:hover {
+    background-color: #b85a1a;
+    border-color: #b85a1a;
+    transform: translateY(-1px);
+}
+
+.tab-actions .btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.tab-actions .btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+    transform: translateY(-1px);
+}
+
+/* Search and Filter Section */
+.search-filter-section {
+    background: var(--light-gray);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-gray);
+}
+
+.search-filter-section .form-control,
+.search-filter-section .form-select {
+    border: 1px solid var(--border-gray);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    font-family: 'Source Sans Pro', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.search-filter-section .form-control:focus,
+.search-filter-section .form-select:focus {
+    border-color: var(--accent-orange);
+    box-shadow: 0 0 0 0.2rem rgba(210, 105, 30, 0.25);
+}
+
+.search-filter-section .btn-outline-secondary {
+    border-color: var(--border-gray);
+    color: var(--secondary-gray);
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 600;
+}
+
+.search-filter-section .btn-outline-secondary:hover {
+    background-color: var(--secondary-gray);
+    border-color: var(--secondary-gray);
+    color: white;
+}
+
+/* Content Grids */
+#photosGrid,
+#recipesGrid,
+#blogGrid {
+    min-height: 200px;
+}
+
+/* Empty State Messages */
+.text-center.text-muted.py-5 {
+    background: var(--light-gray);
+    border-radius: 8px;
+    border: 2px dashed var(--border-gray);
+    margin: 2rem 0;
+}
+
+.text-center.text-muted.py-5 h4 {
+    font-family: 'Playfair Display', Georgia, serif;
+    color: var(--secondary-gray);
+    margin-bottom: 0.5rem;
+}
+
+.text-center.text-muted.py-5 p {
+    font-family: 'Source Sans Pro', sans-serif;
+    color: var(--secondary-gray);
+    margin-bottom: 1.5rem;
+}
+
+/* Comments Container */
+.comments-container {
+    min-height: 200px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .quick-stats-section .row {
+        margin: 0 -0.5rem;
+    }
+    
+    .quick-stats-section .col-md-3 {
+        padding: 0 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .stats-card {
+        padding: 1rem;
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+    }
+    
+    .stats-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+    
+    .stats-number {
+        font-size: 1.5rem;
+    }
+    
+    .stats-label {
+        font-size: 0.8rem;
+    }
+    
+    .nav-tabs {
+        padding: 0 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .nav-tabs .nav-link {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .nav-tabs .nav-link i {
+        font-size: 0.9rem;
+    }
+    
+    .nav-tabs .nav-link .badge {
+        font-size: 0.6rem;
+        padding: 0.2rem 0.4rem;
+    }
+    
+    .tab-content {
+        padding: 1rem;
+    }
+    
+    .tab-content-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 1rem;
+    }
+    
+    .tab-actions {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .tab-actions .btn {
+        flex: 1;
+        max-width: 200px;
+    }
+    
+    .search-filter-section .row {
+        margin: 0;
+    }
+    
+    .search-filter-section .col-md-6,
+    .search-filter-section .col-md-3 {
+        padding: 0;
+        margin-bottom: 0.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .nav-tabs .nav-link {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+    }
+    
+    .nav-tabs .nav-link span:not(.badge) {
+        display: none;
+    }
+    
+    .nav-tabs .nav-link i {
+        margin-right: 0 !important;
+    }
+    
+    .tab-content-header h3 {
+        font-size: 1.5rem;
+    }
+    
+    .stats-card {
+        padding: 0.75rem;
+    }
+    
+    .stats-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+    
+    .stats-number {
+        font-size: 1.25rem;
+    }
+}
+
+/* Animation for tab switching */
+.tab-pane {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid var(--accent-orange);
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+

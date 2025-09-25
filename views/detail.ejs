@@ -59,6 +59,55 @@
             </div>
         </div>
 
+    <!-- Quick Stats Section -->
+    <div class="quick-stats-section mb-4">
+        <div class="row g-3">
+            <div class="col-md-3 col-sm-6">
+                <div class="stats-card">
+                    <div class="stats-icon">
+                        <i class="fas fa-images"></i>
+                    </div>
+                    <div class="stats-content">
+                        <div class="stats-number" id="photoCount">0</div>
+                        <div class="stats-label">Photos</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="stats-card">
+                    <div class="stats-icon">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <div class="stats-content">
+                        <div class="stats-number" id="recipeCount">0</div>
+                        <div class="stats-label">Recipes</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="stats-card">
+                    <div class="stats-icon">
+                        <i class="fas fa-blog"></i>
+                    </div>
+                    <div class="stats-content">
+                        <div class="stats-number" id="blogCount">0</div>
+                        <div class="stats-label">Blog Posts</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="stats-card">
+                    <div class="stats-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <div class="stats-content">
+                        <div class="stats-number" id="commentCount">0</div>
+                        <div class="stats-label">Comments</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Content Sections -->
     <div class="content-sections">
@@ -575,6 +624,37 @@ document.addEventListener('click', function(event) {
     if (cameraModal && event.target === cameraModal) {
         closeCamera();
     }
+});
+
+// Quick Stats Management
+function updateStats() {
+    try {
+        // For now, we'll set placeholder values
+        // In later phases, these will be populated from actual data
+        const stats = {
+            photos: 0,      // Will be updated when photos are loaded
+            recipes: 0,     // Will be updated when recipes are implemented
+            blog: 0,        // Will be updated when blog posts are implemented
+            comments: 0     // Will be updated when comments are implemented
+        };
+
+        // Update the display
+        Object.keys(stats).forEach(key => {
+            const countElement = document.getElementById(`${key}Count`);
+            if (countElement) {
+                countElement.textContent = stats[key];
+            }
+        });
+
+        console.log('Stats updated:', stats);
+    } catch (error) {
+        console.error('Error updating stats:', error);
+    }
+}
+
+// Initialize stats when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    updateStats();
 });
 
 // Import JavaScript modules
