@@ -686,11 +686,16 @@ window.eventId = <%= eventId %>;
 
 // Simple photo form handling
 function setupPhotoEventListeners() {
+    console.log('Setting up photo event listeners...');
+    console.log('window.eventId:', window.eventId);
+    
     // Photo upload form - actual upload functionality
     const uploadForm = document.getElementById('photoUploadForm');
     if (uploadForm) {
+        console.log('Photo upload form found, adding event listener');
         uploadForm.addEventListener('submit', async function(e) {
             e.preventDefault();
+            console.log('Photo upload form submitted, eventId:', window.eventId);
             
             const formData = new FormData();
             const fileInput = document.getElementById('photoFile');
@@ -706,8 +711,11 @@ function setupPhotoEventListeners() {
             formData.append('description', descriptionInput.value || '');
             formData.append('caption', captionInput.value || '');
             
+            const uploadUrl = `/api/events/${window.eventId}/photos`;
+            console.log('Uploading to URL:', uploadUrl);
+            
             try {
-                const response = await fetch(`/api/events/${window.eventId}/photos`, {
+                const response = await fetch(uploadUrl, {
                     method: 'POST',
                     body: formData
                 });
@@ -726,6 +734,8 @@ function setupPhotoEventListeners() {
                 alert('Upload failed: ' + error.message);
             }
         });
+    } else {
+        console.log('Photo upload form not found!');
     }
 }
 
@@ -915,6 +925,9 @@ async function deletePhoto(photoId) {
 document.addEventListener('DOMContentLoaded', function() {
     initializeTabbedNavigation();
     updateTabBadges();
+    
+    // Setup photo event listeners
+    setupPhotoEventListeners();
     
     // Initialize components
     if (typeof PhotoComponent !== 'undefined') {
