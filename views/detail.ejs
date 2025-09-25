@@ -650,10 +650,16 @@ function closeAllModals() {
     
     if (photoUploadModal) {
         photoUploadModal.style.display = 'none';
+        photoUploadModal.style.visibility = 'hidden';
+        photoUploadModal.style.opacity = '0';
+        photoUploadModal.style.pointerEvents = 'none';
         console.log('Photo upload modal closed');
     }
     if (cameraModal) {
         cameraModal.style.display = 'none';
+        cameraModal.style.visibility = 'hidden';
+        cameraModal.style.opacity = '0';
+        cameraModal.style.pointerEvents = 'none';
         console.log('Camera modal closed');
     }
 }
@@ -812,18 +818,27 @@ function setupPhotoEventListeners() {
                     const result = await response.json();
                     
                     if (result.success) {
+                        console.log('Upload successful, closing modal...');
                         alert('Photo uploaded successfully!');
                         
                         // Force close modal immediately
                         const modal = document.getElementById('photoUploadModal');
                         if (modal) {
+                            console.log('Modal found, closing aggressively');
                             modal.style.display = 'none';
+                            modal.style.visibility = 'hidden';
+                            modal.style.opacity = '0';
+                            modal.style.pointerEvents = 'none';
+                            console.log('Modal closed with multiple CSS properties');
+                        } else {
+                            console.log('Modal not found!');
                         }
                         
                         // Reset form
                         const form = document.getElementById('photoUploadForm');
                         if (form) {
                             form.reset();
+                            console.log('Form reset');
                         }
                         
                         loadPhotos(); // Refresh photo list
