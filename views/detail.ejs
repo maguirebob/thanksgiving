@@ -126,37 +126,7 @@
         <div class="tab-content" id="contentTabsContent">
             <!-- Photos Tab -->
             <div class="tab-pane fade show active" id="photos" role="tabpanel" aria-labelledby="photos-tab">
-            <!-- Photo Upload Section -->
-            <div class="photo-upload-section mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3 class="mb-0">
-                        <i class="fas fa-images me-2"></i>Photos
-                    </h3>
-                    <div class="upload-controls">
-                        <button class="btn btn-primary me-2" onclick="openPhotoUpload()">
-                            <i class="fas fa-upload me-2"></i>Upload Photo
-                    </button>
-                        <button class="btn btn-success" onclick="openCameraCapture()">
-                            <i class="fas fa-camera me-2"></i>Take Photo
-                    </button>
-                </div>
-            </div>
-            
-                <!-- Photo Grid -->
-                <div id="photosGrid" class="row">
-                    <!-- Photos will be dynamically loaded here -->
-                        </div>
-                
-                <!-- No Photos Message -->
-                <div id="noPhotosMessage" class="text-center text-muted py-5" style="display: none;">
-                    <i class="fas fa-images fa-3x mb-3" style="color: #dee2e6;"></i>
-                    <h4>No photos yet</h4>
-                    <p>Upload some memories from this Thanksgiving!</p>
-                    <button class="btn btn-primary" onclick="openPhotoUpload()">
-                        <i class="fas fa-upload me-2"></i>Upload First Photo
-                    </button>
-                </div>
-            </div>
+                <div id="photoComponentContainer"></div>
             </div>
 
             <!-- Recipes Tab -->
@@ -189,30 +159,7 @@
 
             <!-- Blog Tab -->
             <div class="tab-pane fade" id="blog" role="tabpanel" aria-labelledby="blog-tab">
-                <div class="blog-section">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h3 class="mb-0">
-                            <i class="fas fa-blog me-2"></i>Blog Posts
-                        </h3>
-                        <button class="btn btn-info" onclick="addBlogPost()">
-                            <i class="fas fa-plus me-2"></i>New Post
-                        </button>
-                    </div>
-                    
-                    <div id="blogPostsList" class="row">
-                        <!-- Blog posts will be dynamically loaded here -->
-                    </div>
-                    
-                    <!-- No Blog Posts Message -->
-                    <div id="noBlogPostsMessage" class="text-center text-muted py-5">
-                        <i class="fas fa-blog fa-3x mb-3" style="color: #dee2e6;"></i>
-                        <h4>No blog posts yet</h4>
-                        <p>Share stories and memories from this Thanksgiving!</p>
-                        <button class="btn btn-info" onclick="addBlogPost()">
-                            <i class="fas fa-plus me-2"></i>Write First Post
-                        </button>
-                    </div>
-                </div>
+                <div id="blogComponentContainer"></div>
             </div>
 
         </div>
@@ -729,7 +676,9 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- Scripts -->
-<!-- Photo functionality scripts removed - using simple modal approach -->
+<!-- Component Scripts -->
+<script src="/js/components/photoComponent.js"></script>
+<script src="/js/components/blogComponent.js"></script>
 
 <script>
 // Set event ID for API calls
@@ -966,7 +915,14 @@ async function deletePhoto(photoId) {
 document.addEventListener('DOMContentLoaded', function() {
     initializeTabbedNavigation();
     updateTabBadges();
-    setupPhotoEventListeners();
-    loadPhotos(); // Load photos when page loads
+    
+    // Initialize components
+    if (typeof PhotoComponent !== 'undefined') {
+        window.photoComponent = new PhotoComponent(window.eventId, 'photoComponentContainer');
+    }
+    
+    if (typeof BlogComponent !== 'undefined') {
+        window.blogComponent = new BlogComponent(window.eventId, 'blogComponentContainer');
+    }
 });
 </script>
