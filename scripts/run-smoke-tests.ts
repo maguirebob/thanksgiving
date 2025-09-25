@@ -73,7 +73,7 @@ class SmokeTestRunner {
     await this.runTest('Version API Endpoint', async () => {
       const response = await this.makeRequest('GET', '/api/v1/version/display');
       
-        if (!response.success || response.data.version !== '2.2.1') {
+        if (!response.success || response.data.version !== '2.3.0') {
           throw new Error('Version API returned unexpected response');
         }
     });
@@ -100,6 +100,29 @@ class SmokeTestRunner {
       
       if (!response.includes('menu-card') || !response.includes('View Details')) {
         throw new Error('Homepage does not display menu cards');
+      }
+    });
+
+    // Authentication Tests
+    await this.runTest('Login Page Loads', async () => {
+      const response = await this.makeRequest('GET', '/auth/login');
+      
+      if (!response.includes('Login') || !response.includes('username') || !response.includes('password')) {
+        throw new Error('Login page does not contain expected form elements');
+      }
+    });
+
+    await this.runTest('Login Form Submission', async () => {
+      // Test login form submission with invalid credentials
+      // This should return an error page, not crash the server
+      const response = await this.makeRequest('POST', '/auth/login', {
+        username: 'testuser',
+        password: 'wrongpassword'
+      });
+      
+      // Should redirect to login page with error (status 302) or show error message
+      if (!response.includes('error') && !response.includes('Invalid')) {
+        throw new Error('Login form submission did not handle invalid credentials properly');
       }
     });
 
@@ -146,12 +169,26 @@ class SmokeTestRunner {
     this.printSummary();
   }
 
-  private async makeRequest(method: string, path: string): Promise<any> {
+  private async makeRequest(method: string, path: string, data?: any): Promise<any> {
     const baseUrl = process.env['TEST_BASE_URL'] || 'http://localhost:3000';
     const url = `${baseUrl}${path}`;
     
     try {
-      const response = await fetch(url, { method });
+      const options: RequestInit = { method };
+      
+      if (data && method === 'POST') {
+        // For form data submission
+        const formData = new URLSearchParams();
+        Object.keys(data).forEach(key => {
+          formData.append(key, data[key]);
+        });
+        options.body = formData;
+        options.headers = {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        };
+      }
+      
+      const response = await fetch(url, options);
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
