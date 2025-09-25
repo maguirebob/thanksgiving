@@ -1,0 +1,573 @@
+/**
+ * Photo Component - Handles photo management functionality
+ * Provides reusable components for photo upload, display, and management
+ */
+
+class PhotoComponent {
+    constructor(eventId, containerId) {
+        this.eventId = eventId;
+        this.containerId = containerId;
+        this.container = document.getElementById(containerId);
+        this.photos = [];
+        this.currentPage = 1;
+        this.pageSize = 12;
+        this.isLoading = false;
+        
+        this.init();
+    }
+
+    init() {
+        this.createPhotoGrid();
+        this.createUploadModal();
+        this.bindEvents();
+        this.loadPhotos();
+    }
+
+    createPhotoGrid() {
+        if (!this.container) return;
+
+        this.container.innerHTML = `
+            <div class="photo-component">
+                <!-- Photo Header -->
+                <div class="photo-header mb-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0">
+                            <i class="fas fa-images me-2"></i>Photos
+                        </h3>
+                        <div class="photo-controls">
+                            <button class="btn btn-primary me-2" id="uploadPhotoBtn">
+                                <i class="fas fa-upload me-2"></i>Upload Photo
+                            </button>
+                            <button class="btn btn-success" id="takePhotoBtn">
+                                <i class="fas fa-camera me-2"></i>Take Photo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search and Filter -->
+                <div class="photo-search mb-3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" id="photoSearchInput" 
+                                   placeholder="Search photos by caption or description...">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="photoSortSelect">
+                                <option value="newest">Newest First</option>
+                                <option value="oldest">Oldest First</option>
+                                <option value="filename">Filename A-Z</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-secondary" id="clearFiltersBtn">
+                                <i class="fas fa-times me-2"></i>Clear Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading Indicator -->
+                <div id="photoLoadingIndicator" class="text-center py-4" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading photos...</p>
+                </div>
+
+                <!-- Photos Grid -->
+                <div id="photosGrid" class="row">
+                    <!-- Photos will be dynamically loaded here -->
+                </div>
+
+                <!-- No Photos Message -->
+                <div id="noPhotosMessage" class="text-center text-muted py-5" style="display: none;">
+                    <i class="fas fa-images fa-3x mb-3" style="color: #dee2e6;"></i>
+                    <h4>No photos yet</h4>
+                    <p>Upload some memories from this Thanksgiving!</p>
+                    <button class="btn btn-primary" id="uploadFirstPhotoBtn">
+                        <i class="fas fa-upload me-2"></i>Upload First Photo
+                    </button>
+                </div>
+
+                <!-- Pagination -->
+                <div id="photoPagination" class="d-flex justify-content-center mt-4" style="display: none;">
+                    <nav aria-label="Photo pagination">
+                        <ul class="pagination" id="photoPaginationList">
+                            <!-- Pagination buttons will be generated here -->
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        `;
+    }
+
+    createUploadModal() {
+        // Create modal if it doesn't exist
+        if (document.getElementById('photoUploadModal')) return;
+
+        const modalHTML = `
+            <div id="photoUploadModal" class="modal fade" tabindex="-1" aria-labelledby="photoUploadModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="photoUploadModalLabel">
+                                <i class="fas fa-upload me-2"></i>Upload Photo
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="photoUploadForm" enctype="multipart/form-data">
+                                <div class="mb-3">
+                                    <label for="photoFile" class="form-label">Select Photo</label>
+                                    <input type="file" class="form-control" id="photoFile" accept="image/*" required>
+                                    <div class="form-text">Supported formats: JPEG, PNG, GIF, WebP (Max 10MB)</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="photoCaption" class="form-label">Caption</label>
+                                    <input type="text" class="form-control" id="photoCaption" 
+                                           placeholder="Short caption for this photo">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="photoDescription" class="form-label">Description</label>
+                                    <textarea class="form-control" id="photoDescription" rows="3" 
+                                              placeholder="Describe this photo..."></textarea>
+                                </div>
+
+                                <!-- Image Preview -->
+                                <div id="photoPreview" class="mb-3" style="display: none;">
+                                    <label class="form-label">Preview</label>
+                                    <div class="text-center">
+                                        <img id="photoPreviewImg" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="uploadPhotoSubmitBtn">
+                                <i class="fas fa-upload me-2"></i>Upload Photo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+    }
+
+    bindEvents() {
+        // Upload button events
+        const uploadBtn = document.getElementById('uploadPhotoBtn');
+        const uploadFirstBtn = document.getElementById('uploadFirstPhotoBtn');
+        const takePhotoBtn = document.getElementById('takePhotoBtn');
+        
+        if (uploadBtn) uploadBtn.addEventListener('click', () => this.openUploadModal());
+        if (uploadFirstBtn) uploadFirstBtn.addEventListener('click', () => this.openUploadModal());
+        if (takePhotoBtn) takePhotoBtn.addEventListener('click', () => this.openCameraCapture());
+
+        // Search and filter events
+        const searchInput = document.getElementById('photoSearchInput');
+        const sortSelect = document.getElementById('photoSortSelect');
+        const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+
+        if (searchInput) {
+            searchInput.addEventListener('input', debounce(() => this.handleSearch(), 300));
+        }
+        if (sortSelect) {
+            sortSelect.addEventListener('change', () => this.handleSort());
+        }
+        if (clearFiltersBtn) {
+            clearFiltersBtn.addEventListener('click', () => this.clearFilters());
+        }
+
+        // Upload form events
+        const photoFile = document.getElementById('photoFile');
+        const uploadSubmitBtn = document.getElementById('uploadPhotoSubmitBtn');
+
+        if (photoFile) {
+            photoFile.addEventListener('change', (e) => this.handleFilePreview(e));
+        }
+        if (uploadSubmitBtn) {
+            uploadSubmitBtn.addEventListener('click', () => this.handleUpload());
+        }
+    }
+
+    async loadPhotos(page = 1) {
+        if (this.isLoading) return;
+        
+        this.isLoading = true;
+        this.showLoading(true);
+
+        try {
+            const searchTerm = document.getElementById('photoSearchInput')?.value || '';
+            const sortBy = document.getElementById('photoSortSelect')?.value || 'newest';
+            
+            let url = `/api/events/${this.eventId}/photos?page=${page}&limit=${this.pageSize}`;
+            if (searchTerm) url += `&search=${encodeURIComponent(searchTerm)}`;
+
+            const response = await fetch(url);
+            const result = await response.json();
+
+            if (result.success) {
+                this.photos = result.data.photos;
+                this.currentPage = page;
+                this.displayPhotos();
+                this.updatePagination(result.data.pagination);
+                this.updatePhotoCount(result.data.photos.length);
+            } else {
+                this.showError('Failed to load photos: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error loading photos:', error);
+            this.showError('Error loading photos: ' + error.message);
+        } finally {
+            this.isLoading = false;
+            this.showLoading(false);
+        }
+    }
+
+    displayPhotos() {
+        const photosGrid = document.getElementById('photosGrid');
+        const noPhotosMessage = document.getElementById('noPhotosMessage');
+        
+        if (!photosGrid) return;
+
+        if (this.photos.length === 0) {
+            photosGrid.innerHTML = '';
+            if (noPhotosMessage) noPhotosMessage.style.display = 'block';
+            return;
+        }
+
+        if (noPhotosMessage) noPhotosMessage.style.display = 'none';
+
+        const sortedPhotos = this.sortPhotos([...this.photos]);
+        
+        photosGrid.innerHTML = sortedPhotos.map(photo => this.createPhotoCard(photo)).join('');
+    }
+
+    createPhotoCard(photo) {
+        const caption = photo.caption || photo.original_filename || 'Photo';
+        const description = photo.description || '';
+        const takenDate = new Date(photo.taken_date || photo.created_at).toLocaleDateString();
+
+        return `
+            <div class="col-md-4 col-sm-6 mb-3">
+                <div class="card photo-card h-100">
+                    <img src="/api/photos/${photo.photo_id}/file" 
+                         class="card-img-top" 
+                         alt="${caption}"
+                         style="height: 200px; object-fit: cover; cursor: pointer;"
+                         onclick="photoComponent.viewPhoto('${photo.photo_id}', '${caption}', '${description}')"
+                         loading="lazy">
+                    <div class="card-body d-flex flex-column">
+                        <h6 class="card-title">${caption}</h6>
+                        ${description ? `<p class="card-text text-muted small">${description}</p>` : ''}
+                        <div class="mt-auto">
+                            <small class="text-muted">${takenDate}</small>
+                            <div class="btn-group btn-group-sm mt-2 w-100" role="group">
+                                <button type="button" class="btn btn-outline-primary" 
+                                        onclick="photoComponent.viewPhoto('${photo.photo_id}', '${caption}', '${description}')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" 
+                                        onclick="photoComponent.editPhoto('${photo.photo_id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-danger" 
+                                        onclick="photoComponent.deletePhoto('${photo.photo_id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    sortPhotos(photos) {
+        const sortBy = document.getElementById('photoSortSelect')?.value || 'newest';
+        
+        switch (sortBy) {
+            case 'oldest':
+                return photos.sort((a, b) => new Date(a.taken_date || a.created_at) - new Date(b.taken_date || b.created_at));
+            case 'filename':
+                return photos.sort((a, b) => (a.original_filename || '').localeCompare(b.original_filename || ''));
+            case 'newest':
+            default:
+                return photos.sort((a, b) => new Date(b.taken_date || b.created_at) - new Date(a.taken_date || a.created_at));
+        }
+    }
+
+    updatePagination(pagination) {
+        const paginationContainer = document.getElementById('photoPagination');
+        const paginationList = document.getElementById('photoPaginationList');
+        
+        if (!paginationContainer || !paginationList) return;
+
+        if (pagination.pages <= 1) {
+            paginationContainer.style.display = 'none';
+            return;
+        }
+
+        paginationContainer.style.display = 'flex';
+        
+        let paginationHTML = '';
+        
+        // Previous button
+        if (pagination.page > 1) {
+            paginationHTML += `
+                <li class="page-item">
+                    <button class="page-link" onclick="photoComponent.loadPhotos(${pagination.page - 1})">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                </li>
+            `;
+        }
+
+        // Page numbers
+        const startPage = Math.max(1, pagination.page - 2);
+        const endPage = Math.min(pagination.pages, pagination.page + 2);
+
+        for (let i = startPage; i <= endPage; i++) {
+            paginationHTML += `
+                <li class="page-item ${i === pagination.page ? 'active' : ''}">
+                    <button class="page-link" onclick="photoComponent.loadPhotos(${i})">${i}</button>
+                </li>
+            `;
+        }
+
+        // Next button
+        if (pagination.page < pagination.pages) {
+            paginationHTML += `
+                <li class="page-item">
+                    <button class="page-link" onclick="photoComponent.loadPhotos(${pagination.page + 1})">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </li>
+            `;
+        }
+
+        paginationList.innerHTML = paginationHTML;
+    }
+
+    openUploadModal() {
+        const modal = new bootstrap.Modal(document.getElementById('photoUploadModal'));
+        modal.show();
+    }
+
+    openCameraCapture() {
+        // For now, just open the upload modal
+        // In a real implementation, this would access the camera
+        this.openUploadModal();
+    }
+
+    handleFilePreview(event) {
+        const file = event.target.files[0];
+        const preview = document.getElementById('photoPreview');
+        const previewImg = document.getElementById('photoPreviewImg');
+
+        if (file && preview && previewImg) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImg.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    async handleUpload() {
+        const fileInput = document.getElementById('photoFile');
+        const captionInput = document.getElementById('photoCaption');
+        const descriptionInput = document.getElementById('photoDescription');
+        const submitBtn = document.getElementById('uploadPhotoSubmitBtn');
+
+        if (!fileInput.files[0]) {
+            this.showError('Please select a photo to upload');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('photo', fileInput.files[0]);
+        if (captionInput.value) formData.append('caption', captionInput.value);
+        if (descriptionInput.value) formData.append('description', descriptionInput.value);
+
+        // Disable submit button
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
+        }
+
+        try {
+            const response = await fetch(`/api/events/${this.eventId}/photos`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.showSuccess('Photo uploaded successfully!');
+                this.closeUploadModal();
+                this.loadPhotos(this.currentPage);
+            } else {
+                this.showError('Upload failed: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            this.showError('Upload failed: ' + error.message);
+        } finally {
+            // Re-enable submit button
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-upload me-2"></i>Upload Photo';
+            }
+        }
+    }
+
+    closeUploadModal() {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('photoUploadModal'));
+        if (modal) modal.hide();
+
+        // Reset form
+        document.getElementById('photoUploadForm').reset();
+        document.getElementById('photoPreview').style.display = 'none';
+    }
+
+    viewPhoto(photoId, caption, description) {
+        // Create and show photo viewer modal
+        const photo = this.photos.find(p => p.photo_id == photoId);
+        if (!photo) return;
+
+        const modalHTML = `
+            <div class="modal fade" id="photoViewerModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">${caption}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <img src="/api/photos/${photoId}/file" class="img-fluid" alt="${caption}">
+                            ${description ? `<p class="mt-3">${description}</p>` : ''}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="photoComponent.editPhoto('${photoId}')">
+                                <i class="fas fa-edit me-2"></i>Edit
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="photoComponent.deletePhoto('${photoId}')">
+                                <i class="fas fa-trash me-2"></i>Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Remove existing modal if any
+        const existingModal = document.getElementById('photoViewerModal');
+        if (existingModal) existingModal.remove();
+
+        // Add new modal
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('photoViewerModal'));
+        modal.show();
+
+        // Clean up when modal is hidden
+        document.getElementById('photoViewerModal').addEventListener('hidden.bs.modal', () => {
+            document.getElementById('photoViewerModal').remove();
+        });
+    }
+
+    editPhoto(photoId) {
+        // For now, just show an alert
+        // In a real implementation, this would open an edit modal
+        alert('Edit photo functionality coming soon!');
+    }
+
+    async deletePhoto(photoId) {
+        if (!confirm('Are you sure you want to delete this photo?')) return;
+
+        try {
+            const response = await fetch(`/api/photos/${photoId}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.showSuccess('Photo deleted successfully!');
+                this.loadPhotos(this.currentPage);
+            } else {
+                this.showError('Delete failed: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Delete error:', error);
+            this.showError('Delete failed: ' + error.message);
+        }
+    }
+
+    handleSearch() {
+        this.loadPhotos(1);
+    }
+
+    handleSort() {
+        this.displayPhotos();
+    }
+
+    clearFilters() {
+        document.getElementById('photoSearchInput').value = '';
+        document.getElementById('photoSortSelect').value = 'newest';
+        this.loadPhotos(1);
+    }
+
+    updatePhotoCount(count) {
+        // Update global photo count if function exists
+        if (typeof updatePhotoCount === 'function') {
+            updatePhotoCount(count);
+        }
+    }
+
+    showLoading(show) {
+        const loadingIndicator = document.getElementById('photoLoadingIndicator');
+        if (loadingIndicator) {
+            loadingIndicator.style.display = show ? 'block' : 'none';
+        }
+    }
+
+    showError(message) {
+        // Simple error display - could be enhanced with toast notifications
+        alert('Error: ' + message);
+    }
+
+    showSuccess(message) {
+        // Simple success display - could be enhanced with toast notifications
+        alert(message);
+    }
+}
+
+// Utility function for debouncing
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Export for use in other modules
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = PhotoComponent;
+}
