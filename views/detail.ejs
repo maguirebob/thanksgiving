@@ -681,19 +681,47 @@ document.addEventListener('keydown', function(event) {
 // Global error handler to catch unhandled errors
 window.addEventListener('error', function(event) {
     console.error('Global error caught:', event.error);
-    // Force close all modals if there's an error
-    setTimeout(() => {
-        closeAllModals();
-    }, 100);
+    
+    // Don't close modals during active uploads
+    if (isUploading) {
+        console.log('Ignoring error during active upload');
+        return;
+    }
+    
+    // Only close modals for specific errors, not Bootstrap selector-engine errors
+    if (event.error && event.error.message && 
+        !event.error.message.includes('Illegal invocation') &&
+        !event.error.message.includes('selector-engine')) {
+        console.log('Closing modals due to non-Bootstrap error');
+        setTimeout(() => {
+            closeAllModals();
+        }, 100);
+    } else {
+        console.log('Ignoring Bootstrap selector-engine error');
+    }
 });
 
 // Handle unhandled promise rejections
 window.addEventListener('unhandledrejection', function(event) {
     console.error('Unhandled promise rejection:', event.reason);
-    // Force close all modals if there's an error
-    setTimeout(() => {
-        closeAllModals();
-    }, 100);
+    
+    // Don't close modals during active uploads
+    if (isUploading) {
+        console.log('Ignoring promise rejection during active upload');
+        return;
+    }
+    
+    // Only close modals for specific promise rejections
+    if (event.reason && event.reason.message && 
+        !event.reason.message.includes('Illegal invocation') &&
+        !event.reason.message.includes('selector-engine')) {
+        console.log('Closing modals due to promise rejection');
+        setTimeout(() => {
+            closeAllModals();
+        }, 100);
+    } else {
+        console.log('Ignoring Bootstrap-related promise rejection');
+    }
 });
 
 // Quick Stats Management
@@ -739,6 +767,9 @@ document.addEventListener('DOMContentLoaded', function() {
 // Set event ID for API calls
 window.eventId = <%= eventId %>;
 
+// Flag to prevent global error handler from closing modals during uploads
+let isUploading = false;
+
 // Simple photo form handling
 function setupPhotoEventListeners() {
     console.log('Setting up photo event listeners...');
@@ -752,6 +783,7 @@ function setupPhotoEventListeners() {
             try {
                 e.preventDefault();
                 e.stopPropagation();
+                isUploading = true; // Set flag to prevent global error handler from interfering
                 console.log('Photo upload form submitted, eventId:', window.eventId);
                 
                 const formData = new FormData();
@@ -818,6 +850,8 @@ function setupPhotoEventListeners() {
                     modal.style.display = 'none';
                 }
                 alert('An error occurred. Please try again.');
+            } finally {
+                isUploading = false; // Reset flag
             }
         });
     } else {
