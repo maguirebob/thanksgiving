@@ -446,8 +446,22 @@ function openPhotoUpload() {
 }
 
 function closePhotoUpload() {
-    document.getElementById('photoUploadModal').style.display = 'none';
-    document.getElementById('photoUploadForm').reset();
+    console.log('Closing photo upload modal...');
+    const modal = document.getElementById('photoUploadModal');
+    if (modal) {
+        modal.style.display = 'none';
+        console.log('Modal closed successfully');
+    } else {
+        console.log('Modal not found!');
+    }
+    
+    const form = document.getElementById('photoUploadForm');
+    if (form) {
+        form.reset();
+        console.log('Form reset successfully');
+    } else {
+        console.log('Form not found!');
+    }
 }
 
 // Photo upload form submission is now handled by PhotoManager in setupPhotoEventListeners()
@@ -628,6 +642,22 @@ function viewPhoto(fileData, description, caption) {
 
 // Photo management functions are now handled by PhotoManager and PhotoUIController
 
+// Global function to close all modals
+function closeAllModals() {
+    console.log('Closing all modals...');
+    const photoUploadModal = document.getElementById('photoUploadModal');
+    const cameraModal = document.getElementById('cameraModal');
+    
+    if (photoUploadModal) {
+        photoUploadModal.style.display = 'none';
+        console.log('Photo upload modal closed');
+    }
+    if (cameraModal) {
+        cameraModal.style.display = 'none';
+        console.log('Camera modal closed');
+    }
+}
+
 // Close modals when clicking outside
 document.addEventListener('click', function(event) {
     const photoUploadModal = document.getElementById('photoUploadModal');
@@ -639,6 +669,31 @@ document.addEventListener('click', function(event) {
     if (cameraModal && event.target === cameraModal) {
         closeCamera();
     }
+});
+
+// Add escape key handler to close modals
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeAllModals();
+    }
+});
+
+// Global error handler to catch unhandled errors
+window.addEventListener('error', function(event) {
+    console.error('Global error caught:', event.error);
+    // Force close all modals if there's an error
+    setTimeout(() => {
+        closeAllModals();
+    }, 100);
+});
+
+// Handle unhandled promise rejections
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Unhandled promise rejection:', event.reason);
+    // Force close all modals if there's an error
+    setTimeout(() => {
+        closeAllModals();
+    }, 100);
 });
 
 // Quick Stats Management
@@ -694,44 +749,75 @@ function setupPhotoEventListeners() {
     if (uploadForm) {
         console.log('Photo upload form found, adding event listener');
         uploadForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            console.log('Photo upload form submitted, eventId:', window.eventId);
-            
-            const formData = new FormData();
-            const fileInput = document.getElementById('photoFile');
-            const descriptionInput = document.getElementById('photoDescription');
-            const captionInput = document.getElementById('photoCaption');
-            
-            if (!fileInput.files[0]) {
-                alert('Please select a photo file');
-                return;
-            }
-            
-            formData.append('photo', fileInput.files[0]);
-            formData.append('description', descriptionInput.value || '');
-            formData.append('caption', captionInput.value || '');
-            
-            const uploadUrl = `/api/events/${window.eventId}/photos`;
-            console.log('Uploading to URL:', uploadUrl);
-            
             try {
-                const response = await fetch(uploadUrl, {
-                    method: 'POST',
-                    body: formData
-                });
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Photo upload form submitted, eventId:', window.eventId);
                 
-                const result = await response.json();
+                const formData = new FormData();
+                const fileInput = document.getElementById('photoFile');
+                const descriptionInput = document.getElementById('photoDescription');
+                const captionInput = document.getElementById('photoCaption');
                 
-                if (result.success) {
-                    alert('Photo uploaded successfully!');
-                    closePhotoUpload();
-                    loadPhotos(); // Refresh photo list
-                } else {
-                    alert('Upload failed: ' + result.message);
+                if (!fileInput.files[0]) {
+                    alert('Please select a photo file');
+                    return;
+                }
+                
+                formData.append('photo', fileInput.files[0]);
+                formData.append('description', descriptionInput.value || '');
+                formData.append('caption', captionInput.value || '');
+                
+                const uploadUrl = `/api/events/${window.eventId}/photos`;
+                console.log('Uploading to URL:', uploadUrl);
+                
+                try {
+                    const response = await fetch(uploadUrl, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        alert('Photo uploaded successfully!');
+                        
+                        // Force close modal immediately
+                        const modal = document.getElementById('photoUploadModal');
+                        if (modal) {
+                            modal.style.display = 'none';
+                        }
+                        
+                        // Reset form
+                        const form = document.getElementById('photoUploadForm');
+                        if (form) {
+                            form.reset();
+                        }
+                        
+                        loadPhotos(); // Refresh photo list
+                        
+                        // Fallback: ensure modal is closed after a delay
+                        setTimeout(() => {
+                            if (modal && modal.style.display !== 'none') {
+                                console.log('Force closing modal after timeout');
+                                modal.style.display = 'none';
+                            }
+                        }, 500);
+                    } else {
+                        alert('Upload failed: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    alert('Upload failed: ' + error.message);
                 }
             } catch (error) {
-                console.error('Upload error:', error);
-                alert('Upload failed: ' + error.message);
+                console.error('Form submission error:', error);
+                // Force close modal even if there's an error
+                const modal = document.getElementById('photoUploadModal');
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+                alert('An error occurred. Please try again.');
             }
         });
     } else {
