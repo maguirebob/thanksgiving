@@ -109,10 +109,40 @@
         </div>
     </div>
 
-    <!-- Content Sections -->
-    <div class="content-sections">
-        <!-- Photos Section -->
-        <div class="content-section mb-5" id="photos">
+    <!-- Tabbed Navigation -->
+    <div class="tabbed-navigation">
+        <!-- Tab Navigation -->
+        <ul class="nav nav-tabs custom-tabs mb-4" id="contentTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="photos-tab" data-bs-toggle="tab" data-bs-target="#photos" type="button" role="tab" aria-controls="photos" aria-selected="true">
+                    <i class="fas fa-images me-2"></i>Photos
+                    <span class="badge bg-primary ms-2" id="photosBadge">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="recipes-tab" data-bs-toggle="tab" data-bs-target="#recipes" type="button" role="tab" aria-controls="recipes" aria-selected="false">
+                    <i class="fas fa-book-open me-2"></i>Recipes
+                    <span class="badge bg-success ms-2" id="recipesBadge">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="blog-tab" data-bs-toggle="tab" data-bs-target="#blog" type="button" role="tab" aria-controls="blog" aria-selected="false">
+                    <i class="fas fa-blog me-2"></i>Blog
+                    <span class="badge bg-info ms-2" id="blogBadge">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="comments-tab" data-bs-toggle="tab" data-bs-target="#comments" type="button" role="tab" aria-controls="comments" aria-selected="false">
+                    <i class="fas fa-comments me-2"></i>Comments
+                    <span class="badge bg-warning ms-2" id="commentsBadge">0</span>
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="contentTabsContent">
+            <!-- Photos Tab -->
+            <div class="tab-pane fade show active" id="photos" role="tabpanel" aria-labelledby="photos-tab">
             <!-- Photo Upload Section -->
             <div class="photo-upload-section mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -145,10 +175,93 @@
                 </div>
                         </div>
                     </div>
-                    
+            </div>
 
+            <!-- Recipes Tab -->
+            <div class="tab-pane fade" id="recipes" role="tabpanel" aria-labelledby="recipes-tab">
+                <div class="recipes-section">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="mb-0">
+                            <i class="fas fa-book-open me-2"></i>Recipes
+                        </h3>
+                        <button class="btn btn-success" onclick="addRecipe()">
+                            <i class="fas fa-plus me-2"></i>Add Recipe
+                        </button>
+                    </div>
                     
-</div>
+                    <div id="recipesList" class="row">
+                        <!-- Recipes will be dynamically loaded here -->
+                    </div>
+                    
+                    <!-- No Recipes Message -->
+                    <div id="noRecipesMessage" class="text-center text-muted py-5">
+                        <i class="fas fa-book-open fa-3x mb-3" style="color: #dee2e6;"></i>
+                        <h4>No recipes yet</h4>
+                        <p>Share your favorite Thanksgiving recipes!</p>
+                        <button class="btn btn-success" onclick="addRecipe()">
+                            <i class="fas fa-plus me-2"></i>Add First Recipe
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Blog Tab -->
+            <div class="tab-pane fade" id="blog" role="tabpanel" aria-labelledby="blog-tab">
+                <div class="blog-section">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="mb-0">
+                            <i class="fas fa-blog me-2"></i>Blog Posts
+                        </h3>
+                        <button class="btn btn-info" onclick="addBlogPost()">
+                            <i class="fas fa-plus me-2"></i>New Post
+                        </button>
+                    </div>
+                    
+                    <div id="blogPostsList" class="row">
+                        <!-- Blog posts will be dynamically loaded here -->
+                    </div>
+                    
+                    <!-- No Blog Posts Message -->
+                    <div id="noBlogPostsMessage" class="text-center text-muted py-5">
+                        <i class="fas fa-blog fa-3x mb-3" style="color: #dee2e6;"></i>
+                        <h4>No blog posts yet</h4>
+                        <p>Share stories and memories from this Thanksgiving!</p>
+                        <button class="btn btn-info" onclick="addBlogPost()">
+                            <i class="fas fa-plus me-2"></i>Write First Post
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comments Tab -->
+            <div class="tab-pane fade" id="comments" role="tabpanel" aria-labelledby="comments-tab">
+                <div class="comments-section">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="mb-0">
+                            <i class="fas fa-comments me-2"></i>Comments
+                        </h3>
+                        <button class="btn btn-warning" onclick="addComment()">
+                            <i class="fas fa-plus me-2"></i>Add Comment
+                        </button>
+                    </div>
+                    
+                    <div id="commentsList" class="row">
+                        <!-- Comments will be dynamically loaded here -->
+                    </div>
+                    
+                    <!-- No Comments Message -->
+                    <div id="noCommentsMessage" class="text-center text-muted py-5">
+                        <i class="fas fa-comments fa-3x mb-3" style="color: #dee2e6;"></i>
+                        <h4>No comments yet</h4>
+                        <p>Share your thoughts about this Thanksgiving!</p>
+                        <button class="btn btn-warning" onclick="addComment()">
+                            <i class="fas fa-plus me-2"></i>Add First Comment
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
 
@@ -675,4 +788,67 @@ function setupPhotoEventListeners() {
         });
     }
 }
+
+// Tabbed Navigation Functionality
+function initializeTabbedNavigation() {
+    // Initialize Bootstrap tabs
+    const tabTriggerList = [].slice.call(document.querySelectorAll('#contentTabs button[data-bs-toggle="tab"]'));
+    tabTriggerList.forEach(function (tabTriggerEl) {
+        new bootstrap.Tab(tabTriggerEl);
+    });
+
+    // Add click handlers for tab badges
+    const tabButtons = document.querySelectorAll('#contentTabs .nav-link');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Update active tab styling
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update tab content visibility
+            const targetId = this.getAttribute('data-bs-target').substring(1);
+            const tabPanes = document.querySelectorAll('.tab-pane');
+            tabPanes.forEach(pane => {
+                pane.classList.remove('show', 'active');
+            });
+            
+            const targetPane = document.getElementById(targetId);
+            if (targetPane) {
+                targetPane.classList.add('show', 'active');
+            }
+        });
+    });
+}
+
+// Tab Content Management Functions
+function addRecipe() {
+    alert('Recipe functionality coming soon!');
+}
+
+function addBlogPost() {
+    alert('Blog post functionality coming soon!');
+}
+
+function addComment() {
+    alert('Comment functionality coming soon!');
+}
+
+// Update tab badges with current counts
+function updateTabBadges() {
+    const photoCount = document.getElementById('photoCount')?.textContent || '0';
+    const recipeCount = document.getElementById('recipeCount')?.textContent || '0';
+    const blogCount = document.getElementById('blogCount')?.textContent || '0';
+    const commentCount = document.getElementById('commentCount')?.textContent || '0';
+    
+    document.getElementById('photosBadge').textContent = photoCount;
+    document.getElementById('recipesBadge').textContent = recipeCount;
+    document.getElementById('blogBadge').textContent = blogCount;
+    document.getElementById('commentsBadge').textContent = commentCount;
+}
+
+// Initialize everything when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeTabbedNavigation();
+    updateTabBadges();
+});
 </script>

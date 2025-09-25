@@ -881,6 +881,114 @@
                 font-size: 1.25rem;
             }
         }
+
+        /* Tabbed Navigation Styles */
+        .tabbed-navigation {
+            margin-top: 2rem;
+        }
+
+        .custom-tabs {
+            border-bottom: 2px solid var(--border-gray);
+            background: var(--white);
+            border-radius: 8px 8px 0 0;
+            padding: 0.5rem 1rem 0;
+        }
+
+        .custom-tabs .nav-link {
+            border: none;
+            border-radius: 8px 8px 0 0;
+            padding: 0.75rem 1.5rem;
+            margin-right: 0.5rem;
+            background: transparent;
+            color: var(--secondary-gray);
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .custom-tabs .nav-link:hover {
+            background: var(--light-gray);
+            color: var(--primary-black);
+            transform: translateY(-2px);
+        }
+
+        .custom-tabs .nav-link.active {
+            background: var(--white);
+            color: var(--primary-black);
+            border-bottom: 3px solid var(--accent-orange);
+            font-weight: 600;
+        }
+
+        .custom-tabs .nav-link .badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .tab-content {
+            background: var(--white);
+            border-radius: 0 0 8px 8px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            min-height: 400px;
+        }
+
+        .tab-pane {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Tab Section Headers */
+        .tab-pane h3 {
+            color: var(--primary-black);
+            border-bottom: 2px solid var(--border-gray);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Responsive Tab Navigation */
+        @media (max-width: 768px) {
+            .custom-tabs {
+                flex-wrap: wrap;
+                padding: 0.25rem 0.5rem 0;
+            }
+
+            .custom-tabs .nav-link {
+                padding: 0.5rem 1rem;
+                margin-right: 0.25rem;
+                margin-bottom: 0.25rem;
+                font-size: 0.9rem;
+            }
+
+            .tab-content {
+                padding: 1rem;
+            }
+
+            .custom-tabs .nav-link .badge {
+                font-size: 0.7rem;
+                padding: 0.2rem 0.4rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .custom-tabs .nav-link {
+                flex: 1;
+                text-align: center;
+                margin-right: 0;
+            }
+
+            .custom-tabs .nav-link i {
+                display: block;
+                margin-bottom: 0.25rem;
+            }
+
+            .custom-tabs .nav-link span:not(.badge) {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
