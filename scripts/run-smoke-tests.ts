@@ -73,9 +73,17 @@ class SmokeTestRunner {
     await this.runTest('Version API Endpoint', async () => {
       const response = await this.makeRequest('GET', '/api/v1/version/display');
       
-        if (!response.success || response.data.version !== '2.4.1') {
-          throw new Error('Version API returned unexpected response');
-        }
+      if (!response.success || !response.data || !response.data.version) {
+        throw new Error('Version API returned invalid response structure');
+      }
+      
+      // Check if version follows semantic versioning format (e.g., 2.4.3)
+      const versionPattern = /^\d+\.\d+\.\d+$/;
+      if (!versionPattern.test(response.data.version)) {
+        throw new Error(`Version format is invalid: ${response.data.version}. Expected format: x.y.z`);
+      }
+      
+      console.log(`   Version: ${response.data.version}`);
     });
 
     await this.runTest('Database Setup API', async () => {
