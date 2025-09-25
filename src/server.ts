@@ -124,7 +124,7 @@ app.get('/api/v1/version/display', (_req, res) => {
   res.json({
     success: true,
     data: {
-      version: '2.2.1',
+      version: '2.3.0',
       environment: config.getConfig().nodeEnv,
       buildDate: new Date().toISOString()
     }
@@ -250,7 +250,7 @@ app.get('/api/setup-database', async (_req, res) => {
 app.get('/about', (_req, res) => {
   res.render('about', {
     title: 'About - Thanksgiving Menu Collection',
-    version: '2.2.1',
+    version: '2.3.0',
     environment: config.getConfig().nodeEnv,
     buildDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
     dbStatus: 'Connected'
