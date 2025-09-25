@@ -228,7 +228,7 @@
             Upload Photo
         </h3>
         
-        <form id="photoUploadForm" enctype="multipart/form-data">
+        <form id="photoUploadForm" method="POST" enctype="multipart/form-data">
             <div class="mb-3">
                 <label for="photoFile" class="form-label">Select Photo</label>
                 <input type="file" class="form-control" id="photoFile" accept="image/*" required>
@@ -732,14 +732,50 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Photo functionality scripts removed - using simple modal approach -->
 
 <script>
+// Set event ID for API calls
+window.eventId = <%= eventId %>;
+
 // Simple photo form handling
 function setupPhotoEventListeners() {
-    // Photo upload form - simple alert for now
+    // Photo upload form - actual upload functionality
     const uploadForm = document.getElementById('photoUploadForm');
     if (uploadForm) {
-        uploadForm.addEventListener('submit', function(e) {
+        uploadForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            alert('Photo upload functionality coming soon!');
+            
+            const formData = new FormData();
+            const fileInput = document.getElementById('photoFile');
+            const descriptionInput = document.getElementById('photoDescription');
+            const captionInput = document.getElementById('photoCaption');
+            
+            if (!fileInput.files[0]) {
+                alert('Please select a photo file');
+                return;
+            }
+            
+            formData.append('photo', fileInput.files[0]);
+            formData.append('description', descriptionInput.value || '');
+            formData.append('caption', captionInput.value || '');
+            
+            try {
+                const response = await fetch(`/api/events/${window.eventId}/photos`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Photo uploaded successfully!');
+                    closePhotoUpload();
+                    loadPhotos(); // Refresh photo list
+                } else {
+                    alert('Upload failed: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert('Upload failed: ' + error.message);
+            }
         });
     }
 }
@@ -796,9 +832,141 @@ function updateTabBadges() {
     document.getElementById('blogBadge').textContent = blogCount;
 }
 
+// Load photos from API
+async function loadPhotos() {
+    try {
+        const response = await fetch(`/api/events/${window.eventId}/photos`);
+        const result = await response.json();
+        
+        if (result.success) {
+            displayPhotos(result.data.photos);
+            updatePhotoCount(result.data.photos.length);
+        } else {
+            console.error('Failed to load photos:', result.message);
+        }
+    } catch (error) {
+        console.error('Error loading photos:', error);
+    }
+}
+
+// Display photos in the grid
+function displayPhotos(photos) {
+    const photosGrid = document.getElementById('photosGrid');
+    const noPhotosMessage = document.getElementById('noPhotosMessage');
+    
+    if (!photosGrid) return;
+    
+    if (photos.length === 0) {
+        photosGrid.innerHTML = '';
+        if (noPhotosMessage) {
+            noPhotosMessage.style.display = 'block';
+        }
+        return;
+    }
+    
+    if (noPhotosMessage) {
+        noPhotosMessage.style.display = 'none';
+    }
+    
+    photosGrid.innerHTML = photos.map(photo => `
+        <div class="col-md-4 col-sm-6 mb-3">
+            <div class="card photo-card">
+                <img src="/api/photos/${photo.photo_id}/file" 
+                     class="card-img-top" 
+                     alt="${photo.caption || photo.original_filename || 'Photo'}"
+                     style="height: 200px; object-fit: cover; cursor: pointer;"
+                     onclick="viewPhoto('${photo.photo_id}', '${photo.caption || ''}', '${photo.description || ''}')">
+                <div class="card-body">
+                    <h6 class="card-title">${photo.caption || 'Untitled'}</h6>
+                    <p class="card-text small text-muted">${photo.description || ''}</p>
+                    <div class="d-flex gap-1">
+                        <button class="btn btn-sm btn-outline-primary" onclick="editPhoto('${photo.photo_id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deletePhoto('${photo.photo_id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Update photo count in stats and badges
+function updatePhotoCount(count) {
+    const photoCountElement = document.getElementById('photoCount');
+    const photosBadgeElement = document.getElementById('photosBadge');
+    
+    if (photoCountElement) {
+        photoCountElement.textContent = count;
+    }
+    if (photosBadgeElement) {
+        photosBadgeElement.textContent = count;
+    }
+}
+
+// View photo in modal
+function viewPhoto(photoId, caption, description) {
+    // Create a simple modal for viewing photos
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background-color: rgba(0,0,0,0.9); z-index: 10001; 
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer;
+    `;
+    modal.onclick = () => document.body.removeChild(modal);
+    
+    modal.innerHTML = `
+        <div style="max-width: 90%; max-height: 90%; text-align: center;">
+            <img src="/api/photos/${photoId}/file" 
+                 style="max-width: 100%; max-height: 80%; object-fit: contain; border-radius: 8px;">
+            <div style="color: white; margin-top: 1rem;">
+                <h4>${caption || 'Untitled'}</h4>
+                <p>${description || 'No description'}</p>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+// Edit photo (placeholder)
+function editPhoto(photoId) {
+    alert('Edit photo functionality coming soon!');
+}
+
+// Delete photo
+async function deletePhoto(photoId) {
+    if (!confirm('Are you sure you want to delete this photo?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/photos/${photoId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Photo deleted successfully!');
+            loadPhotos(); // Reload photos
+        } else {
+            alert('Delete failed: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Delete error:', error);
+        alert('Delete failed: ' + error.message);
+    }
+}
+
 // Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initializeTabbedNavigation();
     updateTabBadges();
+    setupPhotoEventListeners();
+    loadPhotos(); // Load photos when page loads
 });
 </script>
