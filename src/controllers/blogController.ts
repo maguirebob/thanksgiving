@@ -1,0 +1,551 @@
+import { Request, Response } from 'express';
+import { PrismaClient } from '@prisma/client';
+
+// Create prisma instance - can be mocked in tests
+const prisma = new PrismaClient();
+
+/**
+ * Get all blog posts for a specific event
+ * GET /api/events/:eventId/blog-posts
+ */
+export const getEventBlogPosts = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { eventId } = req.params;
+    if (!eventId) {
+      res.status(400).json({
+        success: false,
+        message: 'Event ID is required'
+      });
+      return;
+    }
+
+    const { page = '1', limit = '20', status, search } = req.query;
+
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+    const offset = (pageNum - 1) * limitNum;
+
+    // Validate event exists
+    const event = await prisma.event.findUnique({
+      where: { event_id: parseInt(eventId, 10) }
+    });
+
+    if (!event) {
+      res.status(404).json({
+        success: false,
+        message: 'Event not found'
+      });
+      return;
+    }
+
+    // Build search conditions
+    const whereConditions: any = {
+      event_id: parseInt(eventId, 10)
+    };
+
+    if (status) {
+      whereConditions.status = status as string;
+    }
+
+    if (search) {
+      whereConditions.OR = [
+        { title: { contains: search as string, mode: 'insensitive' as any } },
+        { content: { contains: search as string, mode: 'insensitive' as any } },
+        { excerpt: { contains: search as string, mode: 'insensitive' as any } },
+        { tags: { has: search as string } }
+      ];
+    }
+
+    // Get blog posts with pagination
+    const [blogPosts, totalCount] = await Promise.all([
+      prisma.blogPost.findMany({
+        where: whereConditions,
+        orderBy: { created_at: 'desc' },
+        skip: offset,
+        take: limitNum,
+        select: {
+          blog_post_id: true,
+          title: true,
+          content: true,
+          excerpt: true,
+          featured_image: true,
+          tags: true,
+          status: true,
+          published_at: true,
+          created_at: true,
+          updated_at: true,
+          user_id: true,
+          user: {
+            select: {
+              username: true,
+              first_name: true,
+              last_name: true
+            }
+          }
+        }
+      }),
+      prisma.blogPost.count({ where: whereConditions })
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        blogPosts,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total: totalCount,
+          pages: Math.ceil(totalCount / limitNum)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching event blog posts:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
+/**
+ * Create a new blog post for a specific event
+ * POST /api/events/:eventId/blog-posts
+ */
+export const createEventBlogPost = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { eventId } = req.params;
+    if (!eventId) {
+      res.status(400).json({ success: false, message: 'Event ID is required' });
+      return;
+    }
+
+    const { title, content, excerpt, featured_image, tags, status = 'draft' } = req.body;
+
+    // Validate required fields
+    if (!title || !content) {
+      res.status(400).json({
+        success: false,
+        message: 'Title and content are required'
+      });
+      return;
+    }
+
+    // Validate event exists
+    const event = await prisma.event.findUnique({
+      where: { event_id: parseInt(eventId, 10) }
+    });
+
+    if (!event) {
+      res.status(404).json({ success: false, message: 'Event not found' });
+      return;
+    }
+
+    // For now, we'll use a default user ID (in a real app, this would come from auth)
+    const defaultUserId = 1; // This should be replaced with actual user authentication
+
+    // Parse tags if they're a string
+    let parsedTags: string[] = [];
+    if (tags) {
+      if (typeof tags === 'string') {
+        parsedTags = tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+      } else if (Array.isArray(tags)) {
+        parsedTags = tags.filter(tag => typeof tag === 'string' && tag.trim().length > 0);
+      }
+    }
+
+    const newBlogPost = await prisma.blogPost.create({
+      data: {
+        event_id: parseInt(eventId, 10),
+        user_id: defaultUserId,
+        title,
+        content,
+        excerpt: excerpt || null,
+        featured_image: featured_image || null,
+        tags: parsedTags,
+        status,
+        published_at: status === 'published' ? new Date() : null,
+      },
+      select: {
+        blog_post_id: true,
+        title: true,
+        content: true,
+        excerpt: true,
+        featured_image: true,
+        tags: true,
+        status: true,
+        published_at: true,
+        created_at: true,
+        updated_at: true,
+        user_id: true,
+        user: {
+          select: {
+            username: true,
+            first_name: true,
+            last_name: true
+          }
+        }
+      }
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Blog post created successfully',
+      data: newBlogPost
+    });
+  } catch (error) {
+    console.error('Error creating blog post:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
+/**
+ * Get a single blog post by ID
+ * GET /api/blog-posts/:blogPostId
+ */
+export const getBlogPost = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { blogPostId } = req.params;
+    if (!blogPostId) {
+      res.status(400).json({ success: false, message: 'Blog post ID is required' });
+      return;
+    }
+
+    const blogPost = await prisma.blogPost.findUnique({
+      where: { blog_post_id: parseInt(blogPostId, 10) },
+      select: {
+        blog_post_id: true,
+        title: true,
+        content: true,
+        excerpt: true,
+        featured_image: true,
+        tags: true,
+        status: true,
+        published_at: true,
+        created_at: true,
+        updated_at: true,
+        user_id: true,
+        event_id: true,
+        user: {
+          select: {
+            username: true,
+            first_name: true,
+            last_name: true
+          }
+        },
+        event: {
+          select: {
+            event_name: true,
+            event_date: true
+          }
+        }
+      }
+    });
+
+    if (!blogPost) {
+      res.status(404).json({ success: false, message: 'Blog post not found' });
+      return;
+    }
+
+    res.status(200).json({ success: true, data: blogPost });
+  } catch (error) {
+    console.error('Error fetching blog post:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+/**
+ * Update a blog post by ID
+ * PUT /api/blog-posts/:blogPostId
+ */
+export const updateBlogPost = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { blogPostId } = req.params;
+    if (!blogPostId) {
+      res.status(400).json({ success: false, message: 'Blog post ID is required' });
+      return;
+    }
+
+    const { title, content, excerpt, featured_image, tags, status } = req.body;
+
+    const existingBlogPost = await prisma.blogPost.findUnique({
+      where: { blog_post_id: parseInt(blogPostId, 10) }
+    });
+
+    if (!existingBlogPost) {
+      res.status(404).json({ success: false, message: 'Blog post not found' });
+      return;
+    }
+
+    // Parse tags if they're provided
+    let parsedTags: string[] | undefined;
+    if (tags !== undefined) {
+      if (typeof tags === 'string') {
+        parsedTags = tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+      } else if (Array.isArray(tags)) {
+        parsedTags = tags.filter(tag => typeof tag === 'string' && tag.trim().length > 0);
+      } else {
+        parsedTags = existingBlogPost.tags;
+      }
+    }
+
+    // Handle status change to published
+    let publishedAt = existingBlogPost.published_at;
+    if (status === 'published' && existingBlogPost.status !== 'published') {
+      publishedAt = new Date();
+    } else if (status !== 'published' && existingBlogPost.status === 'published') {
+      publishedAt = null;
+    }
+
+    const updatedBlogPost = await prisma.blogPost.update({
+      where: { blog_post_id: parseInt(blogPostId, 10) },
+      data: {
+        title: title ?? existingBlogPost.title,
+        content: content ?? existingBlogPost.content,
+        excerpt: excerpt ?? existingBlogPost.excerpt,
+        featured_image: featured_image ?? existingBlogPost.featured_image,
+        tags: parsedTags ?? existingBlogPost.tags,
+        status: status ?? existingBlogPost.status,
+        published_at: publishedAt,
+        updated_at: new Date(),
+      },
+      select: {
+        blog_post_id: true,
+        title: true,
+        content: true,
+        excerpt: true,
+        featured_image: true,
+        tags: true,
+        status: true,
+        published_at: true,
+        created_at: true,
+        updated_at: true,
+        user_id: true,
+        user: {
+          select: {
+            username: true,
+            first_name: true,
+            last_name: true
+          }
+        }
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Blog post updated successfully',
+      data: updatedBlogPost
+    });
+  } catch (error) {
+    console.error('Error updating blog post:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+/**
+ * Delete a blog post by ID
+ * DELETE /api/blog-posts/:blogPostId
+ */
+export const deleteBlogPost = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { blogPostId } = req.params;
+    if (!blogPostId) {
+      res.status(400).json({ success: false, message: 'Blog post ID is required' });
+      return;
+    }
+
+    const existingBlogPost = await prisma.blogPost.findUnique({
+      where: { blog_post_id: parseInt(blogPostId, 10) }
+    });
+
+    if (!existingBlogPost) {
+      res.status(404).json({ success: false, message: 'Blog post not found' });
+      return;
+    }
+
+    await prisma.blogPost.delete({
+      where: { blog_post_id: parseInt(blogPostId, 10) }
+    });
+
+    res.status(200).json({ success: true, message: 'Blog post deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting blog post:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+/**
+ * Search blog posts by title, content, or tags
+ * GET /api/blog-posts/search?q=<query>&page=<page>&limit=<limit>&status=<status>
+ */
+export const searchBlogPosts = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { q, page = '1', limit = '20', status } = req.query;
+
+    if (!q || (q as string).trim() === '') {
+      res.status(400).json({ success: false, message: 'Search query (q) is required' });
+      return;
+    }
+
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+    const offset = (pageNum - 1) * limitNum;
+
+    const searchTerm = (q as string).trim();
+
+    // Build search conditions
+    const whereConditions: any = {
+      OR: [
+        { title: { contains: searchTerm, mode: 'insensitive' as any } },
+        { content: { contains: searchTerm, mode: 'insensitive' as any } },
+        { excerpt: { contains: searchTerm, mode: 'insensitive' as any } },
+        { tags: { has: searchTerm } },
+        { event: { event_name: { contains: searchTerm, mode: 'insensitive' as any } } }
+      ]
+    };
+
+    if (status) {
+      whereConditions.status = status as string;
+    }
+
+    // Get blog posts with pagination
+    const [blogPosts, totalCount] = await Promise.all([
+      prisma.blogPost.findMany({
+        where: whereConditions,
+        orderBy: { created_at: 'desc' },
+        skip: offset,
+        take: limitNum,
+        select: {
+          blog_post_id: true,
+          title: true,
+          content: true,
+          excerpt: true,
+          featured_image: true,
+          tags: true,
+          status: true,
+          published_at: true,
+          created_at: true,
+          updated_at: true,
+          user_id: true,
+          event_id: true,
+          user: {
+            select: {
+              username: true,
+              first_name: true,
+              last_name: true
+            }
+          },
+          event: {
+            select: {
+              event_name: true,
+              event_date: true
+            }
+          }
+        }
+      }),
+      prisma.blogPost.count({ where: whereConditions })
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        blogPosts,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total: totalCount,
+          pages: Math.ceil(totalCount / limitNum)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error searching blog posts:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+/**
+ * Get blog posts by tag
+ * GET /api/blog-posts/tag/:tag?page=<page>&limit=<limit>&status=<status>
+ */
+export const getBlogPostsByTag = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { tag } = req.params;
+    if (!tag) {
+      res.status(400).json({ success: false, message: 'Tag is required' });
+      return;
+    }
+
+    const { page = '1', limit = '20', status } = req.query;
+
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+    const offset = (pageNum - 1) * limitNum;
+
+    // Build search conditions
+    const whereConditions: any = {
+      tags: { has: tag as string }
+    };
+
+    if (status) {
+      whereConditions.status = status as string;
+    }
+
+    // Get blog posts with pagination
+    const [blogPosts, totalCount] = await Promise.all([
+      prisma.blogPost.findMany({
+        where: whereConditions,
+        orderBy: { created_at: 'desc' },
+        skip: offset,
+        take: limitNum,
+        select: {
+          blog_post_id: true,
+          title: true,
+          content: true,
+          excerpt: true,
+          featured_image: true,
+          tags: true,
+          status: true,
+          published_at: true,
+          created_at: true,
+          updated_at: true,
+          user_id: true,
+          event_id: true,
+          user: {
+            select: {
+              username: true,
+              first_name: true,
+              last_name: true
+            }
+          },
+          event: {
+            select: {
+              event_name: true,
+              event_date: true
+            }
+          }
+        }
+      }),
+      prisma.blogPost.count({ where: whereConditions })
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        blogPosts,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total: totalCount,
+          pages: Math.ceil(totalCount / limitNum)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching blog posts by tag:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};

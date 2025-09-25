@@ -11,6 +11,7 @@ import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/authRoutes';
 import adminRoutes from './routes/adminRoutes';
 import photoRoutes from './routes/photoRoutes';
+import blogRoutes from './routes/blogRoutes';
 import { addUserToLocals } from './middleware/auth';
 
 const app = express();
@@ -125,7 +126,7 @@ app.get('/api/v1/version/display', (_req, res) => {
   res.json({
     success: true,
     data: {
-      version: '2.4.3',
+      version: '2.4.4',
       environment: config.getConfig().nodeEnv,
       buildDate: new Date().toISOString()
     }
@@ -251,7 +252,7 @@ app.get('/api/setup-database', async (_req, res) => {
 app.get('/about', (_req, res) => {
   res.render('about', {
     title: 'About - Thanksgiving Menu Collection',
-    version: '2.4.3',
+    version: '2.4.4',
     environment: config.getConfig().nodeEnv,
     buildDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
     dbStatus: 'Connected'
@@ -318,6 +319,7 @@ app.use('/admin', adminRoutes);
 
 // API routes
 app.use('/api', photoRoutes);
+app.use('/api', blogRoutes);
 
 // Error handling middleware
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
