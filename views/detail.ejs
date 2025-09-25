@@ -666,41 +666,38 @@ function closeAllModals() {
     }
     
     // Find and close any other modals/overlays with high z-index
-    const allElements = document.querySelectorAll('*');
-    allElements.forEach(element => {
-        const style = window.getComputedStyle(element);
-        const zIndex = parseInt(style.zIndex);
-        
-        // Look for elements with high z-index that might be modals
-        if (zIndex >= 1000 && 
-            (style.position === 'fixed' || style.position === 'absolute')) {
+    // Only look for elements that are clearly modals/overlays
+    const modalSelectors = [
+        '[id*="modal"]',
+        '[class*="modal"]', 
+        '[id*="overlay"]',
+        '[class*="overlay"]',
+        '[style*="rgba(0, 0, 0, 0.5)"]',
+        '[style*="rgba(0,0,0,0.5)"]'
+    ];
+    
+    modalSelectors.forEach(selector => {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(element => {
+            const style = window.getComputedStyle(element);
+            const zIndex = parseInt(style.zIndex);
             
-            // Check for modal-like properties
-            const isModalLike = 
-                style.backgroundColor.includes('rgba(0, 0, 0') ||  // Dark background
-                style.backgroundColor.includes('rgba(0,0,0') ||     // Dark background (no spaces)
-                element.id.includes('modal') ||
-                element.id.includes('overlay') ||
-                element.className.includes('modal') ||
-                element.className.includes('overlay') ||
-                (style.width === '100%' && style.height === '100%' && zIndex > 5000); // Full screen overlay
-            
-            if (isModalLike) {
-                console.log('Found potential modal/overlay:', {
+            // Only close if it's positioned and has high z-index
+            if (zIndex >= 1000 && 
+                (style.position === 'fixed' || style.position === 'absolute')) {
+                
+                console.log('Found modal/overlay:', {
                     id: element.id,
                     className: element.className,
                     zIndex: zIndex,
-                    backgroundColor: style.backgroundColor,
-                    position: style.position,
-                    width: style.width,
-                    height: style.height
+                    selector: selector
                 });
                 element.style.display = 'none';
                 element.style.visibility = 'hidden';
                 element.style.opacity = '0';
                 element.style.pointerEvents = 'none';
             }
-        }
+        });
     });
     
     console.log('All modals and overlays closed');
@@ -726,41 +723,7 @@ document.addEventListener('keydown', function(event) {
     }
 });
 
-// Add a temporary debug button to close all modals (remove in production)
-function addDebugCloseButton() {
-    const debugBtn = document.createElement('button');
-    debugBtn.innerHTML = '🔧 Close All Modals';
-    debugBtn.style.cssText = `
-        position: fixed;
-        top: 10px;
-        right: 10px;
-        z-index: 99999;
-        background: red;
-        color: white;
-        border: none;
-        padding: 10px;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 12px;
-    `;
-    debugBtn.onclick = () => {
-        console.log('Manual close all modals triggered');
-        closeAllModals();
-    };
-    document.body.appendChild(debugBtn);
-    
-    // Remove button after 30 seconds
-    setTimeout(() => {
-        if (debugBtn.parentNode) {
-            debugBtn.parentNode.removeChild(debugBtn);
-        }
-    }, 30000);
-}
-
-// Add debug button when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(addDebugCloseButton, 2000); // Add after 2 seconds
-});
+// Debug button removed - no longer needed
 
 // Global error handler to catch unhandled errors
 window.addEventListener('error', function(event) {
@@ -775,13 +738,14 @@ window.addEventListener('error', function(event) {
     // Only close modals for specific errors, not Bootstrap selector-engine errors
     if (event.error && event.error.message && 
         !event.error.message.includes('Illegal invocation') &&
-        !event.error.message.includes('selector-engine')) {
+        !event.error.message.includes('selector-engine') &&
+        !event.error.message.includes('Bootstrap')) {
         console.log('Closing modals due to non-Bootstrap error');
         setTimeout(() => {
             closeAllModals();
         }, 100);
     } else {
-        console.log('Ignoring Bootstrap selector-engine error');
+        console.log('Ignoring Bootstrap-related error');
     }
 });
 
@@ -798,7 +762,8 @@ window.addEventListener('unhandledrejection', function(event) {
     // Only close modals for specific promise rejections
     if (event.reason && event.reason.message && 
         !event.reason.message.includes('Illegal invocation') &&
-        !event.reason.message.includes('selector-engine')) {
+        !event.reason.message.includes('selector-engine') &&
+        !event.reason.message.includes('Bootstrap')) {
         console.log('Closing modals due to promise rejection');
         setTimeout(() => {
             closeAllModals();
