@@ -142,7 +142,23 @@ export const createEventBlogPost = async (req: Request, res: Response): Promise<
     }
 
     // For now, we'll use a default user ID (in a real app, this would come from auth)
-    const defaultUserId = 1; // This should be replaced with actual user authentication
+    // Find the first available user or create a default one
+    let defaultUser = await prisma.user.findFirst();
+    if (!defaultUser) {
+      // Create a default user if none exists
+      const bcrypt = require('bcryptjs');
+      defaultUser = await prisma.user.create({
+        data: {
+          username: 'default_user',
+          email: 'default@example.com',
+          password_hash: await bcrypt.hash('defaultpassword', 10),
+          role: 'user' as any,
+          first_name: 'Default',
+          last_name: 'User'
+        }
+      });
+    }
+    const defaultUserId = defaultUser.user_id;
 
     // Parse tags if they're a string
     let parsedTags: string[] = [];
