@@ -11,10 +11,16 @@ const prisma = new PrismaClient();
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     const uploadDir = 'public/uploads/photos';
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+    try {
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+        console.log(`Created upload directory: ${uploadDir}`);
+      }
+      cb(null, uploadDir);
+    } catch (error) {
+      console.error('Error creating upload directory:', error);
+      cb(error instanceof Error ? error : new Error('Unknown error'), '');
     }
-    cb(null, uploadDir);
   },
   filename: (_req, file, cb) => {
     const uniqueName = `${randomUUID()}${path.extname(file.originalname)}`;
@@ -149,6 +155,8 @@ export const uploadEventPhoto = async (req: Request, res: Response): Promise<voi
     }
     const { description, caption } = req.body;
 
+    console.log('Photo upload request:', { eventId, hasFile: !!req.file, description, caption });
+
     // Validate event exists
     const event = await prisma.event.findUnique({
       where: { event_id: parseInt(eventId, 10) }
@@ -164,12 +172,20 @@ export const uploadEventPhoto = async (req: Request, res: Response): Promise<voi
 
     // Check if file was uploaded
     if (!req.file) {
+      console.log('No file in request:', req.body);
       res.status(400).json({
         success: false,
         message: 'No photo file provided'
       });
       return;
     }
+
+    console.log('File details:', {
+      filename: req.file.filename,
+      originalname: req.file.originalname,
+      size: req.file.size,
+      mimetype: req.file.mimetype
+    });
 
     // Create photo record
     const photo = await prisma.photo.create({
