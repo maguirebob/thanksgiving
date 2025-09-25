@@ -751,6 +751,13 @@ window.addEventListener('error', function(event) {
         return; // Don't do anything for Bootstrap errors
     }
     
+    // Also check the error source/filename for selector-engine.js
+    if (event.filename && event.filename.includes('selector-engine.js')) {
+        console.log('Ignoring selector-engine.js error');
+        bootstrapErrorOccurred = true;
+        return;
+    }
+    
     // Only close modals for genuine application errors
     if (event.error && event.error.message) {
         console.log('Closing modals due to application error');
@@ -843,6 +850,43 @@ let isUploading = false;
 
 // Flag to prevent Bootstrap errors from interfering with subsequent uploads
 let bootstrapErrorOccurred = false;
+
+// Suppress Bootstrap selector-engine errors globally
+window.addEventListener('error', function(event) {
+    if (event.filename && event.filename.includes('selector-engine.js')) {
+        console.log('Suppressing selector-engine.js error');
+        event.preventDefault();
+        event.stopPropagation();
+        bootstrapErrorOccurred = true;
+        return false;
+    }
+}, true);
+
+// Also suppress Bootstrap errors by overriding console.error temporarily
+const originalConsoleError = console.error;
+console.error = function(...args) {
+    const message = args.join(' ');
+    if (message.includes('selector-engine') || message.includes('Illegal invocation')) {
+        console.log('Suppressed Bootstrap error:', message);
+        bootstrapErrorOccurred = true;
+        return;
+    }
+    originalConsoleError.apply(console, args);
+};
+
+// Override window.onerror to prevent Bootstrap errors from affecting the UI
+const originalOnError = window.onerror;
+window.onerror = function(message, source, lineno, colno, error) {
+    if (source && source.includes('selector-engine.js')) {
+        console.log('Suppressed selector-engine.js error via onerror');
+        bootstrapErrorOccurred = true;
+        return true; // Prevent default error handling
+    }
+    if (originalOnError) {
+        return originalOnError.call(this, message, source, lineno, colno, error);
+    }
+    return false;
+};
 
 // Simple photo form handling
 function setupPhotoEventListeners() {
