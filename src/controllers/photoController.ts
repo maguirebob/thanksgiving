@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 const prisma = new PrismaClient();
 
@@ -17,7 +17,7 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: (_req, file, cb) => {
-    const uniqueName = `${uuidv4()}${path.extname(file.originalname)}`;
+    const uniqueName = `${randomUUID()}${path.extname(file.originalname)}`;
     cb(null, uniqueName);
   }
 });
