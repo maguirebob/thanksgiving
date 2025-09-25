@@ -645,6 +645,8 @@ function viewPhoto(fileData, description, caption) {
 // Global function to close all modals
 function closeAllModals() {
     console.log('Closing all modals...');
+    
+    // Close known modals
     const photoUploadModal = document.getElementById('photoUploadModal');
     const cameraModal = document.getElementById('cameraModal');
     
@@ -662,6 +664,30 @@ function closeAllModals() {
         cameraModal.style.pointerEvents = 'none';
         console.log('Camera modal closed');
     }
+    
+    // Find and close any other modals/overlays with high z-index
+    const allElements = document.querySelectorAll('*');
+    allElements.forEach(element => {
+        const style = window.getComputedStyle(element);
+        const zIndex = parseInt(style.zIndex);
+        
+        // Look for elements with high z-index that might be modals
+        if (zIndex >= 1000 && 
+            (style.position === 'fixed' || style.position === 'absolute') &&
+            (style.backgroundColor === 'rgba(0, 0, 0, 0.5)' || 
+             style.backgroundColor === 'rgba(0,0,0,0.5)' ||
+             element.id.includes('modal') ||
+             element.id.includes('overlay'))) {
+            
+            console.log('Found potential modal/overlay:', element.id || element.className, 'z-index:', zIndex);
+            element.style.display = 'none';
+            element.style.visibility = 'hidden';
+            element.style.opacity = '0';
+            element.style.pointerEvents = 'none';
+        }
+    });
+    
+    console.log('All modals and overlays closed');
 }
 
 // Close modals when clicking outside
@@ -682,6 +708,42 @@ document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         closeAllModals();
     }
+});
+
+// Add a temporary debug button to close all modals (remove in production)
+function addDebugCloseButton() {
+    const debugBtn = document.createElement('button');
+    debugBtn.innerHTML = '🔧 Close All Modals';
+    debugBtn.style.cssText = `
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        z-index: 99999;
+        background: red;
+        color: white;
+        border: none;
+        padding: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 12px;
+    `;
+    debugBtn.onclick = () => {
+        console.log('Manual close all modals triggered');
+        closeAllModals();
+    };
+    document.body.appendChild(debugBtn);
+    
+    // Remove button after 30 seconds
+    setTimeout(() => {
+        if (debugBtn.parentNode) {
+            debugBtn.parentNode.removeChild(debugBtn);
+        }
+    }, 30000);
+}
+
+// Add debug button when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(addDebugCloseButton, 2000); // Add after 2 seconds
 });
 
 // Global error handler to catch unhandled errors
@@ -821,18 +883,9 @@ function setupPhotoEventListeners() {
                         console.log('Upload successful, closing modal...');
                         alert('Photo uploaded successfully!');
                         
-                        // Force close modal immediately
-                        const modal = document.getElementById('photoUploadModal');
-                        if (modal) {
-                            console.log('Modal found, closing aggressively');
-                            modal.style.display = 'none';
-                            modal.style.visibility = 'hidden';
-                            modal.style.opacity = '0';
-                            modal.style.pointerEvents = 'none';
-                            console.log('Modal closed with multiple CSS properties');
-                        } else {
-                            console.log('Modal not found!');
-                        }
+                        // Force close all modals and overlays
+                        console.log('Closing all modals after successful upload');
+                        closeAllModals();
                         
                         // Reset form
                         const form = document.getElementById('photoUploadForm');
