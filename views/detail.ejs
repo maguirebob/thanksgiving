@@ -62,7 +62,7 @@
     <!-- Quick Stats Section -->
     <div class="quick-stats-section mb-4">
         <div class="row g-3">
-            <div class="col-md-3 col-sm-6">
+            <div class="col-md-4 col-sm-6">
                 <div class="stats-card">
                     <div class="stats-icon">
                         <i class="fas fa-images"></i>
@@ -73,7 +73,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 col-sm-6">
+            <div class="col-md-4 col-sm-6">
                 <div class="stats-card">
                     <div class="stats-icon">
                         <i class="fas fa-book-open"></i>
@@ -84,7 +84,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 col-sm-6">
+            <div class="col-md-4 col-sm-6">
                 <div class="stats-card">
                     <div class="stats-icon">
                         <i class="fas fa-blog"></i>
@@ -92,17 +92,6 @@
                     <div class="stats-content">
                         <div class="stats-number" id="blogCount">0</div>
                         <div class="stats-label">Blog Posts</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 col-sm-6">
-                <div class="stats-card">
-                    <div class="stats-icon">
-                        <i class="fas fa-comments"></i>
-                    </div>
-                    <div class="stats-content">
-                        <div class="stats-number" id="commentCount">0</div>
-                        <div class="stats-label">Comments</div>
                     </div>
                 </div>
             </div>
@@ -129,12 +118,6 @@
                 <button class="nav-link" id="blog-tab" data-bs-toggle="tab" data-bs-target="#blog" type="button" role="tab" aria-controls="blog" aria-selected="false">
                     <i class="fas fa-blog me-2"></i>Blog
                     <span class="badge bg-info ms-2" id="blogBadge">0</span>
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="comments-tab" data-bs-toggle="tab" data-bs-target="#comments" type="button" role="tab" aria-controls="comments" aria-selected="false">
-                    <i class="fas fa-comments me-2"></i>Comments
-                    <span class="badge bg-warning ms-2" id="commentsBadge">0</span>
                 </button>
             </li>
         </ul>
@@ -173,8 +156,7 @@
                         <i class="fas fa-upload me-2"></i>Upload First Photo
                     </button>
                 </div>
-                        </div>
-                    </div>
+            </div>
             </div>
 
             <!-- Recipes Tab -->
@@ -233,33 +215,6 @@
                 </div>
             </div>
 
-            <!-- Comments Tab -->
-            <div class="tab-pane fade" id="comments" role="tabpanel" aria-labelledby="comments-tab">
-                <div class="comments-section">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h3 class="mb-0">
-                            <i class="fas fa-comments me-2"></i>Comments
-                        </h3>
-                        <button class="btn btn-warning" onclick="addComment()">
-                            <i class="fas fa-plus me-2"></i>Add Comment
-                        </button>
-                    </div>
-                    
-                    <div id="commentsList" class="row">
-                        <!-- Comments will be dynamically loaded here -->
-                    </div>
-                    
-                    <!-- No Comments Message -->
-                    <div id="noCommentsMessage" class="text-center text-muted py-5">
-                        <i class="fas fa-comments fa-3x mb-3" style="color: #dee2e6;"></i>
-                        <h4>No comments yet</h4>
-                        <p>Share your thoughts about this Thanksgiving!</p>
-                        <button class="btn btn-warning" onclick="addComment()">
-                            <i class="fas fa-plus me-2"></i>Add First Comment
-                        </button>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -829,21 +784,16 @@ function addBlogPost() {
     alert('Blog post functionality coming soon!');
 }
 
-function addComment() {
-    alert('Comment functionality coming soon!');
-}
 
 // Update tab badges with current counts
 function updateTabBadges() {
     const photoCount = document.getElementById('photoCount')?.textContent || '0';
     const recipeCount = document.getElementById('recipeCount')?.textContent || '0';
     const blogCount = document.getElementById('blogCount')?.textContent || '0';
-    const commentCount = document.getElementById('commentCount')?.textContent || '0';
     
     document.getElementById('photosBadge').textContent = photoCount;
     document.getElementById('recipesBadge').textContent = recipeCount;
     document.getElementById('blogBadge').textContent = blogCount;
-    document.getElementById('commentsBadge').textContent = commentCount;
 }
 
 // Initialize everything when DOM is loaded

@@ -1,6 +1,5 @@
 module.exports = {
   preset: 'ts-jest',
-  testEnvironment: 'jsdom',
   roots: ['<rootDir>/src', '<rootDir>/tests'],
   testMatch: [
     '**/__tests__/**/*.ts',
@@ -22,4 +21,36 @@ module.exports = {
   coverageReporters: ['text', 'lcov', 'html'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
   testTimeout: 10000,
+  projects: [
+    {
+      displayName: 'node',
+      preset: 'ts-jest',
+      testEnvironment: 'node',
+      testMatch: [
+        '<rootDir>/tests/models/**/*.test.ts',
+        '<rootDir>/tests/controllers/**/*.test.ts',
+        '<rootDir>/tests/middleware/**/*.test.ts',
+        '<rootDir>/tests/routes/**/*.test.ts',
+        '<rootDir>/tests/integration/**/*.test.ts'
+      ],
+      transform: {
+        '^.+\\.ts$': 'ts-jest',
+      },
+      setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+      testTimeout: 10000,
+    },
+    {
+      displayName: 'jsdom',
+      preset: 'ts-jest',
+      testEnvironment: 'jsdom',
+      testMatch: [
+        '<rootDir>/tests/navigation.test.ts'
+      ],
+      transform: {
+        '^.+\\.ts$': 'ts-jest',
+      },
+      setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+      testTimeout: 10000,
+    }
+  ]
 };

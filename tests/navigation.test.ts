@@ -45,14 +45,6 @@ describe('Navigation Functionality', () => {
               </div>
             </div>
           </div>
-          <div class="col-md-3 col-sm-6">
-            <div class="stats-card">
-              <div class="stats-content">
-                <div class="stats-number" id="commentCount">8</div>
-                <div class="stats-label">Comments</div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -77,12 +69,6 @@ describe('Navigation Functionality', () => {
               <span class="badge bg-info ms-2" id="blogBadge">0</span>
             </button>
           </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="comments-tab" data-bs-toggle="tab" data-bs-target="#comments" type="button" role="tab" aria-controls="comments" aria-selected="false">
-              <i class="fas fa-comments me-2"></i>Comments
-              <span class="badge bg-warning ms-2" id="commentsBadge">0</span>
-            </button>
-          </li>
         </ul>
 
         <div class="tab-content" id="contentTabsContent">
@@ -101,11 +87,6 @@ describe('Navigation Functionality', () => {
               <h3>Blog Content</h3>
             </div>
           </div>
-          <div class="tab-pane fade" id="comments" role="tabpanel" aria-labelledby="comments-tab">
-            <div class="comments-section">
-              <h3>Comments Content</h3>
-            </div>
-          </div>
         </div>
       </div>
     `;
@@ -122,17 +103,14 @@ describe('Navigation Functionality', () => {
         const photoCount = document.getElementById('photoCount')?.textContent || '0';
         const recipeCount = document.getElementById('recipeCount')?.textContent || '0';
         const blogCount = document.getElementById('blogCount')?.textContent || '0';
-        const commentCount = document.getElementById('commentCount')?.textContent || '0';
         
         const photosBadge = document.getElementById('photosBadge');
         const recipesBadge = document.getElementById('recipesBadge');
         const blogBadge = document.getElementById('blogBadge');
-        const commentsBadge = document.getElementById('commentsBadge');
         
         if (photosBadge) photosBadge.textContent = photoCount;
         if (recipesBadge) recipesBadge.textContent = recipeCount;
         if (blogBadge) blogBadge.textContent = blogCount;
-        if (commentsBadge) commentsBadge.textContent = commentCount;
       };
 
       // Execute the function
@@ -142,7 +120,6 @@ describe('Navigation Functionality', () => {
       expect(document.getElementById('photosBadge')?.textContent).toBe('5');
       expect(document.getElementById('recipesBadge')?.textContent).toBe('3');
       expect(document.getElementById('blogBadge')?.textContent).toBe('2');
-      expect(document.getElementById('commentsBadge')?.textContent).toBe('8');
     });
 
     test('should handle missing stats elements gracefully', () => {
@@ -154,17 +131,14 @@ describe('Navigation Functionality', () => {
         const photoCount = document.getElementById('photoCount')?.textContent || '0';
         const recipeCount = document.getElementById('recipeCount')?.textContent || '0';
         const blogCount = document.getElementById('blogCount')?.textContent || '0';
-        const commentCount = document.getElementById('commentCount')?.textContent || '0';
         
         const photosBadge = document.getElementById('photosBadge');
         const recipesBadge = document.getElementById('recipesBadge');
         const blogBadge = document.getElementById('blogBadge');
-        const commentsBadge = document.getElementById('commentsBadge');
         
         if (photosBadge) photosBadge.textContent = photoCount;
         if (recipesBadge) recipesBadge.textContent = recipeCount;
         if (blogBadge) blogBadge.textContent = blogCount;
-        if (commentsBadge) commentsBadge.textContent = commentCount;
       };
 
       // Should not throw errors
@@ -174,7 +148,6 @@ describe('Navigation Functionality', () => {
       expect(document.getElementById('photosBadge')?.textContent).toBe('0');
       expect(document.getElementById('recipesBadge')?.textContent).toBe('0');
       expect(document.getElementById('blogBadge')?.textContent).toBe('2');
-      expect(document.getElementById('commentsBadge')?.textContent).toBe('8');
     });
   });
 
@@ -190,7 +163,7 @@ describe('Navigation Functionality', () => {
       initializeTabbedNavigation();
 
       // Verify Bootstrap.Tab was called for each tab button
-      expect(mockBootstrap.Tab).toHaveBeenCalledTimes(4);
+      expect(mockBootstrap.Tab).toHaveBeenCalledTimes(3);
     });
 
     test('should handle tab click events', () => {
@@ -267,19 +240,13 @@ describe('Navigation Functionality', () => {
         (global as any).alert('Blog post functionality coming soon!');
       };
 
-      const addComment = () => {
-        (global as any).alert('Comment functionality coming soon!');
-      };
-
       // Test each function
       addRecipe();
       addBlogPost();
-      addComment();
 
-      expect(mockAlert).toHaveBeenCalledTimes(3);
+      expect(mockAlert).toHaveBeenCalledTimes(2);
       expect(mockAlert).toHaveBeenCalledWith('Recipe functionality coming soon!');
       expect(mockAlert).toHaveBeenCalledWith('Blog post functionality coming soon!');
-      expect(mockAlert).toHaveBeenCalledWith('Comment functionality coming soon!');
     });
 
     test('should have proper tab content structure', () => {
@@ -287,11 +254,10 @@ describe('Navigation Functionality', () => {
       expect(document.getElementById('photos')).toBeTruthy();
       expect(document.getElementById('recipes')).toBeTruthy();
       expect(document.getElementById('blog')).toBeTruthy();
-      expect(document.getElementById('comments')).toBeTruthy();
 
       // Check that tab panes have proper classes
       const tabPanes = document.querySelectorAll('.tab-pane');
-      expect(tabPanes).toHaveLength(4);
+      expect(tabPanes).toHaveLength(3);
       
       tabPanes.forEach((pane: any) => {
         expect(pane.classList.contains('tab-pane')).toBe(true);
@@ -311,18 +277,15 @@ describe('Navigation Functionality', () => {
         const photoCount = document.getElementById('photoCount')?.textContent || '0';
         const recipeCount = document.getElementById('recipeCount')?.textContent || '0';
         const blogCount = document.getElementById('blogCount')?.textContent || '0';
-        const commentCount = document.getElementById('commentCount')?.textContent || '0';
         
         // Update badges
         const photosBadge = document.getElementById('photosBadge');
         const recipesBadge = document.getElementById('recipesBadge');
         const blogBadge = document.getElementById('blogBadge');
-        const commentsBadge = document.getElementById('commentsBadge');
         
         if (photosBadge) photosBadge.textContent = photoCount;
         if (recipesBadge) recipesBadge.textContent = recipeCount;
         if (blogBadge) blogBadge.textContent = blogCount;
-        if (commentsBadge) commentsBadge.textContent = commentCount;
       };
 
       initializeStats();
@@ -331,31 +294,27 @@ describe('Navigation Functionality', () => {
       expect(document.getElementById('photosBadge')?.textContent).toBe('5');
       expect(document.getElementById('recipesBadge')?.textContent).toBe('3');
       expect(document.getElementById('blogBadge')?.textContent).toBe('2');
-      expect(document.getElementById('commentsBadge')?.textContent).toBe('8');
     });
 
     test('should handle dynamic stats updates', () => {
       // Simulate stats update
-      const updateStats = (newStats: { photos: number; recipes: number; blog: number; comments: number }) => {
+      const updateStats = (newStats: { photos: number; recipes: number; blog: number }) => {
         const photoCountEl = document.getElementById('photoCount');
         const recipeCountEl = document.getElementById('recipeCount');
         const blogCountEl = document.getElementById('blogCount');
-        const commentCountEl = document.getElementById('commentCount');
         
         if (photoCountEl) photoCountEl.textContent = newStats.photos.toString();
         if (recipeCountEl) recipeCountEl.textContent = newStats.recipes.toString();
         if (blogCountEl) blogCountEl.textContent = newStats.blog.toString();
-        if (commentCountEl) commentCountEl.textContent = newStats.comments.toString();
       };
 
       // Update stats
-      updateStats({ photos: 10, recipes: 7, blog: 4, comments: 15 });
+      updateStats({ photos: 10, recipes: 7, blog: 4 });
 
       // Verify updates
       expect(document.getElementById('photoCount')?.textContent).toBe('10');
       expect(document.getElementById('recipeCount')?.textContent).toBe('7');
       expect(document.getElementById('blogCount')?.textContent).toBe('4');
-      expect(document.getElementById('commentCount')?.textContent).toBe('15');
     });
   });
 
@@ -378,7 +337,7 @@ describe('Navigation Functionality', () => {
     test('should maintain accessibility attributes', () => {
       const tabButtons = document.querySelectorAll('#contentTabs button[role="tab"]');
       
-      expect(tabButtons).toHaveLength(4);
+      expect(tabButtons).toHaveLength(3);
       
       tabButtons.forEach((button: any) => {
         expect(button.getAttribute('role')).toBe('tab');
@@ -388,7 +347,7 @@ describe('Navigation Functionality', () => {
 
       const tabPanes = document.querySelectorAll('.tab-pane[role="tabpanel"]');
       
-      expect(tabPanes).toHaveLength(4);
+      expect(tabPanes).toHaveLength(3);
       
       tabPanes.forEach((pane: any) => {
         expect(pane.getAttribute('role')).toBe('tabpanel');
