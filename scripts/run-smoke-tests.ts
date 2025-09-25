@@ -73,7 +73,7 @@ class SmokeTestRunner {
     await this.runTest('Version API Endpoint', async () => {
       const response = await this.makeRequest('GET', '/api/v1/version/display');
       
-        if (!response.success || response.data.version !== '2.3.0') {
+        if (!response.success || response.data.version !== '2.4.0') {
           throw new Error('Version API returned unexpected response');
         }
     });

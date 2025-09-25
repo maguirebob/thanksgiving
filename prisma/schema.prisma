@@ -27,7 +27,9 @@ model User {
   updated_at   DateTime @updatedAt
 
   // Relations
-  sessions Session[]
+  sessions   Session[]
+  recipes    Recipe[]
+  blog_posts BlogPost[]
 
   @@map("Users")
 }
@@ -56,7 +58,9 @@ model Event {
   menu_image_filename String  @db.VarChar(255)
 
   // Relations
-  photos Photo[]
+  photos     Photo[]
+  recipes    Recipe[]
+  blog_posts BlogPost[]
 
   @@map("events")
 }
@@ -79,4 +83,50 @@ model Photo {
   event Event @relation(fields: [event_id], references: [event_id], onDelete: Cascade)
 
   @@map("Photos")
+}
+
+model Recipe {
+  recipe_id        Int      @id @default(autoincrement())
+  event_id         Int
+  user_id          Int?
+  title            String   @db.VarChar(255)
+  description      String?  @db.Text
+  ingredients      String   @db.Text
+  instructions     String   @db.Text
+  prep_time        Int?     // minutes
+  cook_time        Int?     // minutes
+  servings         Int?
+  difficulty_level String?  @db.VarChar(20) // Easy, Medium, Hard
+  category         String?  @db.VarChar(50) // Main Course, Side Dish, Dessert, Appetizer, Beverage
+  image_filename   String?  @db.VarChar(255)
+  is_featured      Boolean  @default(false)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  // Relations
+  event Event @relation(fields: [event_id], references: [event_id], onDelete: Cascade)
+  user  User? @relation(fields: [user_id], references: [user_id], onDelete: SetNull)
+
+  @@map("Recipes")
+}
+
+model BlogPost {
+  blog_post_id    Int      @id @default(autoincrement())
+  event_id       Int
+  user_id        Int
+  title          String   @db.VarChar(255)
+  content        String   @db.Text
+  excerpt        String?  @db.Text
+  featured_image String?  @db.VarChar(255)
+  tags           String[] // Array of tags
+  status         String   @default("draft") @db.VarChar(20) // draft, published, archived
+  published_at   DateTime?
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  // Relations
+  event Event @relation(fields: [event_id], references: [event_id], onDelete: Cascade)
+  user  User  @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@map("BlogPosts")
 }
