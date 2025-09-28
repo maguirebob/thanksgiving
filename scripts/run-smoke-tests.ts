@@ -94,20 +94,22 @@ class SmokeTestRunner {
       }
     });
 
-    // Homepage Tests
-    await this.runTest('Homepage Loads', async () => {
+    // Homepage Tests (now requires authentication)
+    await this.runTest('Homepage Redirects to Login', async () => {
       const response = await this.makeRequest('GET', '/');
       
-      if (!response.includes('Thanksgiving Menu Collection')) {
-        throw new Error('Homepage does not contain expected content');
+      // Should redirect to login page since authentication is required
+      if (!response.includes('Login') || !response.includes('username')) {
+        throw new Error('Homepage does not redirect to login page as expected');
       }
     });
 
-    await this.runTest('Homepage Has Menu Data', async () => {
+    await this.runTest('Homepage Authentication Required', async () => {
       const response = await this.makeRequest('GET', '/');
       
-      if (!response.includes('menu-card') || !response.includes('View Details')) {
-        throw new Error('Homepage does not display menu cards');
+      // Should show login form, not menu data
+      if (!response.includes('Login') || !response.includes('password')) {
+        throw new Error('Homepage does not require authentication');
       }
     });
 
@@ -153,14 +155,10 @@ class SmokeTestRunner {
       }
     });
 
-    // Environment Tests (skip for remote testing)
+    // Environment Tests (optional for local testing)
     await this.runTest('Environment Variables', async () => {
-      // For remote testing, we don't need local environment variables
-      // The Railway environment has its own variables
-      const baseUrl = process.env['TEST_BASE_URL'];
-      if (!baseUrl) {
-        throw new Error('TEST_BASE_URL environment variable is not set');
-      }
+      // For local testing, TEST_BASE_URL is optional (defaults to localhost:3000)
+      const baseUrl = process.env['TEST_BASE_URL'] || 'http://localhost:3000';
       
       // Verify the base URL is accessible
       try {
