@@ -103,19 +103,19 @@
         <!-- Tab Navigation -->
         <ul class="nav nav-tabs custom-tabs mb-4" id="contentTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="photos-tab" data-bs-toggle="tab" data-bs-target="#photos" type="button" role="tab" aria-controls="photos" aria-selected="true">
+                <button class="nav-link active" id="photos-tab" type="button" role="tab" aria-controls="photos" aria-selected="true">
                     <i class="fas fa-images me-2"></i>Photos
                     <span class="badge bg-primary ms-2" id="photosBadge">0</span>
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="recipes-tab" data-bs-toggle="tab" data-bs-target="#recipes" type="button" role="tab" aria-controls="recipes" aria-selected="false">
+                <button class="nav-link" id="recipes-tab" type="button" role="tab" aria-controls="recipes" aria-selected="false">
                     <i class="fas fa-book-open me-2"></i>Recipes
                     <span class="badge bg-success ms-2" id="recipesBadge">0</span>
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="blog-tab" data-bs-toggle="tab" data-bs-target="#blog" type="button" role="tab" aria-controls="blog" aria-selected="false">
+                <button class="nav-link" id="blog-tab" type="button" role="tab" aria-controls="blog" aria-selected="false">
                     <i class="fas fa-blog me-2"></i>Blog
                     <span class="badge bg-info ms-2" id="blogBadge">0</span>
                 </button>
@@ -167,43 +167,7 @@
 
 
 
-<!-- Photo Upload Modal -->
-<div id="photoUploadModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
-    <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 600px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
-        <h3 style="color: var(--primary-black); margin-bottom: 1rem; font-family: 'Playfair Display', Georgia, serif;">
-            <i class="fas fa-upload me-2"></i>
-            Upload Photo
-        </h3>
-        
-        <form id="photoUploadForm" method="POST" enctype="multipart/form-data">
-            <div class="mb-3">
-                <label for="photoFile" class="form-label">Select Photo</label>
-                <input type="file" class="form-control" id="photoFile" accept="image/*" required>
-            </div>
-            
-            <div class="mb-3">
-                <label for="photoDescription" class="form-label">Description</label>
-                <textarea class="form-control" id="photoDescription" rows="3" placeholder="Describe this photo..."></textarea>
-            </div>
-            
-            <div class="mb-3">
-                <label for="photoCaption" class="form-label">Caption</label>
-                <input type="text" class="form-control" id="photoCaption" placeholder="Short caption for this photo">
-            </div>
-            
-            <div class="d-flex gap-2 justify-content-end">
-                <button type="button" class="btn-view-details" style="background-color: var(--secondary-gray);" onclick="closePhotoUpload()">
-                    <i class="fas fa-times me-2"></i>
-                    Cancel
-                </button>
-                <button type="submit" class="btn-view-details">
-                    <i class="fas fa-upload me-2"></i>
-                    Upload Photo
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
+<!-- Photo Upload Modal - Now handled by PhotoComponent -->
 
 <!-- Camera Capture Modal -->
 <div id="cameraModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
@@ -434,35 +398,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Photo display is now handled by PhotoUIController.displayPhotos()
 
-// Photo Upload Functions
-function openPhotoUpload() {
-    console.log('Opening photo upload modal...');
-    const modal = document.getElementById('photoUploadModal');
-    if (modal) {
-        modal.style.display = 'flex';
-    } else {
-        alert('Photo upload functionality coming soon!');
-    }
-}
-
-function closePhotoUpload() {
-    console.log('Closing photo upload modal...');
-    const modal = document.getElementById('photoUploadModal');
-    if (modal) {
-        modal.style.display = 'none';
-        console.log('Modal closed successfully');
-    } else {
-        console.log('Modal not found!');
-    }
-    
-    const form = document.getElementById('photoUploadForm');
-    if (form) {
-        form.reset();
-        console.log('Form reset successfully');
-    } else {
-        console.log('Form not found!');
-    }
-}
+// Photo Upload Functions - Now handled by PhotoComponent
 
 // Photo upload form submission is now handled by PhotoManager in setupPhotoEventListeners()
 
@@ -647,16 +583,8 @@ function closeAllModals() {
     console.log('Closing all modals...');
     
     // Close known modals
-    const photoUploadModal = document.getElementById('photoUploadModal');
     const cameraModal = document.getElementById('cameraModal');
     
-    if (photoUploadModal) {
-        photoUploadModal.style.display = 'none';
-        photoUploadModal.style.visibility = 'hidden';
-        photoUploadModal.style.opacity = '0';
-        photoUploadModal.style.pointerEvents = 'none';
-        console.log('Photo upload modal closed');
-    }
     if (cameraModal) {
         cameraModal.style.display = 'none';
         cameraModal.style.visibility = 'hidden';
@@ -705,12 +633,8 @@ function closeAllModals() {
 
 // Close modals when clicking outside
 document.addEventListener('click', function(event) {
-    const photoUploadModal = document.getElementById('photoUploadModal');
     const cameraModal = document.getElementById('cameraModal');
     
-    if (photoUploadModal && event.target === photoUploadModal) {
-        closePhotoUpload();
-    }
     if (cameraModal && event.target === cameraModal) {
         closeCamera();
     }
@@ -735,36 +659,6 @@ window.addEventListener('error', function(event) {
         return;
     }
     
-    // Don't close modals if Bootstrap error already occurred (prevents interference)
-    if (bootstrapErrorOccurred) {
-        console.log('Ignoring error due to previous Bootstrap error');
-        return;
-    }
-    
-    // Completely ignore Bootstrap selector-engine errors
-    if (event.error && event.error.message && 
-        (event.error.message.includes('Illegal invocation') ||
-         event.error.message.includes('selector-engine') ||
-         event.error.message.includes('Bootstrap'))) {
-        console.log('Ignoring Bootstrap-related error');
-        bootstrapErrorOccurred = true;
-        return; // Don't do anything for Bootstrap errors
-    }
-    
-    // Also check the error source/filename for selector-engine.js
-    if (event.filename && event.filename.includes('selector-engine.js')) {
-        console.log('Ignoring selector-engine.js error');
-        bootstrapErrorOccurred = true;
-        return;
-    }
-    
-    // Also check for null errors (which can be Bootstrap-related)
-    if (event.error === null && event.filename && event.filename.includes('selector-engine.js')) {
-        console.log('Ignoring null error from selector-engine.js');
-        bootstrapErrorOccurred = true;
-        return;
-    }
-    
     // Only close modals for genuine application errors
     if (event.error && event.error.message) {
         console.log('Closing modals due to application error');
@@ -782,22 +676,6 @@ window.addEventListener('unhandledrejection', function(event) {
     if (isUploading) {
         console.log('Ignoring promise rejection during active upload');
         return;
-    }
-    
-    // Don't close modals if Bootstrap error already occurred (prevents interference)
-    if (bootstrapErrorOccurred) {
-        console.log('Ignoring promise rejection due to previous Bootstrap error');
-        return;
-    }
-    
-    // Completely ignore Bootstrap selector-engine promise rejections
-    if (event.reason && event.reason.message && 
-        (event.reason.message.includes('Illegal invocation') ||
-         event.reason.message.includes('selector-engine') ||
-         event.reason.message.includes('Bootstrap'))) {
-        console.log('Ignoring Bootstrap-related promise rejection');
-        bootstrapErrorOccurred = true;
-        return; // Don't do anything for Bootstrap errors
     }
     
     // Only close modals for genuine application promise rejections
@@ -855,180 +733,13 @@ window.eventId = <%= eventId %>;
 // Flag to prevent global error handler from closing modals during uploads
 let isUploading = false;
 
-// Flag to prevent Bootstrap errors from interfering with subsequent uploads
-let bootstrapErrorOccurred = false;
-
-// Suppress Bootstrap selector-engine errors globally
-window.addEventListener('error', function(event) {
-    if (event.filename && event.filename.includes('selector-engine.js')) {
-        console.log('Suppressing selector-engine.js error');
-        event.preventDefault();
-        event.stopPropagation();
-        bootstrapErrorOccurred = true;
-        return false;
-    }
-    
-    // Also catch Bootstrap errors by error message
-    if (event.error && event.error.message && 
-        event.error.message.includes('Illegal invocation')) {
-        console.log('Suppressing Illegal invocation error');
-        event.preventDefault();
-        event.stopPropagation();
-        bootstrapErrorOccurred = true;
-        return false;
-    }
-}, true);
-
-// Also suppress Bootstrap errors by overriding console.error temporarily
-const originalConsoleError = console.error;
-console.error = function(...args) {
-    const message = args.join(' ');
-    if (message.includes('selector-engine') || message.includes('Illegal invocation')) {
-        console.log('Suppressed Bootstrap error:', message);
-        bootstrapErrorOccurred = true;
-        return;
-    }
-    
-    // Also suppress null errors that might be Bootstrap-related
-    if (args.length === 1 && args[0] === null) {
-        console.log('Suppressed null error (likely Bootstrap-related)');
-        bootstrapErrorOccurred = true;
-        return;
-    }
-    
-    originalConsoleError.apply(console, args);
-};
-
-// Override window.onerror to prevent Bootstrap errors from affecting the UI
-const originalOnError = window.onerror;
-window.onerror = function(message, source, lineno, colno, error) {
-    if (source && source.includes('selector-engine.js')) {
-        console.log('Suppressed selector-engine.js error via onerror');
-        bootstrapErrorOccurred = true;
-        return true; // Prevent default error handling
-    }
-    
-    // Also catch Bootstrap errors by message
-    if (message && message.includes('Illegal invocation')) {
-        console.log('Suppressed Illegal invocation error via onerror');
-        bootstrapErrorOccurred = true;
-        return true; // Prevent default error handling
-    }
-    
-    if (originalOnError) {
-        return originalOnError.call(this, message, source, lineno, colno, error);
-    }
-    return false;
-};
-
-// Simple photo form handling
-function setupPhotoEventListeners() {
-    console.log('Setting up photo event listeners...');
-    console.log('window.eventId:', window.eventId);
-    
-    // Photo upload form - actual upload functionality
-    const uploadForm = document.getElementById('photoUploadForm');
-    if (uploadForm) {
-        console.log('Photo upload form found, adding event listener');
-        uploadForm.addEventListener('submit', async function(e) {
-            try {
-                e.preventDefault();
-                e.stopPropagation();
-                isUploading = true; // Set flag to prevent global error handler from interfering
-                console.log('Photo upload form submitted, eventId:', window.eventId);
-                
-                const formData = new FormData();
-                const fileInput = document.getElementById('photoFile');
-                const descriptionInput = document.getElementById('photoDescription');
-                const captionInput = document.getElementById('photoCaption');
-                
-                if (!fileInput.files[0]) {
-                    alert('Please select a photo file');
-                    return;
-                }
-                
-                formData.append('photo', fileInput.files[0]);
-                formData.append('description', descriptionInput.value || '');
-                formData.append('caption', captionInput.value || '');
-                
-                const uploadUrl = `/api/events/${window.eventId}/photos`;
-                console.log('Uploading to URL:', uploadUrl);
-                
-                try {
-                    const response = await fetch(uploadUrl, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    const result = await response.json();
-                    
-                                if (result.success) {
-                                    console.log('Upload successful, closing modal...');
-                                    alert('Photo uploaded successfully!');
-                                    
-                                    // Reset form first
-                                    const form = document.getElementById('photoUploadForm');
-                                    if (form) {
-                                        form.reset();
-                                        console.log('Form reset');
-                                    }
-                                    
-                                    // Refresh photo list
-                                    loadPhotos();
-                                    
-                                    // Close modal with a small delay to prevent Bootstrap interference
-                                    setTimeout(() => {
-                                        console.log('Closing all modals after successful upload');
-                                        closeAllModals();
-                                    }, 100);
-                                    
-                                    // Fallback: ensure modal is closed after a longer delay
-                                    setTimeout(() => {
-                                        const modal = document.getElementById('photoUploadModal');
-                                        if (modal && modal.style.display !== 'none') {
-                                            console.log('Force closing modal after timeout');
-                                            modal.style.display = 'none';
-                                        }
-                                    }, 1000);
-                                } else {
-                                    alert('Upload failed: ' + result.message);
-                                }
-                } catch (error) {
-                    console.error('Upload error:', error);
-                    alert('Upload failed: ' + error.message);
-                }
-            } catch (error) {
-                console.error('Form submission error:', error);
-                // Force close modal even if there's an error
-                const modal = document.getElementById('photoUploadModal');
-                if (modal) {
-                    modal.style.display = 'none';
-                }
-                alert('An error occurred. Please try again.');
-            } finally {
-                isUploading = false; // Reset flag
-            }
-        });
-    } else {
-        console.log('Photo upload form not found!');
-    }
-}
+// Photo event listeners - Now handled by PhotoComponent
 
 // Tabbed Navigation Functionality
 function initializeTabbedNavigation() {
-    try {
-        // Initialize Bootstrap tabs with error handling
-        const tabTriggerList = [].slice.call(document.querySelectorAll('#contentTabs button[data-bs-toggle="tab"]'));
-        tabTriggerList.forEach(function (tabTriggerEl) {
-            try {
-                new bootstrap.Tab(tabTriggerEl);
-            } catch (error) {
-                console.log('Bootstrap tab initialization error (ignored):', error);
-            }
-        });
-    } catch (error) {
-        console.log('Bootstrap initialization error (ignored):', error);
-    }
+    // We're using custom tab handling, not Bootstrap tabs
+    // This prevents Bootstrap selector-engine conflicts with our custom modals
+    console.log('Using custom tab navigation (no Bootstrap tabs)');
 
     // Add click handlers for tab badges
     const tabButtons = document.querySelectorAll('#contentTabs .nav-link');
@@ -1039,13 +750,13 @@ function initializeTabbedNavigation() {
             this.classList.add('active');
             
             // Update tab content visibility
-            const targetId = this.getAttribute('data-bs-target').substring(1);
+            const tabId = this.id.replace('-tab', '');
             const tabPanes = document.querySelectorAll('.tab-pane');
             tabPanes.forEach(pane => {
                 pane.classList.remove('show', 'active');
             });
             
-            const targetPane = document.getElementById(targetId);
+            const targetPane = document.getElementById(tabId);
             if (targetPane) {
                 targetPane.classList.add('show', 'active');
             }
@@ -1208,9 +919,6 @@ async function deletePhoto(photoId) {
 document.addEventListener('DOMContentLoaded', function() {
     initializeTabbedNavigation();
     updateTabBadges();
-    
-    // Setup photo event listeners
-    setupPhotoEventListeners();
     
     // Initialize components
     if (typeof PhotoComponent !== 'undefined') {
