@@ -2,6 +2,15 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.7.0] - 2025-09-28
+
+- feat: Implement camera access functionality with rate limiting handling
+- Add getUserMedia() API integration for camera access
+- Implement video stream display and photo capture
+- Add retry mechanism with exponential backoff for rate limiting
+- Fix CSP violations by using manual base64 decoding
+- Enhance error handling for HTTP status codes and JSON parsing
+- Integrate camera photos with existing photo upload system
 ## [2.2.0] - 2025-09-24
 
 - Added complete authentication system
