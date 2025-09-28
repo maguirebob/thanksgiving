@@ -12,7 +12,7 @@ import authRoutes from './routes/authRoutes';
 import adminRoutes from './routes/adminRoutes';
 import photoRoutes from './routes/photoRoutes';
 import blogRoutes from './routes/blogRoutes';
-import { addUserToLocals } from './middleware/auth';
+import { addUserToLocals, requireAuth } from './middleware/auth';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -79,7 +79,7 @@ app.set('views', path.join(__dirname, '../views'));
 app.set('layout', 'layout');
 
 // Basic routes
-app.get('/', async (_req, res) => {
+app.get('/', requireAuth, async (_req, res) => {
   try {
     // Fetch events from database using Prisma
     const events = await prisma.event.findMany({
@@ -126,7 +126,7 @@ app.get('/api/v1/version/display', (_req, res) => {
   res.json({
     success: true,
     data: {
-      version: '2.7.0',
+      version: '2.7.1',
       environment: config.getConfig().nodeEnv,
       buildDate: new Date().toISOString()
     }
@@ -249,10 +249,10 @@ app.get('/api/setup-database', async (_req, res) => {
 });
 
 // About page route
-app.get('/about', (_req, res) => {
+app.get('/about', requireAuth, (_req, res) => {
   res.render('about', {
     title: 'About - Thanksgiving Menu Collection',
-    version: '2.7.0',
+    version: '2.7.1',
     environment: config.getConfig().nodeEnv,
     buildDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
     dbStatus: 'Connected'
@@ -260,7 +260,7 @@ app.get('/about', (_req, res) => {
 });
 
 // Menu detail route
-app.get('/menu/:id', async (req, res) => {
+app.get('/menu/:id', requireAuth, async (req, res) => {
   try {
     const menuId = parseInt(req.params.id);
     
