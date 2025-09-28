@@ -262,7 +262,7 @@ app.get('/about', requireAuth, (_req, res) => {
 // Menu detail route
 app.get('/menu/:id', requireAuth, async (req, res) => {
   try {
-    const menuId = parseInt(req.params.id);
+    const menuId = parseInt(req.params['id'] || '');
     
     if (isNaN(menuId)) {
       return res.status(400).render('error', {
