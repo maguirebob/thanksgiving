@@ -12,14 +12,24 @@ class PhotoComponent {
         this.currentPage = 1;
         this.pageSize = 12;
         this.isLoading = false;
+        this.eventsBound = false; // Flag to prevent duplicate event binding
         
         this.init();
     }
 
     init() {
+        console.log('PhotoComponent: Initializing...', { eventId: this.eventId, containerId: this.containerId });
+        console.log('PhotoComponent: Container found:', !!this.container);
+        
         this.createPhotoGrid();
         this.createUploadModal();
-        this.bindEvents();
+        
+        // Wait for DOM to be ready before binding events
+        setTimeout(() => {
+            console.log('PhotoComponent: Binding events...');
+            this.bindEvents();
+        }, 100);
+        
         this.loadPhotos();
     }
 
@@ -107,51 +117,50 @@ class PhotoComponent {
         if (document.getElementById('photoUploadModal')) return;
 
         const modalHTML = `
-            <div id="photoUploadModal" class="modal fade" tabindex="-1" aria-labelledby="photoUploadModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="photoUploadModalLabel">
-                                <i class="fas fa-upload me-2"></i>Upload Photo
-                            </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div id="photoUploadModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
+                <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 600px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                    <h3 style="color: var(--primary-black); margin-bottom: 1rem; font-family: 'Playfair Display', Georgia, serif;">
+                        <i class="fas fa-upload me-2"></i>Upload Photo
+                    </h3>
+                    
+                    <form id="photoUploadForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="photoFile" class="form-label">Select Photo</label>
+                            <input type="file" class="form-control" id="photoFile" accept="image/*" required>
+                            <div class="form-text">Supported formats: JPEG, PNG, GIF, WebP (Max 10MB)</div>
                         </div>
-                        <div class="modal-body">
-                            <form id="photoUploadForm" enctype="multipart/form-data">
-                                <div class="mb-3">
-                                    <label for="photoFile" class="form-label">Select Photo</label>
-                                    <input type="file" class="form-control" id="photoFile" accept="image/*" required>
-                                    <div class="form-text">Supported formats: JPEG, PNG, GIF, WebP (Max 10MB)</div>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="photoCaption" class="form-label">Caption</label>
-                                    <input type="text" class="form-control" id="photoCaption" 
-                                           placeholder="Short caption for this photo">
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="photoDescription" class="form-label">Description</label>
-                                    <textarea class="form-control" id="photoDescription" rows="3" 
-                                              placeholder="Describe this photo..."></textarea>
-                                </div>
+                        
+                        <div class="mb-3">
+                            <label for="photoCaption" class="form-label">Caption</label>
+                            <input type="text" class="form-control" id="photoCaption" 
+                                   placeholder="Short caption for this photo">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="photoDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="photoDescription" rows="3" 
+                                      placeholder="Describe this photo..."></textarea>
+                        </div>
 
-                                <!-- Image Preview -->
-                                <div id="photoPreview" class="mb-3" style="display: none;">
-                                    <label class="form-label">Preview</label>
-                                    <div class="text-center">
-                                        <img id="photoPreviewImg" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
-                                    </div>
-                                </div>
-                            </form>
+                        <!-- Image Preview -->
+                        <div id="photoPreview" class="mb-3" style="display: none;">
+                            <label class="form-label">Preview</label>
+                            <div class="text-center">
+                                <img id="photoPreviewImg" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
+                            </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-primary" id="uploadPhotoSubmitBtn">
-                                <i class="fas fa-upload me-2"></i>Upload Photo
+                        
+                        <div class="d-flex gap-2 justify-content-end">
+                            <button type="button" class="btn-view-details" style="background-color: var(--secondary-gray);" onclick="photoComponent.closeUploadModal()">
+                                <i class="fas fa-times me-2"></i>
+                                Cancel
+                            </button>
+                            <button type="submit" class="btn-view-details" id="uploadPhotoSubmitBtn">
+                                <i class="fas fa-upload me-2"></i>
+                                Upload Photo
                             </button>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         `;
@@ -160,14 +169,81 @@ class PhotoComponent {
     }
 
     bindEvents() {
-        // Upload button events
+        if (this.eventsBound) {
+            console.log('PhotoComponent: Events already bound, skipping...');
+            return;
+        }
+        
+        console.log('PhotoComponent: Starting bindEvents...');
+        
+        // Upload button events - find buttons created by this component
         const uploadBtn = document.getElementById('uploadPhotoBtn');
         const uploadFirstBtn = document.getElementById('uploadFirstPhotoBtn');
         const takePhotoBtn = document.getElementById('takePhotoBtn');
         
-        if (uploadBtn) uploadBtn.addEventListener('click', () => this.openUploadModal());
-        if (uploadFirstBtn) uploadFirstBtn.addEventListener('click', () => this.openUploadModal());
-        if (takePhotoBtn) takePhotoBtn.addEventListener('click', () => this.openCameraCapture());
+        console.log('PhotoComponent: Buttons found:', {
+            uploadBtn: !!uploadBtn,
+            uploadFirstBtn: !!uploadFirstBtn,
+            takePhotoBtn: !!takePhotoBtn
+        });
+        
+        if (uploadBtn) {
+            console.log('PhotoComponent: Binding uploadBtn');
+            uploadBtn.addEventListener('click', () => this.openUploadModal());
+        }
+        if (uploadFirstBtn) {
+            console.log('PhotoComponent: Binding uploadFirstBtn');
+            uploadFirstBtn.addEventListener('click', () => this.openUploadModal());
+        }
+        if (takePhotoBtn) {
+            console.log('PhotoComponent: Binding takePhotoBtn');
+            takePhotoBtn.addEventListener('click', () => this.openCameraCapture());
+        }
+
+        // Form submission handling
+        const uploadForm = document.getElementById('photoUploadForm');
+        if (uploadForm) {
+            uploadForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('Photo upload form submitted');
+                
+                const formData = new FormData();
+                const fileInput = document.getElementById('photoFile');
+                const descriptionInput = document.getElementById('photoDescription');
+                const captionInput = document.getElementById('photoCaption');
+                
+                if (!fileInput.files[0]) {
+                    alert('Please select a photo file');
+                    return;
+                }
+                
+                formData.append('photo', fileInput.files[0]);
+                formData.append('description', descriptionInput.value || '');
+                formData.append('caption', captionInput.value || '');
+                
+                try {
+                    const response = await fetch(`/api/events/${this.eventId}/photos`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        alert('Photo uploaded successfully!');
+                        this.closeUploadModal();
+                        this.loadPhotos(); // Refresh photo list
+                    } else {
+                        alert('Upload failed: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    alert('Upload failed: ' + error.message);
+                }
+            });
+        }
 
         // Search and filter events
         const searchInput = document.getElementById('photoSearchInput');
@@ -194,6 +270,9 @@ class PhotoComponent {
         if (uploadSubmitBtn) {
             uploadSubmitBtn.addEventListener('click', () => this.handleUpload());
         }
+        
+        this.eventsBound = true;
+        console.log('PhotoComponent: Events bound successfully');
     }
 
     async loadPhotos(page = 1) {
@@ -218,6 +297,7 @@ class PhotoComponent {
                 this.displayPhotos();
                 this.updatePagination(result.data.pagination);
                 this.updatePhotoCount(result.data.photos.length);
+                // Events are already bound during initialization - no need to rebind
             } else {
                 this.showError('Failed to load photos: ' + result.message);
             }
@@ -356,8 +436,13 @@ class PhotoComponent {
     }
 
     openUploadModal() {
-        const modal = new bootstrap.Modal(document.getElementById('photoUploadModal'));
-        modal.show();
+        // Use custom modal instead of Bootstrap modal to prevent conflicts
+        const modal = document.getElementById('photoUploadModal');
+        if (modal) {
+            modal.style.display = 'flex';
+        } else {
+            console.error('Photo upload modal not found');
+        }
     }
 
     openCameraCapture() {
@@ -431,8 +516,11 @@ class PhotoComponent {
     }
 
     closeUploadModal() {
-        const modal = bootstrap.Modal.getInstance(document.getElementById('photoUploadModal'));
-        if (modal) modal.hide();
+        // Use custom modal instead of Bootstrap modal
+        const modal = document.getElementById('photoUploadModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
 
         // Reset form
         document.getElementById('photoUploadForm').reset();
@@ -445,26 +533,26 @@ class PhotoComponent {
         if (!photo) return;
 
         const modalHTML = `
-            <div class="modal fade" id="photoViewerModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-xl">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">${caption}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body text-center">
-                            <img src="/api/photos/${photoId}/file" class="img-fluid" alt="${caption}">
-                            ${description ? `<p class="mt-3">${description}</p>` : ''}
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary" onclick="photoComponent.editPhoto('${photoId}')">
-                                <i class="fas fa-edit me-2"></i>Edit
-                            </button>
-                            <button type="button" class="btn btn-danger" onclick="photoComponent.deletePhoto('${photoId}')">
-                                <i class="fas fa-trash me-2"></i>Delete
-                            </button>
-                        </div>
+            <div id="photoViewerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center;">
+                <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 90%; max-height: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.3); overflow: auto;">
+                    <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="margin: 0; color: var(--primary-black); font-family: 'Playfair Display', Georgia, serif;">${caption}</h3>
+                        <button type="button" class="btn-close" onclick="photoComponent.closePhotoViewer()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+                    </div>
+                    <div style="text-align: center;">
+                        <img src="/api/photos/${photoId}/file" style="max-width: 100%; max-height: 70vh; object-fit: contain;" alt="${caption}">
+                        ${description ? `<p style="margin-top: 1rem; color: var(--secondary-gray);">${description}</p>` : ''}
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem;">
+                        <button type="button" class="btn-view-details" style="background-color: var(--secondary-gray);" onclick="photoComponent.closePhotoViewer()">
+                            <i class="fas fa-times me-2"></i>Close
+                        </button>
+                        <button type="button" class="btn-view-details" onclick="photoComponent.editPhoto('${photoId}')">
+                            <i class="fas fa-edit me-2"></i>Edit
+                        </button>
+                        <button type="button" class="btn-view-details" style="background-color: #dc3545;" onclick="photoComponent.deletePhoto('${photoId}')">
+                            <i class="fas fa-trash me-2"></i>Delete
+                        </button>
                     </div>
                 </div>
             </div>
@@ -478,13 +566,39 @@ class PhotoComponent {
         document.body.insertAdjacentHTML('beforeend', modalHTML);
         
         // Show modal
-        const modal = new bootstrap.Modal(document.getElementById('photoViewerModal'));
-        modal.show();
+        const modal = document.getElementById('photoViewerModal');
+        if (modal) {
+            modal.style.display = 'flex';
+        }
 
-        // Clean up when modal is hidden
-        document.getElementById('photoViewerModal').addEventListener('hidden.bs.modal', () => {
-            document.getElementById('photoViewerModal').remove();
+        // Clean up when modal is closed
+        const closeBtn = modal.querySelector('.btn-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                this.closePhotoViewer();
+            });
+        }
+        
+        // Also close when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                this.closePhotoViewer();
+            }
         });
+        
+        // Close on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.closePhotoViewer();
+            }
+        });
+    }
+
+    closePhotoViewer() {
+        const modal = document.getElementById('photoViewerModal');
+        if (modal) {
+            modal.remove();
+        }
     }
 
     editPhoto(photoId) {

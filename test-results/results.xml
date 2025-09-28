@@ -1,1547 +1,388 @@
-<testsuites id="" name="" tests="45" failures="35" skipped="0" errors="0" time="27.875262">
-<testsuite name="smoke.spec.ts" timestamp="2025-09-24T20:47:41.382Z" hostname="chromium" tests="9" failures="5" skipped="0" time="34.992" errors="0">
-<testcase name="Smoke Tests - End-to-End › homepage should load and display menus" classname="smoke.spec.ts" time="5.605">
-<failure message="smoke.spec.ts:4:7 homepage should load and display menus" type="FAILURE">
-<![CDATA[  [chromium] › smoke.spec.ts:4:7 › Smoke Tests - End-to-End › homepage should load and display menus 
-
-    Error: expect(locator).toHaveCount(expected) failed
-
-    Locator:  locator('.menu-card')
-    Expected: 1
-    Received: 0
-    Timeout:  5000ms
-
-    Call log:
-      - Expect "toHaveCount" with timeout 5000ms
-      - waiting for locator('.menu-card')
-        9 × locator resolved to 0 elements
-          - unexpected value "0"
-
-
-      16 |     // Check that menu cards are displayed
-      17 |     const menuCards = page.locator('.menu-card');
-    > 18 |     await expect(menuCards).toHaveCount(1);
-         |                             ^
-      19 |     
-      20 |     // Check that at least one menu card has expected content
-      21 |     const firstCard = menuCards.first();
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:18:29
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-chromium/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-chromium/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-chromium/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-chromium/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-chromium/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-chromium/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should navigate to menu detail page" classname="smoke.spec.ts" time="5.578">
-<failure message="smoke.spec.ts:26:7 should navigate to menu detail page" type="FAILURE">
-<![CDATA[  [chromium] › smoke.spec.ts:26:7 › Smoke Tests - End-to-End › should navigate to menu detail page ─
-
-    Error: expect(locator).toBeVisible() failed
-
-    Locator:  locator('.btn-view-details').first()
-    Expected: visible
-    Received: <element(s) not found>
-    Timeout:  5000ms
-
-    Call log:
-      - Expect "toBeVisible" with timeout 5000ms
-      - waiting for locator('.btn-view-details').first()
-
-
-      29 |     // Click on the first "View Details" button (using btn-view-details class)
-      30 |     const firstViewDetailsButton = page.locator('.btn-view-details').first();
-    > 31 |     await expect(firstViewDetailsButton).toBeVisible();
-         |                                          ^
-      32 |     await firstViewDetailsButton.click();
-      33 |     
-      34 |     // Should navigate to detail page
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:31:42
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-chromium/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-chromium/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-chromium/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-chromium/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-chromium/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-chromium/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › version API should return correct response" classname="smoke.spec.ts" time="2.391">
-</testcase>
-<testcase name="Smoke Tests - End-to-End › database setup API should work" classname="smoke.spec.ts" time="2.533">
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should display Grandma Maguire image correctly" classname="smoke.spec.ts" time="0.489">
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should be responsive on mobile" classname="smoke.spec.ts" time="5.571">
-<failure message="smoke.spec.ts:94:7 should be responsive on mobile" type="FAILURE">
-<![CDATA[  [chromium] › smoke.spec.ts:94:7 › Smoke Tests - End-to-End › should be responsive on mobile ──────
-
-    Error: expect(locator).toBeVisible() failed
-
-    Locator:  locator('.menu-card').first()
-    Expected: visible
-    Received: <element(s) not found>
-    Timeout:  5000ms
-
-    Call log:
-      - Expect "toBeVisible" with timeout 5000ms
-      - waiting for locator('.menu-card').first()
-
-
-      104 |     // Check that menu cards stack vertically
-      105 |     const menuCards = page.locator('.menu-card');
-    > 106 |     await expect(menuCards.first()).toBeVisible();
-          |                                     ^
-      107 |   });
-      108 |
-      109 |   test('should handle 404 pages gracefully', async ({ page }) => {
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:106:37
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-9a03d-uld-be-responsive-on-mobile-chromium/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-9a03d-uld-be-responsive-on-mobile-chromium/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-9a03d-uld-be-responsive-on-mobile-chromium/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-9a03d-uld-be-responsive-on-mobile-chromium/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-9a03d-uld-be-responsive-on-mobile-chromium/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-9a03d-uld-be-responsive-on-mobile-chromium/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should handle 404 pages gracefully" classname="smoke.spec.ts" time="5.333">
-<failure message="smoke.spec.ts:109:7 should handle 404 pages gracefully" type="FAILURE">
-<![CDATA[  [chromium] › smoke.spec.ts:109:7 › Smoke Tests - End-to-End › should handle 404 pages gracefully ─
-
-    Error: expect(locator).toContainText(expected) failed
-
-    Locator: locator('h1')
-    Expected string: "Error"
-    Received: <element(s) not found>
-    Timeout: 5000ms
-
-    Call log:
-      - Expect "toContainText" with timeout 5000ms
-      - waiting for locator('h1')
-
-
-      112 |     
-      113 |     // Check that error page is displayed
-    > 114 |     await expect(page.locator('h1')).toContainText('Error');
-          |                                      ^
-      115 |   });
-      116 |
-      117 |   test('should load all required CSS and JavaScript', async ({ page }) => {
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:114:38
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-chromium/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-chromium/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-chromium/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-chromium/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-chromium/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-chromium/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should load all required CSS and JavaScript" classname="smoke.spec.ts" time="2.057">
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should have proper meta tags" classname="smoke.spec.ts" time="5.435">
-<failure message="smoke.spec.ts:133:7 should have proper meta tags" type="FAILURE">
-<![CDATA[  [chromium] › smoke.spec.ts:133:7 › Smoke Tests - End-to-End › should have proper meta tags ───────
-
-    Error: expect(locator).toHaveAttribute(expected) failed
-
-    Locator: locator('meta[charset]')
-    Expected string: "utf-8"
-    Received string: "UTF-8"
-    Timeout: 5000ms
-
-    Call log:
-      - Expect "toHaveAttribute" with timeout 5000ms
-      - waiting for locator('meta[charset]')
-        9 × locator resolved to <meta charset="UTF-8"/>
-          - unexpected value "UTF-8"
-
-
-      140 |     // Check charset
-      141 |     const charset = page.locator('meta[charset]');
-    > 142 |     await expect(charset).toHaveAttribute('charset', 'utf-8');
-          |                           ^
-      143 |   });
-      144 | });
-      145 |
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:142:27
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-chromium/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-chromium/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-chromium/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-chromium/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-chromium/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-chromium/error-context.md]]
-]]>
-</system-out>
-</testcase>
-</testsuite>
-<testsuite name="smoke.spec.ts" timestamp="2025-09-24T20:47:41.382Z" hostname="firefox" tests="9" failures="3" skipped="0" time="23.59" errors="0">
-<testcase name="Smoke Tests - End-to-End › homepage should load and display menus" classname="smoke.spec.ts" time="5.912">
-<failure message="smoke.spec.ts:4:7 homepage should load and display menus" type="FAILURE">
-<![CDATA[  [firefox] › smoke.spec.ts:4:7 › Smoke Tests - End-to-End › homepage should load and display menus 
-
-    Error: expect(locator).toHaveCount(expected) failed
-
-    Locator:  locator('.menu-card')
-    Expected: 1
-    Received: 5
-    Timeout:  5000ms
-
-    Call log:
-      - Expect "toHaveCount" with timeout 5000ms
-      - waiting for locator('.menu-card')
-        9 × locator resolved to 5 elements
-          - unexpected value "5"
-
-
-      16 |     // Check that menu cards are displayed
-      17 |     const menuCards = page.locator('.menu-card');
-    > 18 |     await expect(menuCards).toHaveCount(1);
-         |                             ^
-      19 |     
-      20 |     // Check that at least one menu card has expected content
-      21 |     const firstCard = menuCards.first();
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:18:29
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-firefox/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-firefox/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-firefox/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-firefox/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-firefox/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-firefox/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should navigate to menu detail page" classname="smoke.spec.ts" time="1.004">
-</testcase>
-<testcase name="Smoke Tests - End-to-End › version API should return correct response" classname="smoke.spec.ts" time="0.458">
-</testcase>
-<testcase name="Smoke Tests - End-to-End › database setup API should work" classname="smoke.spec.ts" time="1.761">
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should display Grandma Maguire image correctly" classname="smoke.spec.ts" time="1.334">
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should be responsive on mobile" classname="smoke.spec.ts" time="1.087">
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should handle 404 pages gracefully" classname="smoke.spec.ts" time="5.626">
-<failure message="smoke.spec.ts:109:7 should handle 404 pages gracefully" type="FAILURE">
-<![CDATA[  [firefox] › smoke.spec.ts:109:7 › Smoke Tests - End-to-End › should handle 404 pages gracefully ──
-
-    Error: expect(locator).toContainText(expected) failed
-
-    Locator: locator('h1')
-    Expected string: "Error"
-    Received: <element(s) not found>
-    Timeout: 5000ms
-
-    Call log:
-      - Expect "toContainText" with timeout 5000ms
-      - waiting for locator('h1')
-
-
-      112 |     
-      113 |     // Check that error page is displayed
-    > 114 |     await expect(page.locator('h1')).toContainText('Error');
-          |                                      ^
-      115 |   });
-      116 |
-      117 |   test('should load all required CSS and JavaScript', async ({ page }) => {
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:114:38
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-firefox/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-firefox/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-firefox/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-firefox/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-firefox/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-firefox/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should load all required CSS and JavaScript" classname="smoke.spec.ts" time="0.907">
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should have proper meta tags" classname="smoke.spec.ts" time="5.501">
-<failure message="smoke.spec.ts:133:7 should have proper meta tags" type="FAILURE">
-<![CDATA[  [firefox] › smoke.spec.ts:133:7 › Smoke Tests - End-to-End › should have proper meta tags ────────
-
-    Error: expect(locator).toHaveAttribute(expected) failed
-
-    Locator: locator('meta[charset]')
-    Expected string: "utf-8"
-    Received string: "UTF-8"
-    Timeout: 5000ms
-
-    Call log:
-      - Expect "toHaveAttribute" with timeout 5000ms
-      - waiting for locator('meta[charset]')
-        9 × locator resolved to <meta charset="UTF-8"/>
-          - unexpected value "UTF-8"
-
-
-      140 |     // Check charset
-      141 |     const charset = page.locator('meta[charset]');
-    > 142 |     await expect(charset).toHaveAttribute('charset', 'utf-8');
-          |                           ^
-      143 |   });
-      144 | });
-      145 |
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:142:27
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-firefox/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-firefox/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-firefox/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-firefox/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-firefox/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-firefox/error-context.md]]
-]]>
-</system-out>
-</testcase>
-</testsuite>
-<testsuite name="smoke.spec.ts" timestamp="2025-09-24T20:47:41.382Z" hostname="webkit" tests="9" failures="9" skipped="0" time="34.404" errors="0">
-<testcase name="Smoke Tests - End-to-End › homepage should load and display menus" classname="smoke.spec.ts" time="5.767">
-<failure message="smoke.spec.ts:4:7 homepage should load and display menus" type="FAILURE">
-<![CDATA[  [webkit] › smoke.spec.ts:4:7 › Smoke Tests - End-to-End › homepage should load and display menus ─
-
-    Error: expect(locator).toHaveCount(expected) failed
-
-    Locator:  locator('.menu-card')
-    Expected: 1
-    Received: 5
-    Timeout:  5000ms
-
-    Call log:
-      - Expect "toHaveCount" with timeout 5000ms
-      - waiting for locator('.menu-card')
-        9 × locator resolved to 5 elements
-          - unexpected value "5"
-
-
-      16 |     // Check that menu cards are displayed
-      17 |     const menuCards = page.locator('.menu-card');
-    > 18 |     await expect(menuCards).toHaveCount(1);
-         |                             ^
-      19 |     
-      20 |     // Check that at least one menu card has expected content
-      21 |     const firstCard = menuCards.first();
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:18:29
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-webkit/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-webkit/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-webkit/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-webkit/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-webkit/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-webkit/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should navigate to menu detail page" classname="smoke.spec.ts" time="5.561">
-<failure message="smoke.spec.ts:26:7 should navigate to menu detail page" type="FAILURE">
-<![CDATA[  [webkit] › smoke.spec.ts:26:7 › Smoke Tests - End-to-End › should navigate to menu detail page ───
-
-    Error: expect(locator).toBeVisible() failed
-
-    Locator:  locator('.btn-view-details').first()
-    Expected: visible
-    Received: <element(s) not found>
-    Timeout:  5000ms
-
-    Call log:
-      - Expect "toBeVisible" with timeout 5000ms
-      - waiting for locator('.btn-view-details').first()
-
-
-      29 |     // Click on the first "View Details" button (using btn-view-details class)
-      30 |     const firstViewDetailsButton = page.locator('.btn-view-details').first();
-    > 31 |     await expect(firstViewDetailsButton).toBeVisible();
-         |                                          ^
-      32 |     await firstViewDetailsButton.click();
-      33 |     
-      34 |     // Should navigate to detail page
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:31:42
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-webkit/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-webkit/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-webkit/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-webkit/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-webkit/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-webkit/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › version API should return correct response" classname="smoke.spec.ts" time="0.761">
-<failure message="smoke.spec.ts:42:7 version API should return correct response" type="FAILURE">
-<![CDATA[  [webkit] › smoke.spec.ts:42:7 › Smoke Tests - End-to-End › version API should return correct response 
+<testsuites id="" name="" tests="10" failures="9" skipped="0" errors="0" time="42.766167">
+<testsuite name="photo-upload.test.js" timestamp="2025-09-28T15:44:08.717Z" hostname="chromium" tests="10" failures="9" skipped="0" time="178.716" errors="0">
+<testcase name="Photo Upload Functionality - Comprehensive E2E Tests › should upload single photo successfully" classname="photo-upload.test.js" time="11.154">
+<failure message="photo-upload.test.js:17:3 should upload single photo successfully" type="FAILURE">
+<![CDATA[  [chromium] › photo-upload.test.js:17:3 › Photo Upload Functionality - Comprehensive E2E Tests › should upload single photo successfully 
 
     Error: expect(received).toBe(expected) // Object.is equality
 
-    Expected: 200
-    Received: 429
+    Expected: "Photo uploaded successfully!"
+    Received: "Error: Upload failed: Unexpected token 'T', \"Too many r\"... is not valid JSON"
 
-      43 |     const response = await page.request.get('/api/v1/version/display');
-      44 |     
-    > 45 |     expect(response.status()).toBe(200);
-         |                               ^
-      46 |     
-      47 |     const data = await response.json();
-      48 |     expect(data).toMatchObject({
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:45:31
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-54efa-uld-return-correct-response-webkit/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-54efa-uld-return-correct-response-webkit/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-54efa-uld-return-correct-response-webkit/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-54efa-uld-return-correct-response-webkit/video.webm]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › database setup API should work" classname="smoke.spec.ts" time="0.548">
-<failure message="smoke.spec.ts:58:7 database setup API should work" type="FAILURE">
-<![CDATA[  [webkit] › smoke.spec.ts:58:7 › Smoke Tests - End-to-End › database setup API should work ────────
-
-    Error: expect(received).toBe(expected) // Object.is equality
-
-    Expected: 200
-    Received: 429
-
-      59 |     const response = await page.request.get('/api/setup-database');
-      60 |     
-    > 61 |     expect(response.status()).toBe(200);
-         |                               ^
-      62 |     
-      63 |     const data = await response.json();
-      64 |     expect(data).toMatchObject({
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:61:31
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-d1b4e-abase-setup-API-should-work-webkit/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-d1b4e-abase-setup-API-should-work-webkit/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-d1b4e-abase-setup-API-should-work-webkit/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-d1b4e-abase-setup-API-should-work-webkit/video.webm]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should display Grandma Maguire image correctly" classname="smoke.spec.ts" time="5.344">
-<failure message="smoke.spec.ts:82:7 should display Grandma Maguire image correctly" type="FAILURE">
-<![CDATA[  [webkit] › smoke.spec.ts:82:7 › Smoke Tests - End-to-End › should display Grandma Maguire image correctly 
-
-    Error: expect(locator).toBeVisible() failed
-
-    Locator:  locator('img[src*="Grandma80s"]')
-    Expected: visible
-    Received: <element(s) not found>
-    Timeout:  5000ms
-
-    Call log:
-      - Expect "toBeVisible" with timeout 5000ms
-      - waiting for locator('img[src*="Grandma80s"]')
-
-
-      85 |     // Check that Grandma's image is visible
-      86 |     const grandmaImage = page.locator('img[src*="Grandma80s"]');
-    > 87 |     await expect(grandmaImage).toBeVisible();
+      26 |     // Handle alert dialog
+      27 |     page.on('dialog', async dialog => {
+    > 28 |       expect(dialog.message()).toBe('Photo uploaded successfully!');
          |                                ^
-      88 |     
-      89 |     // Check that the stats section layout is correct (use first one)
-      90 |     const statsSection = page.locator('.stats-section').first();
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:87:32
+      29 |       await dialog.accept();
+      30 |     });
+      31 |
+        at Page.<anonymous> (/Users/bobmaguire/repos/thanksgiving/tests/e2e/photo-upload.test.js:28:32)
 
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-71030-dma-Maguire-image-correctly-webkit/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-71030-dma-Maguire-image-correctly-webkit/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-71030-dma-Maguire-image-correctly-webkit/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-71030-dma-Maguire-image-correctly-webkit/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-71030-dma-Maguire-image-correctly-webkit/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-71030-dma-Maguire-image-correctly-webkit/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should be responsive on mobile" classname="smoke.spec.ts" time="5.363">
-<failure message="smoke.spec.ts:94:7 should be responsive on mobile" type="FAILURE">
-<![CDATA[  [webkit] › smoke.spec.ts:94:7 › Smoke Tests - End-to-End › should be responsive on mobile ────────
-
-    Error: expect(locator).toBeVisible() failed
-
-    Locator:  locator('.menu-card').first()
-    Expected: visible
-    Received: <element(s) not found>
-    Timeout:  5000ms
-
+    Error: page.waitForSelector: Test ended.
     Call log:
-      - Expect "toBeVisible" with timeout 5000ms
-      - waiting for locator('.menu-card').first()
+      - waiting for locator('#photoUploadModal') to be hidden
+        2 × locator resolved to visible <div id="photoUploadModal">…</div>
 
 
-      104 |     // Check that menu cards stack vertically
-      105 |     const menuCards = page.locator('.menu-card');
-    > 106 |     await expect(menuCards.first()).toBeVisible();
-          |                                     ^
-      107 |   });
-      108 |
-      109 |   test('should handle 404 pages gracefully', async ({ page }) => {
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:106:37
+      48 |     
+      49 |     // Wait for modal to close (after alert is accepted)
+    > 50 |     await page.waitForSelector('#photoUploadModal', { state: 'hidden' });
+         |                ^
+      51 |     
+      52 |     // Verify photo appears in grid
+      53 |     await page.waitForSelector('#photosGrid .photo-card');
+        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/photo-upload.test.js:50:16
 
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-9a03d-uld-be-responsive-on-mobile-webkit/test-failed-1.png
+    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/photo-upload-Photo-Upload--08dff-d-single-photo-successfully-chromium/video.webm
     ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-9a03d-uld-be-responsive-on-mobile-webkit/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-9a03d-uld-be-responsive-on-mobile-webkit/error-context.md
 ]]>
 </failure>
 <system-out>
 <![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-9a03d-uld-be-responsive-on-mobile-webkit/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-9a03d-uld-be-responsive-on-mobile-webkit/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-9a03d-uld-be-responsive-on-mobile-webkit/error-context.md]]
+[[ATTACHMENT|photo-upload-Photo-Upload--08dff-d-single-photo-successfully-chromium/video.webm]]
 ]]>
 </system-out>
 </testcase>
-<testcase name="Smoke Tests - End-to-End › should handle 404 pages gracefully" classname="smoke.spec.ts" time="0.37">
-<failure message="smoke.spec.ts:109:7 should handle 404 pages gracefully" type="FAILURE">
-<![CDATA[  [webkit] › smoke.spec.ts:109:7 › Smoke Tests - End-to-End › should handle 404 pages gracefully ───
+<testcase name="Photo Upload Functionality - Comprehensive E2E Tests › should upload multiple photos successfully" classname="photo-upload.test.js" time="11.091">
+<failure message="photo-upload.test.js:63:3 should upload multiple photos successfully" type="FAILURE">
+<![CDATA[  [chromium] › photo-upload.test.js:63:3 › Photo Upload Functionality - Comprehensive E2E Tests › should upload multiple photos successfully 
 
     Error: expect(received).toBe(expected) // Object.is equality
 
-    Expected: 404
-    Received: 429
+    Expected: "Photo uploaded successfully!"
+    Received: "Error: Upload failed: Unexpected token 'T', \"Too many r\"... is not valid JSON"
 
-      109 |   test('should handle 404 pages gracefully', async ({ page }) => {
-      110 |     const response = await page.goto('/nonexistent-page');
-    > 111 |     expect(response?.status()).toBe(404);
-          |                                ^
-      112 |     
-      113 |     // Check that error page is displayed
-      114 |     await expect(page.locator('h1')).toContainText('Error');
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:111:32
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-webkit/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-webkit/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-webkit/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-webkit/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-webkit/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-webkit/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should load all required CSS and JavaScript" classname="smoke.spec.ts" time="5.355">
-<failure message="smoke.spec.ts:117:7 should load all required CSS and JavaScript" type="FAILURE">
-<![CDATA[  [webkit] › smoke.spec.ts:117:7 › Smoke Tests - End-to-End › should load all required CSS and JavaScript 
-
-    Error: expect(locator).toHaveCount(expected) failed
-
-    Locator:  locator('link[href*="bootstrap"]')
-    Expected: 1
-    Received: 0
-    Timeout:  5000ms
-
-    Call log:
-      - Expect "toHaveCount" with timeout 5000ms
-      - waiting for locator('link[href*="bootstrap"]')
-        9 × locator resolved to 0 elements
-          - unexpected value "0"
-
-
-      120 |     // Check that Bootstrap CSS is loaded
-      121 |     const bootstrapCSS = page.locator('link[href*="bootstrap"]');
-    > 122 |     await expect(bootstrapCSS).toHaveCount(1);
-          |                                ^
-      123 |     
-      124 |     // Check that Bootstrap JS is loaded
-      125 |     const bootstrapJS = page.locator('script[src*="bootstrap"]');
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:122:32
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-a8fac-required-CSS-and-JavaScript-webkit/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-a8fac-required-CSS-and-JavaScript-webkit/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-a8fac-required-CSS-and-JavaScript-webkit/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-a8fac-required-CSS-and-JavaScript-webkit/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-a8fac-required-CSS-and-JavaScript-webkit/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-a8fac-required-CSS-and-JavaScript-webkit/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should have proper meta tags" classname="smoke.spec.ts" time="5.335">
-<failure message="smoke.spec.ts:133:7 should have proper meta tags" type="FAILURE">
-<![CDATA[  [webkit] › smoke.spec.ts:133:7 › Smoke Tests - End-to-End › should have proper meta tags ─────────
-
-    Error: expect(locator).toHaveAttribute(expected) failed
-
-    Locator: locator('meta[name="viewport"]')
-    Expected pattern: /width=device-width, initial-scale=1\.?0?/
-    Received: <element(s) not found>
-    Timeout: 5000ms
-
-    Call log:
-      - Expect "toHaveAttribute" with timeout 5000ms
-      - waiting for locator('meta[name="viewport"]')
-
-
-      136 |     // Check viewport meta tag (accept both 1 and 1.0)
-      137 |     const viewport = page.locator('meta[name="viewport"]');
-    > 138 |     await expect(viewport).toHaveAttribute('content', /width=device-width, initial-scale=1\.?0?/);
-          |                            ^
-      139 |     
-      140 |     // Check charset
-      141 |     const charset = page.locator('meta[charset]');
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:138:28
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-webkit/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-webkit/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-webkit/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-webkit/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-webkit/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-webkit/error-context.md]]
-]]>
-</system-out>
-</testcase>
-</testsuite>
-<testsuite name="smoke.spec.ts" timestamp="2025-09-24T20:47:41.382Z" hostname="Mobile Chrome" tests="9" failures="9" skipped="0" time="26.978" errors="0">
-<testcase name="Smoke Tests - End-to-End › homepage should load and display menus" classname="smoke.spec.ts" time="5.206">
-<failure message="smoke.spec.ts:4:7 homepage should load and display menus" type="FAILURE">
-<![CDATA[  [Mobile Chrome] › smoke.spec.ts:4:7 › Smoke Tests - End-to-End › homepage should load and display menus 
-
-    Error: expect(page).toHaveTitle(expected) failed
-
-    Expected pattern: /Thanksgiving Menu Collection/
-    Received string:  ""
-    Timeout: 5000ms
-
-    Call log:
-      - Expect "toHaveTitle" with timeout 5000ms
-        9 × unexpected value ""
-
-
-       6 |     
-       7 |     // Check page title
-    >  8 |     await expect(page).toHaveTitle(/Thanksgiving Menu Collection/);
-         |                        ^
-       9 |     
-      10 |     // Check main heading
-      11 |     await expect(page.locator('h1')).toContainText('Thanksgiving Menu Collection');
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:8:24
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-Mobile-Chrome/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-Mobile-Chrome/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-Mobile-Chrome/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-Mobile-Chrome/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-Mobile-Chrome/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-Mobile-Chrome/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should navigate to menu detail page" classname="smoke.spec.ts" time="5.171">
-<failure message="smoke.spec.ts:26:7 should navigate to menu detail page" type="FAILURE">
-<![CDATA[  [Mobile Chrome] › smoke.spec.ts:26:7 › Smoke Tests - End-to-End › should navigate to menu detail page 
-
-    Error: expect(locator).toBeVisible() failed
-
-    Locator:  locator('.btn-view-details').first()
-    Expected: visible
-    Received: <element(s) not found>
-    Timeout:  5000ms
-
-    Call log:
-      - Expect "toBeVisible" with timeout 5000ms
-      - waiting for locator('.btn-view-details').first()
-
-
-      29 |     // Click on the first "View Details" button (using btn-view-details class)
-      30 |     const firstViewDetailsButton = page.locator('.btn-view-details').first();
-    > 31 |     await expect(firstViewDetailsButton).toBeVisible();
-         |                                          ^
-      32 |     await firstViewDetailsButton.click();
-      33 |     
-      34 |     // Should navigate to detail page
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:31:42
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-Mobile-Chrome/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-Mobile-Chrome/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-Mobile-Chrome/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-Mobile-Chrome/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-Mobile-Chrome/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-Mobile-Chrome/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › version API should return correct response" classname="smoke.spec.ts" time="0.41">
-<failure message="smoke.spec.ts:42:7 version API should return correct response" type="FAILURE">
-<![CDATA[  [Mobile Chrome] › smoke.spec.ts:42:7 › Smoke Tests - End-to-End › version API should return correct response 
-
-    Error: expect(received).toBe(expected) // Object.is equality
-
-    Expected: 200
-    Received: 429
-
-      43 |     const response = await page.request.get('/api/v1/version/display');
-      44 |     
-    > 45 |     expect(response.status()).toBe(200);
-         |                               ^
-      46 |     
-      47 |     const data = await response.json();
-      48 |     expect(data).toMatchObject({
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:45:31
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-54efa-uld-return-correct-response-Mobile-Chrome/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-54efa-uld-return-correct-response-Mobile-Chrome/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-54efa-uld-return-correct-response-Mobile-Chrome/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-54efa-uld-return-correct-response-Mobile-Chrome/video.webm]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › database setup API should work" classname="smoke.spec.ts" time="0.413">
-<failure message="smoke.spec.ts:58:7 database setup API should work" type="FAILURE">
-<![CDATA[  [Mobile Chrome] › smoke.spec.ts:58:7 › Smoke Tests - End-to-End › database setup API should work ─
-
-    Error: expect(received).toBe(expected) // Object.is equality
-
-    Expected: 200
-    Received: 429
-
-      59 |     const response = await page.request.get('/api/setup-database');
-      60 |     
-    > 61 |     expect(response.status()).toBe(200);
-         |                               ^
-      62 |     
-      63 |     const data = await response.json();
-      64 |     expect(data).toMatchObject({
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:61:31
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-d1b4e-abase-setup-API-should-work-Mobile-Chrome/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-d1b4e-abase-setup-API-should-work-Mobile-Chrome/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-d1b4e-abase-setup-API-should-work-Mobile-Chrome/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-d1b4e-abase-setup-API-should-work-Mobile-Chrome/video.webm]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should display Grandma Maguire image correctly" classname="smoke.spec.ts" time="5.183">
-<failure message="smoke.spec.ts:82:7 should display Grandma Maguire image correctly" type="FAILURE">
-<![CDATA[  [Mobile Chrome] › smoke.spec.ts:82:7 › Smoke Tests - End-to-End › should display Grandma Maguire image correctly 
-
-    Error: expect(locator).toBeVisible() failed
-
-    Locator:  locator('img[src*="Grandma80s"]')
-    Expected: visible
-    Received: <element(s) not found>
-    Timeout:  5000ms
-
-    Call log:
-      - Expect "toBeVisible" with timeout 5000ms
-      - waiting for locator('img[src*="Grandma80s"]')
-
-
-      85 |     // Check that Grandma's image is visible
-      86 |     const grandmaImage = page.locator('img[src*="Grandma80s"]');
-    > 87 |     await expect(grandmaImage).toBeVisible();
+      71 |     // Handle alert dialogs for success messages
+      72 |     page.on('dialog', async dialog => {
+    > 73 |       expect(dialog.message()).toBe('Photo uploaded successfully!');
          |                                ^
-      88 |     
-      89 |     // Check that the stats section layout is correct (use first one)
-      90 |     const statsSection = page.locator('.stats-section').first();
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:87:32
+      74 |       await dialog.accept();
+      75 |     });
+      76 |
+        at Page.<anonymous> (/Users/bobmaguire/repos/thanksgiving/tests/e2e/photo-upload.test.js:73:32)
 
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-71030-dma-Maguire-image-correctly-Mobile-Chrome/test-failed-1.png
+    Error: page.waitForSelector: Test ended.
+    Call log:
+      - waiting for locator('#photoUploadModal') to be hidden
+        2 × locator resolved to visible <div id="photoUploadModal">…</div>
+
+
+      86 |     
+      87 |     await page.click('button[type="submit"]');
+    > 88 |     await page.waitForSelector('#photoUploadModal', { state: 'hidden' });
+         |                ^
+      89 |     
+      90 |     // Verify first photo appears
+      91 |     await page.waitForSelector('#photosGrid .photo-card');
+        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/photo-upload.test.js:88:16
+
+    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/photo-upload-Photo-Upload--9ef44-ultiple-photos-successfully-chromium/video.webm
     ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-71030-dma-Maguire-image-correctly-Mobile-Chrome/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-71030-dma-Maguire-image-correctly-Mobile-Chrome/error-context.md
 ]]>
 </failure>
 <system-out>
 <![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-71030-dma-Maguire-image-correctly-Mobile-Chrome/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-71030-dma-Maguire-image-correctly-Mobile-Chrome/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-71030-dma-Maguire-image-correctly-Mobile-Chrome/error-context.md]]
+[[ATTACHMENT|photo-upload-Photo-Upload--9ef44-ultiple-photos-successfully-chromium/video.webm]]
 ]]>
 </system-out>
 </testcase>
-<testcase name="Smoke Tests - End-to-End › should be responsive on mobile" classname="smoke.spec.ts" time="0.127">
-<failure message="smoke.spec.ts:94:7 should be responsive on mobile" type="FAILURE">
-<![CDATA[  [Mobile Chrome] › smoke.spec.ts:94:7 › Smoke Tests - End-to-End › should be responsive on mobile ─
-
-    Error: expect(received).toBeLessThanOrEqual(expected)
-
-    Expected: <= 375
-    Received:    964.0000610351562
-
-      100 |     const body = page.locator('body');
-      101 |     const boundingBox = await body.boundingBox();
-    > 102 |     expect(boundingBox?.width).toBeLessThanOrEqual(375);
-          |                                ^
-      103 |     
-      104 |     // Check that menu cards stack vertically
-      105 |     const menuCards = page.locator('.menu-card');
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:102:32
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-9a03d-uld-be-responsive-on-mobile-Mobile-Chrome/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-9a03d-uld-be-responsive-on-mobile-Mobile-Chrome/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-9a03d-uld-be-responsive-on-mobile-Mobile-Chrome/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-9a03d-uld-be-responsive-on-mobile-Mobile-Chrome/error-context.md]]
-]]>
-</system-out>
+<testcase name="Photo Upload Functionality - Comprehensive E2E Tests › should handle upload errors gracefully" classname="photo-upload.test.js" time="1.129">
 </testcase>
-<testcase name="Smoke Tests - End-to-End › should handle 404 pages gracefully" classname="smoke.spec.ts" time="0.126">
-<failure message="smoke.spec.ts:109:7 should handle 404 pages gracefully" type="FAILURE">
-<![CDATA[  [Mobile Chrome] › smoke.spec.ts:109:7 › Smoke Tests - End-to-End › should handle 404 pages gracefully 
+<testcase name="Photo Upload Functionality - Comprehensive E2E Tests › should display photos correctly after upload" classname="photo-upload.test.js" time="11.123">
+<failure message="photo-upload.test.js:145:3 should display photos correctly after upload" type="FAILURE">
+<![CDATA[  [chromium] › photo-upload.test.js:145:3 › Photo Upload Functionality - Comprehensive E2E Tests › should display photos correctly after upload 
 
     Error: expect(received).toBe(expected) // Object.is equality
 
-    Expected: 404
-    Received: 429
+    Expected: "Photo uploaded successfully!"
+    Received: "Error: Upload failed: Unexpected token 'T', \"Too many r\"... is not valid JSON"
 
-      109 |   test('should handle 404 pages gracefully', async ({ page }) => {
-      110 |     const response = await page.goto('/nonexistent-page');
-    > 111 |     expect(response?.status()).toBe(404);
+      146 |     // Handle alert dialog for success message
+      147 |     page.on('dialog', async dialog => {
+    > 148 |       expect(dialog.message()).toBe('Photo uploaded successfully!');
           |                                ^
-      112 |     
-      113 |     // Check that error page is displayed
-      114 |     await expect(page.locator('h1')).toContainText('Error');
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:111:32
+      149 |       await dialog.accept();
+      150 |     });
+      151 |
+        at Page.<anonymous> (/Users/bobmaguire/repos/thanksgiving/tests/e2e/photo-upload.test.js:148:32)
 
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-Mobile-Chrome/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-Mobile-Chrome/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-Mobile-Chrome/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-Mobile-Chrome/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-Mobile-Chrome/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-Mobile-Chrome/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should load all required CSS and JavaScript" classname="smoke.spec.ts" time="5.156">
-<failure message="smoke.spec.ts:117:7 should load all required CSS and JavaScript" type="FAILURE">
-<![CDATA[  [Mobile Chrome] › smoke.spec.ts:117:7 › Smoke Tests - End-to-End › should load all required CSS and JavaScript 
-
-    Error: expect(locator).toHaveCount(expected) failed
-
-    Locator:  locator('link[href*="bootstrap"]')
-    Expected: 1
-    Received: 0
-    Timeout:  5000ms
-
+    Error: page.waitForSelector: Test ended.
     Call log:
-      - Expect "toHaveCount" with timeout 5000ms
-      - waiting for locator('link[href*="bootstrap"]')
-        9 × locator resolved to 0 elements
-          - unexpected value "0"
+      - waiting for locator('#photoUploadModal') to be hidden
+        2 × locator resolved to visible <div id="photoUploadModal">…</div>
 
 
-      120 |     // Check that Bootstrap CSS is loaded
-      121 |     const bootstrapCSS = page.locator('link[href*="bootstrap"]');
-    > 122 |     await expect(bootstrapCSS).toHaveCount(1);
-          |                                ^
-      123 |     
-      124 |     // Check that Bootstrap JS is loaded
-      125 |     const bootstrapJS = page.locator('script[src*="bootstrap"]');
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:122:32
+      161 |     
+      162 |     await page.click('button[type="submit"]');
+    > 163 |     await page.waitForSelector('#photoUploadModal', { state: 'hidden' });
+          |                ^
+      164 |     
+      165 |     // Verify photo card elements
+      166 |     const photoCard = page.locator('#photosGrid .photo-card').first();
+        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/photo-upload.test.js:163:16
 
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-a8fac-required-CSS-and-JavaScript-Mobile-Chrome/test-failed-1.png
+    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/photo-upload-Photo-Upload--4a778-otos-correctly-after-upload-chromium/video.webm
     ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-a8fac-required-CSS-and-JavaScript-Mobile-Chrome/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-a8fac-required-CSS-and-JavaScript-Mobile-Chrome/error-context.md
 ]]>
 </failure>
 <system-out>
 <![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-a8fac-required-CSS-and-JavaScript-Mobile-Chrome/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-a8fac-required-CSS-and-JavaScript-Mobile-Chrome/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-a8fac-required-CSS-and-JavaScript-Mobile-Chrome/error-context.md]]
+[[ATTACHMENT|photo-upload-Photo-Upload--4a778-otos-correctly-after-upload-chromium/video.webm]]
 ]]>
 </system-out>
 </testcase>
-<testcase name="Smoke Tests - End-to-End › should have proper meta tags" classname="smoke.spec.ts" time="5.186">
-<failure message="smoke.spec.ts:133:7 should have proper meta tags" type="FAILURE">
-<![CDATA[  [Mobile Chrome] › smoke.spec.ts:133:7 › Smoke Tests - End-to-End › should have proper meta tags ──
-
-    Error: expect(locator).toHaveAttribute(expected) failed
-
-    Locator: locator('meta[name="viewport"]')
-    Expected pattern: /width=device-width, initial-scale=1\.?0?/
-    Received: <element(s) not found>
-    Timeout: 5000ms
-
-    Call log:
-      - Expect "toHaveAttribute" with timeout 5000ms
-      - waiting for locator('meta[name="viewport"]')
-
-
-      136 |     // Check viewport meta tag (accept both 1 and 1.0)
-      137 |     const viewport = page.locator('meta[name="viewport"]');
-    > 138 |     await expect(viewport).toHaveAttribute('content', /width=device-width, initial-scale=1\.?0?/);
-          |                            ^
-      139 |     
-      140 |     // Check charset
-      141 |     const charset = page.locator('meta[charset]');
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:138:28
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-Mobile-Chrome/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-Mobile-Chrome/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-Mobile-Chrome/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-Mobile-Chrome/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-Mobile-Chrome/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-Mobile-Chrome/error-context.md]]
-]]>
-</system-out>
-</testcase>
-</testsuite>
-<testsuite name="smoke.spec.ts" timestamp="2025-09-24T20:47:41.382Z" hostname="Mobile Safari" tests="9" failures="9" skipped="0" time="28.272" errors="0">
-<testcase name="Smoke Tests - End-to-End › homepage should load and display menus" classname="smoke.spec.ts" time="5.289">
-<failure message="smoke.spec.ts:4:7 homepage should load and display menus" type="FAILURE">
-<![CDATA[  [Mobile Safari] › smoke.spec.ts:4:7 › Smoke Tests - End-to-End › homepage should load and display menus 
-
-    Error: expect(page).toHaveTitle(expected) failed
-
-    Expected pattern: /Thanksgiving Menu Collection/
-    Received string:  ""
-    Timeout: 5000ms
-
-    Call log:
-      - Expect "toHaveTitle" with timeout 5000ms
-        9 × unexpected value ""
-
-
-       6 |     
-       7 |     // Check page title
-    >  8 |     await expect(page).toHaveTitle(/Thanksgiving Menu Collection/);
-         |                        ^
-       9 |     
-      10 |     // Check main heading
-      11 |     await expect(page.locator('h1')).toContainText('Thanksgiving Menu Collection');
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:8:24
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-Mobile-Safari/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-Mobile-Safari/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-Mobile-Safari/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-Mobile-Safari/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-Mobile-Safari/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-b1c3a-ould-load-and-display-menus-Mobile-Safari/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should navigate to menu detail page" classname="smoke.spec.ts" time="5.314">
-<failure message="smoke.spec.ts:26:7 should navigate to menu detail page" type="FAILURE">
-<![CDATA[  [Mobile Safari] › smoke.spec.ts:26:7 › Smoke Tests - End-to-End › should navigate to menu detail page 
-
-    Error: expect(locator).toBeVisible() failed
-
-    Locator:  locator('.btn-view-details').first()
-    Expected: visible
-    Received: <element(s) not found>
-    Timeout:  5000ms
-
-    Call log:
-      - Expect "toBeVisible" with timeout 5000ms
-      - waiting for locator('.btn-view-details').first()
-
-
-      29 |     // Click on the first "View Details" button (using btn-view-details class)
-      30 |     const firstViewDetailsButton = page.locator('.btn-view-details').first();
-    > 31 |     await expect(firstViewDetailsButton).toBeVisible();
-         |                                          ^
-      32 |     await firstViewDetailsButton.click();
-      33 |     
-      34 |     // Should navigate to detail page
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:31:42
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-Mobile-Safari/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-Mobile-Safari/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-Mobile-Safari/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-Mobile-Safari/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-Mobile-Safari/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-91342-avigate-to-menu-detail-page-Mobile-Safari/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › version API should return correct response" classname="smoke.spec.ts" time="0.552">
-<failure message="smoke.spec.ts:42:7 version API should return correct response" type="FAILURE">
-<![CDATA[  [Mobile Safari] › smoke.spec.ts:42:7 › Smoke Tests - End-to-End › version API should return correct response 
+<testcase name="Photo Upload Functionality - Comprehensive E2E Tests › should handle photo viewing without accessibility errors" classname="photo-upload.test.js" time="11.146">
+<failure message="photo-upload.test.js:191:3 should handle photo viewing without accessibility errors" type="FAILURE">
+<![CDATA[  [chromium] › photo-upload.test.js:191:3 › Photo Upload Functionality - Comprehensive E2E Tests › should handle photo viewing without accessibility errors 
 
     Error: expect(received).toBe(expected) // Object.is equality
 
-    Expected: 200
-    Received: 429
+    Expected: "Photo uploaded successfully!"
+    Received: "Error: Upload failed: Unexpected token 'T', \"Too many r\"... is not valid JSON"
 
-      43 |     const response = await page.request.get('/api/v1/version/display');
-      44 |     
-    > 45 |     expect(response.status()).toBe(200);
-         |                               ^
-      46 |     
-      47 |     const data = await response.json();
-      48 |     expect(data).toMatchObject({
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:45:31
+      192 |     // Handle alert dialog for success message
+      193 |     page.on('dialog', async dialog => {
+    > 194 |       expect(dialog.message()).toBe('Photo uploaded successfully!');
+          |                                ^
+      195 |       await dialog.accept();
+      196 |     });
+      197 |
+        at Page.<anonymous> (/Users/bobmaguire/repos/thanksgiving/tests/e2e/photo-upload.test.js:194:32)
 
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-54efa-uld-return-correct-response-Mobile-Safari/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
+    Error: page.waitForSelector: Test ended.
+    Call log:
+      - waiting for locator('#photoUploadModal') to be hidden
+        2 × locator resolved to visible <div id="photoUploadModal">…</div>
 
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-54efa-uld-return-correct-response-Mobile-Safari/video.webm
+
+      207 |     
+      208 |     await page.click('button[type="submit"]');
+    > 209 |     await page.waitForSelector('#photoUploadModal', { state: 'hidden' });
+          |                ^
+      210 |     
+      211 |     // Wait for photo to appear
+      212 |     await page.waitForSelector('#photosGrid .photo-card');
+        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/photo-upload.test.js:209:16
+
+    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/photo-upload-Photo-Upload--8e34b-ithout-accessibility-errors-chromium/video.webm
     ────────────────────────────────────────────────────────────────────────────────────────────────
 ]]>
 </failure>
 <system-out>
 <![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-54efa-uld-return-correct-response-Mobile-Safari/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-54efa-uld-return-correct-response-Mobile-Safari/video.webm]]
+[[ATTACHMENT|photo-upload-Photo-Upload--8e34b-ithout-accessibility-errors-chromium/video.webm]]
 ]]>
 </system-out>
 </testcase>
-<testcase name="Smoke Tests - End-to-End › database setup API should work" classname="smoke.spec.ts" time="0.531">
-<failure message="smoke.spec.ts:58:7 database setup API should work" type="FAILURE">
-<![CDATA[  [Mobile Safari] › smoke.spec.ts:58:7 › Smoke Tests - End-to-End › database setup API should work ─
+<testcase name="Photo Upload Functionality - Comprehensive E2E Tests › should handle photo deletion" classname="photo-upload.test.js" time="30.454">
+<failure message="photo-upload.test.js:239:3 should handle photo deletion" type="FAILURE">
+<![CDATA[  [chromium] › photo-upload.test.js:239:3 › Photo Upload Functionality - Comprehensive E2E Tests › should handle photo deletion 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: page.waitForSelector: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for locator('#photoUploadModal') to be hidden
+        63 × locator resolved to visible <div id="photoUploadModal">…</div>
+
+
+      261 |     
+      262 |     await page.click('button[type="submit"]');
+    > 263 |     await page.waitForSelector('#photoUploadModal', { state: 'hidden' });
+          |                ^
+      264 |     
+      265 |     // Verify photo appears
+      266 |     await page.waitForSelector('#photosGrid .photo-card');
+        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/photo-upload.test.js:263:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/photo-upload-Photo-Upload--62951-hould-handle-photo-deletion-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/photo-upload-Photo-Upload--62951-hould-handle-photo-deletion-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/photo-upload-Photo-Upload--62951-hould-handle-photo-deletion-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|photo-upload-Photo-Upload--62951-hould-handle-photo-deletion-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|photo-upload-Photo-Upload--62951-hould-handle-photo-deletion-chromium/video.webm]]
+
+[[ATTACHMENT|photo-upload-Photo-Upload--62951-hould-handle-photo-deletion-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Photo Upload Functionality - Comprehensive E2E Tests › should not have Bootstrap errors during multiple uploads" classname="photo-upload.test.js" time="11.097">
+<failure message="photo-upload.test.js:283:3 should not have Bootstrap errors during multiple uploads" type="FAILURE">
+<![CDATA[  [chromium] › photo-upload.test.js:283:3 › Photo Upload Functionality - Comprehensive E2E Tests › should not have Bootstrap errors during multiple uploads 
 
     Error: expect(received).toBe(expected) // Object.is equality
 
-    Expected: 200
-    Received: 429
+    Expected: "Photo uploaded successfully!"
+    Received: "Error: Upload failed: Unexpected token 'T', \"Too many r\"... is not valid JSON"
 
-      59 |     const response = await page.request.get('/api/setup-database');
-      60 |     
-    > 61 |     expect(response.status()).toBe(200);
-         |                               ^
-      62 |     
-      63 |     const data = await response.json();
-      64 |     expect(data).toMatchObject({
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:61:31
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-d1b4e-abase-setup-API-should-work-Mobile-Safari/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-d1b4e-abase-setup-API-should-work-Mobile-Safari/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-d1b4e-abase-setup-API-should-work-Mobile-Safari/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-d1b4e-abase-setup-API-should-work-Mobile-Safari/video.webm]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should display Grandma Maguire image correctly" classname="smoke.spec.ts" time="5.307">
-<failure message="smoke.spec.ts:82:7 should display Grandma Maguire image correctly" type="FAILURE">
-<![CDATA[  [Mobile Safari] › smoke.spec.ts:82:7 › Smoke Tests - End-to-End › should display Grandma Maguire image correctly 
-
-    Error: expect(locator).toBeVisible() failed
-
-    Locator:  locator('img[src*="Grandma80s"]')
-    Expected: visible
-    Received: <element(s) not found>
-    Timeout:  5000ms
-
-    Call log:
-      - Expect "toBeVisible" with timeout 5000ms
-      - waiting for locator('img[src*="Grandma80s"]')
-
-
-      85 |     // Check that Grandma's image is visible
-      86 |     const grandmaImage = page.locator('img[src*="Grandma80s"]');
-    > 87 |     await expect(grandmaImage).toBeVisible();
-         |                                ^
-      88 |     
-      89 |     // Check that the stats section layout is correct (use first one)
-      90 |     const statsSection = page.locator('.stats-section').first();
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:87:32
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-71030-dma-Maguire-image-correctly-Mobile-Safari/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-71030-dma-Maguire-image-correctly-Mobile-Safari/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-71030-dma-Maguire-image-correctly-Mobile-Safari/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-71030-dma-Maguire-image-correctly-Mobile-Safari/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-71030-dma-Maguire-image-correctly-Mobile-Safari/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-71030-dma-Maguire-image-correctly-Mobile-Safari/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should be responsive on mobile" classname="smoke.spec.ts" time="0.334">
-<failure message="smoke.spec.ts:94:7 should be responsive on mobile" type="FAILURE">
-<![CDATA[  [Mobile Safari] › smoke.spec.ts:94:7 › Smoke Tests - End-to-End › should be responsive on mobile ─
-
-    Error: expect(received).toBeLessThanOrEqual(expected)
-
-    Expected: <= 375
-    Received:    964.0000610351562
-
-      100 |     const body = page.locator('body');
-      101 |     const boundingBox = await body.boundingBox();
-    > 102 |     expect(boundingBox?.width).toBeLessThanOrEqual(375);
+      291 |     // Handle alert dialogs for success messages
+      292 |     page.on('dialog', async dialog => {
+    > 293 |       expect(dialog.message()).toBe('Photo uploaded successfully!');
           |                                ^
-      103 |     
-      104 |     // Check that menu cards stack vertically
-      105 |     const menuCards = page.locator('.menu-card');
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:102:32
+      294 |       await dialog.accept();
+      295 |     });
+      296 |
+        at Page.<anonymous> (/Users/bobmaguire/repos/thanksgiving/tests/e2e/photo-upload.test.js:293:32)
 
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-9a03d-uld-be-responsive-on-mobile-Mobile-Safari/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-9a03d-uld-be-responsive-on-mobile-Mobile-Safari/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-9a03d-uld-be-responsive-on-mobile-Mobile-Safari/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-9a03d-uld-be-responsive-on-mobile-Mobile-Safari/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-9a03d-uld-be-responsive-on-mobile-Mobile-Safari/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-9a03d-uld-be-responsive-on-mobile-Mobile-Safari/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should handle 404 pages gracefully" classname="smoke.spec.ts" time="0.328">
-<failure message="smoke.spec.ts:109:7 should handle 404 pages gracefully" type="FAILURE">
-<![CDATA[  [Mobile Safari] › smoke.spec.ts:109:7 › Smoke Tests - End-to-End › should handle 404 pages gracefully 
-
-    Error: expect(received).toBe(expected) // Object.is equality
-
-    Expected: 404
-    Received: 429
-
-      109 |   test('should handle 404 pages gracefully', async ({ page }) => {
-      110 |     const response = await page.goto('/nonexistent-page');
-    > 111 |     expect(response?.status()).toBe(404);
-          |                                ^
-      112 |     
-      113 |     // Check that error page is displayed
-      114 |     await expect(page.locator('h1')).toContainText('Error');
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:111:32
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-Mobile-Safari/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-Mobile-Safari/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-Mobile-Safari/error-context.md
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-Mobile-Safari/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-Mobile-Safari/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-482a8-handle-404-pages-gracefully-Mobile-Safari/error-context.md]]
-]]>
-</system-out>
-</testcase>
-<testcase name="Smoke Tests - End-to-End › should load all required CSS and JavaScript" classname="smoke.spec.ts" time="5.314">
-<failure message="smoke.spec.ts:117:7 should load all required CSS and JavaScript" type="FAILURE">
-<![CDATA[  [Mobile Safari] › smoke.spec.ts:117:7 › Smoke Tests - End-to-End › should load all required CSS and JavaScript 
-
-    Error: expect(locator).toHaveCount(expected) failed
-
-    Locator:  locator('link[href*="bootstrap"]')
-    Expected: 1
-    Received: 0
-    Timeout:  5000ms
-
+    Error: page.waitForSelector: Test ended.
     Call log:
-      - Expect "toHaveCount" with timeout 5000ms
-      - waiting for locator('link[href*="bootstrap"]')
-        9 × locator resolved to 0 elements
-          - unexpected value "0"
+      - waiting for locator('#photoUploadModal') to be hidden
 
 
-      120 |     // Check that Bootstrap CSS is loaded
-      121 |     const bootstrapCSS = page.locator('link[href*="bootstrap"]');
-    > 122 |     await expect(bootstrapCSS).toHaveCount(1);
-          |                                ^
-      123 |     
-      124 |     // Check that Bootstrap JS is loaded
-      125 |     const bootstrapJS = page.locator('script[src*="bootstrap"]');
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:122:32
+      307 |       
+      308 |       await page.click('button[type="submit"]');
+    > 309 |       await page.waitForSelector('#photoUploadModal', { state: 'hidden' });
+          |                  ^
+      310 |       
+      311 |       // Wait for photo to appear
+      312 |       await page.waitForTimeout(500);
+        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/photo-upload.test.js:309:18
 
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-a8fac-required-CSS-and-JavaScript-Mobile-Safari/test-failed-1.png
+    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/photo-upload-Photo-Upload--7a5df-ors-during-multiple-uploads-chromium/video.webm
     ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-a8fac-required-CSS-and-JavaScript-Mobile-Safari/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-a8fac-required-CSS-and-JavaScript-Mobile-Safari/error-context.md
 ]]>
 </failure>
 <system-out>
 <![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-a8fac-required-CSS-and-JavaScript-Mobile-Safari/test-failed-1.png]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-a8fac-required-CSS-and-JavaScript-Mobile-Safari/video.webm]]
-
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-a8fac-required-CSS-and-JavaScript-Mobile-Safari/error-context.md]]
+[[ATTACHMENT|photo-upload-Photo-Upload--7a5df-ors-during-multiple-uploads-chromium/video.webm]]
 ]]>
 </system-out>
 </testcase>
-<testcase name="Smoke Tests - End-to-End › should have proper meta tags" classname="smoke.spec.ts" time="5.303">
-<failure message="smoke.spec.ts:133:7 should have proper meta tags" type="FAILURE">
-<![CDATA[  [Mobile Safari] › smoke.spec.ts:133:7 › Smoke Tests - End-to-End › should have proper meta tags ──
+<testcase name="Photo Upload Functionality - Comprehensive E2E Tests › should handle search functionality" classname="photo-upload.test.js" time="30.528">
+<failure message="photo-upload.test.js:332:3 should handle search functionality" type="FAILURE">
+<![CDATA[  [chromium] › photo-upload.test.js:332:3 › Photo Upload Functionality - Comprehensive E2E Tests › should handle search functionality 
 
-    Error: expect(locator).toHaveAttribute(expected) failed
+    Test timeout of 30000ms exceeded.
 
-    Locator: locator('meta[name="viewport"]')
-    Expected pattern: /width=device-width, initial-scale=1\.?0?/
-    Received: <element(s) not found>
-    Timeout: 5000ms
-
+    Error: page.click: Test timeout of 30000ms exceeded.
     Call log:
-      - Expect "toHaveAttribute" with timeout 5000ms
-      - waiting for locator('meta[name="viewport"]')
+      - waiting for locator('button:has-text("Upload Photo")')
 
 
-      136 |     // Check viewport meta tag (accept both 1 and 1.0)
-      137 |     const viewport = page.locator('meta[name="viewport"]');
-    > 138 |     await expect(viewport).toHaveAttribute('content', /width=device-width, initial-scale=1\.?0?/);
-          |                            ^
-      139 |     
-      140 |     // Check charset
-      141 |     const charset = page.locator('meta[charset]');
-        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/smoke.spec.ts:138:28
+      338 |
+      339 |     // Upload a photo first
+    > 340 |     await page.click('button:has-text("Upload Photo")');
+          |                ^
+      341 |     await page.waitForSelector('#photoUploadModal', { state: 'visible' });
+      342 |     
+      343 |     const fileInput = page.locator('#photoFile');
+        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/photo-upload.test.js:340:16
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-Mobile-Safari/test-failed-1.png
+    ../../test-results/photo-upload-Photo-Upload--fd0b2-handle-search-functionality-chromium/test-failed-1.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-Mobile-Safari/video.webm
+    ../../test-results/photo-upload-Photo-Upload--fd0b2-handle-search-functionality-chromium/video.webm
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-    Error Context: ../../test-results/smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-Mobile-Safari/error-context.md
+    Error Context: ../../test-results/photo-upload-Photo-Upload--fd0b2-handle-search-functionality-chromium/error-context.md
 ]]>
 </failure>
 <system-out>
 <![CDATA[
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-Mobile-Safari/test-failed-1.png]]
+[[ATTACHMENT|photo-upload-Photo-Upload--fd0b2-handle-search-functionality-chromium/test-failed-1.png]]
 
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-Mobile-Safari/video.webm]]
+[[ATTACHMENT|photo-upload-Photo-Upload--fd0b2-handle-search-functionality-chromium/video.webm]]
 
-[[ATTACHMENT|smoke-Smoke-Tests---End-to-End-should-have-proper-meta-tags-Mobile-Safari/error-context.md]]
+[[ATTACHMENT|photo-upload-Photo-Upload--fd0b2-handle-search-functionality-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Photo Upload Functionality - Comprehensive E2E Tests › should handle sort functionality" classname="photo-upload.test.js" time="30.499">
+<failure message="photo-upload.test.js:367:3 should handle sort functionality" type="FAILURE">
+<![CDATA[  [chromium] › photo-upload.test.js:367:3 › Photo Upload Functionality - Comprehensive E2E Tests › should handle sort functionality 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: page.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for locator('button:has-text("Upload Photo")')
+
+
+      374 |     // Upload multiple photos
+      375 |     for (let i = 1; i <= 2; i++) {
+    > 376 |       await page.click('button:has-text("Upload Photo")');
+          |                  ^
+      377 |       await page.waitForSelector('#photoUploadModal', { state: 'visible' });
+      378 |       
+      379 |       const fileInput = page.locator('#photoFile');
+        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/photo-upload.test.js:376:18
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/photo-upload-Photo-Upload--056f2-d-handle-sort-functionality-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/photo-upload-Photo-Upload--056f2-d-handle-sort-functionality-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/photo-upload-Photo-Upload--056f2-d-handle-sort-functionality-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|photo-upload-Photo-Upload--056f2-d-handle-sort-functionality-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|photo-upload-Photo-Upload--056f2-d-handle-sort-functionality-chromium/video.webm]]
+
+[[ATTACHMENT|photo-upload-Photo-Upload--056f2-d-handle-sort-functionality-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Photo Upload Functionality - Comprehensive E2E Tests › should handle clear filters functionality" classname="photo-upload.test.js" time="30.495">
+<failure message="photo-upload.test.js:403:3 should handle clear filters functionality" type="FAILURE">
+<![CDATA[  [chromium] › photo-upload.test.js:403:3 › Photo Upload Functionality - Comprehensive E2E Tests › should handle clear filters functionality 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: page.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for locator('button:has-text("Upload Photo")')
+
+
+      409 |
+      410 |     // Upload a photo first
+    > 411 |     await page.click('button:has-text("Upload Photo")');
+          |                ^
+      412 |     await page.waitForSelector('#photoUploadModal', { state: 'visible' });
+      413 |     
+      414 |     const fileInput = page.locator('#photoFile');
+        at /Users/bobmaguire/repos/thanksgiving/tests/e2e/photo-upload.test.js:411:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/photo-upload-Photo-Upload--b93bf-clear-filters-functionality-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/photo-upload-Photo-Upload--b93bf-clear-filters-functionality-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/photo-upload-Photo-Upload--b93bf-clear-filters-functionality-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|photo-upload-Photo-Upload--b93bf-clear-filters-functionality-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|photo-upload-Photo-Upload--b93bf-clear-filters-functionality-chromium/video.webm]]
+
+[[ATTACHMENT|photo-upload-Photo-Upload--b93bf-clear-filters-functionality-chromium/error-context.md]]
 ]]>
 </system-out>
 </testcase>

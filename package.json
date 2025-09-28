@@ -1,6 +1,6 @@
 {
   "name": "thanksgiving-website-ts",
-  "version": "2.4.19",
+  "version": "2.5.0",
   "description": "Thanksgiving Menu Website - TypeScript Version",
   "main": "dist/server.js",
   "scripts": {
@@ -9,6 +9,11 @@
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:photo": "jest --config jest.config.photo.js",
+    "test:photo:unit": "jest tests/unit/photoComponent.test.js --config jest.config.photo.js",
+    "test:photo:api": "jest tests/api/photoApi.test.js --config jest.config.photo.js",
+    "test:photo:e2e": "playwright test tests/e2e/photo-upload.test.js",
+    "test:photo:all": "node scripts/run-photo-tests.js",
     "test:coverage": "jest --coverage",
     "test:smoke": "jest tests/smoke/",
     "test:smoke:api": "jest tests/smoke/api.test.ts",
