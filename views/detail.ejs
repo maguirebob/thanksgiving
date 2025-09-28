@@ -198,11 +198,11 @@
                 <i class="fas fa-video me-2"></i>
                 Start Camera
             </button>
-            <button type="button" class="btn-view-details" onclick="alert('Camera capture functionality coming soon!')" id="captureBtn" style="display: none;">
+            <button type="button" class="btn-view-details" onclick="capturePhoto()" id="captureBtn" style="display: none;">
                 <i class="fas fa-camera me-2"></i>
                 Capture
             </button>
-            <button type="button" class="btn-view-details" onclick="alert('Save photo functionality coming soon!')" id="saveBtn" style="display: none;">
+            <button type="button" class="btn-view-details" onclick="saveCameraPhoto()" id="saveBtn" style="display: none;">
                 <i class="fas fa-save me-2"></i>
                 Save Photo
             </button>
@@ -468,7 +468,7 @@ async function startCamera() {
         console.log('Camera started successfully');
     } catch (error) {
         console.error('Error accessing camera:', error);
-        showMessage('Error accessing camera. Please check permissions.', 'error');
+        alert('Error accessing camera. Please check permissions.');
     }
 }
 
@@ -510,7 +510,135 @@ function capturePhoto() {
     stopCamera();
 }
 
-// Camera photo saving is now handled by PhotoManager in setupPhotoEventListeners()
+    async function saveCameraPhoto() {
+        if (!capturedImageData) {
+            alert('No photo captured to save');
+            return;
+        }
+
+        const description = document.getElementById('captureDescription').value.trim();
+        const caption = document.getElementById('captureCaption').value.trim();
+
+        try {
+            // Convert data URL to blob without using fetch (to avoid CSP issues)
+            const byteCharacters = atob(capturedImageData.split(',')[1]);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'image/jpeg' });
+            
+            // Create FormData for upload
+            const formData = new FormData();
+            formData.append('photo', blob, 'camera-photo.jpg');
+            formData.append('description', description);
+            formData.append('caption', caption);
+
+            // Get current event ID from URL or use default
+            const eventId = window.location.pathname.split('/').pop() || '466';
+
+            // Upload with retry mechanism for rate limiting
+            const maxRetries = 3;
+            let lastError;
+            
+            for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                try {
+                    console.log(`Upload attempt ${attempt}/${maxRetries}`);
+                    
+                    // Add delay between retries (exponential backoff)
+                    if (attempt > 1) {
+                        const delay = Math.pow(2, attempt - 1) * 1000; // 1s, 2s, 4s
+                        console.log(`Waiting ${delay}ms before retry...`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    }
+
+                    // Upload the photo
+                    const uploadResponse = await fetch(`/api/events/${eventId}/photos`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    // Check if response is ok and handle rate limiting
+                    if (!uploadResponse.ok) {
+                        if (uploadResponse.status === 429) {
+                            if (attempt < maxRetries) {
+                                console.log(`Rate limited, retrying in attempt ${attempt + 1}...`);
+                                lastError = new Error('Rate limited');
+                                continue;
+                            } else {
+                                alert('Too many requests. Please wait a moment and try again.');
+                                return;
+                            }
+                        } else {
+                            alert(`Upload failed with status: ${uploadResponse.status}. Please try again.`);
+                            return;
+                        }
+                    }
+
+                    // Try to parse JSON response
+                    let result;
+                    try {
+                        result = await uploadResponse.json();
+                    } catch (error) {
+                        console.error('Error parsing JSON response:', error);
+                        if (attempt < maxRetries) {
+                            lastError = error;
+                            continue;
+                        } else {
+                            alert('Server returned invalid response. Please try again.');
+                            return;
+                        }
+                    }
+
+                    if (result.success) {
+                        alert('Photo saved successfully!');
+                        closeCamera();
+                        
+                        // Reload photos if PhotoComponent is available
+                        console.log('Attempting to reload photos...', {
+                            photoComponentExists: typeof window.photoComponent !== 'undefined',
+                            loadPhotosExists: window.photoComponent && typeof window.photoComponent.loadPhotos === 'function'
+                        });
+                        
+                        if (typeof window.photoComponent !== 'undefined' && window.photoComponent.loadPhotos) {
+                            try {
+                                await window.photoComponent.loadPhotos();
+                                console.log('Photos reloaded successfully');
+                            } catch (error) {
+                                console.error('Error reloading photos:', error);
+                            }
+                        } else {
+                            console.warn('PhotoComponent not available for reloading photos');
+                            // Fallback: refresh the page to show new photos
+                            console.log('Refreshing page to show new photos...');
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        }
+                        return; // Success, exit the function
+                    } else {
+                        alert('Failed to save photo: ' + (result.message || 'Unknown error'));
+                        return;
+                    }
+                } catch (error) {
+                    console.error(`Upload attempt ${attempt} failed:`, error);
+                    lastError = error;
+                    if (attempt === maxRetries) {
+                        break;
+                    }
+                }
+            }
+            
+            // If we get here, all retries failed
+            console.error('All upload attempts failed:', lastError);
+            alert('Failed to save photo after multiple attempts. Please try again.');
+            
+        } catch (error) {
+            console.error('Error saving camera photo:', error);
+            alert('Failed to save photo. Please try again.');
+        }
+    }
 
 // Add event listeners for photo interactions
 function addPhotoEventListeners() {
@@ -547,7 +675,7 @@ function addPhotoEventListeners() {
 function viewPhoto(fileData, description, caption) {
     // Check if fileData is valid
     if (!fileData || fileData === '' || fileData === 'undefined') {
-        showMessage('Photo data not available for viewing', 'error');
+        alert('Photo data not available for viewing');
         return;
     }
     
@@ -922,7 +1050,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize components
     if (typeof PhotoComponent !== 'undefined') {
+        console.log('Initializing PhotoComponent with eventId:', window.eventId);
         window.photoComponent = new PhotoComponent(window.eventId, 'photoComponentContainer');
+        console.log('PhotoComponent initialized:', window.photoComponent);
+    } else {
+        console.warn('PhotoComponent not available');
     }
     
     if (typeof BlogComponent !== 'undefined') {
