@@ -30,7 +30,7 @@ class Config {
       jwtSecret: process.env['JWT_SECRET'] || 'thanksgiving-jwt-secret-key-change-in-production',
       jwtExpiresIn: process.env['JWT_EXPIRES_IN'] || '24h',
       sessionSecret: process.env['SESSION_SECRET'] || 'thanksgiving-session-secret-change-in-production',
-      corsOrigin: process.env['CORS_ORIGIN'] || 'http://localhost:3000',
+      corsOrigin: process.env['CORS_ORIGIN'] || (process.env['NODE_ENV'] === 'production' ? 'https://thanksgiving-test-test.up.railway.app' : 'http://localhost:3000'),
       maxFileSize: parseInt(process.env['MAX_FILE_SIZE'] || '10485760', 10), // 10MB
       uploadPath: process.env['UPLOAD_PATH'] || './uploads',
       logLevel: process.env['LOG_LEVEL'] || 'info',
