@@ -446,9 +446,14 @@ class PhotoComponent {
     }
 
     openCameraCapture() {
-        // For now, just open the upload modal
-        // In a real implementation, this would access the camera
-        this.openUploadModal();
+        // Use the existing camera modal from detail.ejs
+        if (typeof openCameraCapture === 'function') {
+            openCameraCapture();
+        } else {
+            // Fallback to upload modal if camera function not available
+            console.warn('Camera functionality not available, falling back to upload modal');
+            this.openUploadModal();
+        }
     }
 
     handleFilePreview(event) {
