@@ -299,7 +299,7 @@ export const updatePhoto = async (req: Request, res: Response): Promise<void> =>
       });
       return;
     }
-    const { description, caption } = req.body;
+    const { description, caption, taken_date } = req.body;
 
     // Check if photo exists
     const existingPhoto = await prisma.photo.findUnique({
@@ -319,7 +319,8 @@ export const updatePhoto = async (req: Request, res: Response): Promise<void> =>
       where: { photo_id: parseInt(photoId, 10) },
       data: {
         description: description !== undefined ? description : existingPhoto.description,
-        caption: caption !== undefined ? caption : existingPhoto.caption
+        caption: caption !== undefined ? caption : existingPhoto.caption,
+        taken_date: taken_date !== undefined ? new Date(taken_date) : existingPhoto.taken_date
       },
       select: {
         photo_id: true,

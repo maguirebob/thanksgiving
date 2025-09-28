@@ -602,9 +602,145 @@ class PhotoComponent {
     }
 
     editPhoto(photoId) {
-        // For now, just show an alert
-        // In a real implementation, this would open an edit modal
-        alert('Edit photo functionality coming soon!');
+        this.openEditModal(photoId);
+    }
+
+    async openEditModal(photoId) {
+        try {
+            // Fetch photo data
+            const response = await fetch(`/api/photos/${photoId}`);
+            const result = await response.json();
+            
+            if (!result.success) {
+                this.showError('Failed to load photo data');
+                return;
+            }
+            
+            const photo = result.data.photo;
+            this.createEditModal(photo);
+        } catch (error) {
+            console.error('Error fetching photo:', error);
+            this.showError('Failed to load photo data');
+        }
+    }
+
+    createEditModal(photo) {
+        // Remove existing edit modal if it exists
+        const existingModal = document.getElementById('photoEditModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Create edit modal HTML
+        const modalHTML = `
+            <div id="photoEditModal" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
+                <div style="background: white; padding: 20px; border-radius: 8px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="margin: 0;">Edit Photo</h3>
+                        <button id="closeEditModal" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+                    </div>
+                    
+                    <form id="editPhotoForm">
+                        <input type="hidden" id="editPhotoId" value="${photo.photo_id}">
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label for="editDescription" style="display: block; margin-bottom: 5px; font-weight: bold;">Description:</label>
+                            <textarea id="editDescription" name="description" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;">${photo.description || ''}</textarea>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label for="editCaption" style="display: block; margin-bottom: 5px; font-weight: bold;">Caption:</label>
+                            <textarea id="editCaption" name="caption" rows="2" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;">${photo.caption || ''}</textarea>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label for="editTakenDate" style="display: block; margin-bottom: 5px; font-weight: bold;">Date Taken:</label>
+                            <input type="datetime-local" id="editTakenDate" name="taken_date" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" value="${this.formatDateForInput(photo.taken_date)}">
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button type="button" id="cancelEdit" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+                            <button type="submit" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+
+        // Add modal to page
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        // Bind events
+        this.bindEditModalEvents();
+    }
+
+    formatDateForInput(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:MM
+    }
+
+    bindEditModalEvents() {
+        const modal = document.getElementById('photoEditModal');
+        const closeBtn = document.getElementById('closeEditModal');
+        const cancelBtn = document.getElementById('cancelEdit');
+        const form = document.getElementById('editPhotoForm');
+
+        // Close modal events
+        const closeModal = () => {
+            modal.remove();
+        };
+
+        closeBtn.addEventListener('click', closeModal);
+        cancelBtn.addEventListener('click', closeModal);
+
+        // Close on background click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.savePhotoEdit(form);
+        });
+    }
+
+    async savePhotoEdit(form) {
+        const photoId = document.getElementById('editPhotoId').value;
+        const formData = new FormData(form);
+        
+        const updateData = {
+            description: formData.get('description'),
+            caption: formData.get('caption'),
+            taken_date: formData.get('taken_date')
+        };
+
+        try {
+            const response = await fetch(`/api/photos/${photoId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updateData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.showSuccess('Photo updated successfully!');
+                document.getElementById('photoEditModal').remove();
+                // Reload photos to show updated data
+                await this.loadPhotos();
+            } else {
+                this.showError(result.message || 'Failed to update photo');
+            }
+        } catch (error) {
+            console.error('Error updating photo:', error);
+            this.showError('Failed to update photo');
+        }
     }
 
     async deletePhoto(photoId) {

@@ -513,9 +513,161 @@ class BlogComponent {
     }
 
     editBlogPost(blogPostId) {
-        // For now, just show an alert
-        // In a real implementation, this would open an edit modal
-        alert('Edit blog post functionality coming soon!');
+        this.openEditModal(blogPostId);
+    }
+
+    async openEditModal(blogPostId) {
+        try {
+            // Fetch blog post data
+            const response = await fetch(`/api/blog-posts/${blogPostId}`);
+            const result = await response.json();
+            
+            if (!result.success) {
+                this.showError('Failed to load blog post data');
+                return;
+            }
+            
+            const blogPost = result.data;
+            this.createEditModal(blogPost);
+        } catch (error) {
+            console.error('Error fetching blog post:', error);
+            this.showError('Failed to load blog post data');
+        }
+    }
+
+    createEditModal(blogPost) {
+        // Remove existing edit modal if it exists
+        const existingModal = document.getElementById('blogEditModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Create edit modal HTML
+        const modalHTML = `
+            <div id="blogEditModal" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
+                <div style="background: white; padding: 20px; border-radius: 8px; max-width: 800px; width: 95%; max-height: 90vh; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="margin: 0;">Edit Blog Post</h3>
+                        <button id="closeBlogEditModal" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+                    </div>
+                    
+                    <form id="editBlogForm">
+                        <input type="hidden" id="editBlogPostId" value="${blogPost.blog_post_id}">
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label for="editTitle" style="display: block; margin-bottom: 5px; font-weight: bold;">Title:</label>
+                            <input type="text" id="editTitle" name="title" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" value="${blogPost.title || ''}" required>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label for="editExcerpt" style="display: block; margin-bottom: 5px; font-weight: bold;">Excerpt:</label>
+                            <textarea id="editExcerpt" name="excerpt" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;">${blogPost.excerpt || ''}</textarea>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label for="editContent" style="display: block; margin-bottom: 5px; font-weight: bold;">Content:</label>
+                            <textarea id="editContent" name="content" rows="10" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;" required>${blogPost.content || ''}</textarea>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label for="editTags" style="display: block; margin-bottom: 5px; font-weight: bold;">Tags (comma-separated):</label>
+                            <input type="text" id="editTags" name="tags" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" value="${Array.isArray(blogPost.tags) ? blogPost.tags.join(', ') : (blogPost.tags || '')}" placeholder="e.g., thanksgiving, family, recipes">
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label for="editStatus" style="display: block; margin-bottom: 5px; font-weight: bold;">Status:</label>
+                            <select id="editStatus" name="status" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="draft" ${blogPost.status === 'draft' ? 'selected' : ''}>Draft</option>
+                                <option value="published" ${blogPost.status === 'published' ? 'selected' : ''}>Published</option>
+                                <option value="archived" ${blogPost.status === 'archived' ? 'selected' : ''}>Archived</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label for="editFeaturedImage" style="display: block; margin-bottom: 5px; font-weight: bold;">Featured Image URL:</label>
+                            <input type="url" id="editFeaturedImage" name="featured_image" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" value="${blogPost.featured_image || ''}" placeholder="https://example.com/image.jpg">
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button type="button" id="cancelBlogEdit" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+                            <button type="submit" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+
+        // Add modal to page
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        // Bind events
+        this.bindEditModalEvents();
+    }
+
+    bindEditModalEvents() {
+        const modal = document.getElementById('blogEditModal');
+        const closeBtn = document.getElementById('closeBlogEditModal');
+        const cancelBtn = document.getElementById('cancelBlogEdit');
+        const form = document.getElementById('editBlogForm');
+
+        // Close modal events
+        const closeModal = () => {
+            modal.remove();
+        };
+
+        closeBtn.addEventListener('click', closeModal);
+        cancelBtn.addEventListener('click', closeModal);
+
+        // Close on background click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.saveBlogEdit(form);
+        });
+    }
+
+    async saveBlogEdit(form) {
+        const blogPostId = document.getElementById('editBlogPostId').value;
+        const formData = new FormData(form);
+        
+        const updateData = {
+            title: formData.get('title'),
+            content: formData.get('content'),
+            excerpt: formData.get('excerpt'),
+            tags: formData.get('tags'),
+            status: formData.get('status'),
+            featured_image: formData.get('featured_image')
+        };
+
+        try {
+            const response = await fetch(`/api/blog-posts/${blogPostId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updateData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.showSuccess('Blog post updated successfully!');
+                document.getElementById('blogEditModal').remove();
+                // Reload blog posts to show updated data
+                await this.loadBlogPosts();
+            } else {
+                this.showError(result.message || 'Failed to update blog post');
+            }
+        } catch (error) {
+            console.error('Error updating blog post:', error);
+            this.showError('Failed to update blog post');
+        }
     }
 
     async deleteBlogPost(blogPostId) {
