@@ -60,9 +60,10 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: config.isProduction(),
+    secure: false, // Set to false for Railway deployment to avoid HTTPS issues
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: 'lax' // Allow cross-site cookies for Railway
   }
 }));
 

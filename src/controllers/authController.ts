@@ -46,10 +46,18 @@ export class AuthController {
       // Set session
       req.session.userId = user.user_id;
       req.session.userRole = user.role;
+      
+      console.log('Login successful:', {
+        userId: user.user_id,
+        username: user.username,
+        role: user.role,
+        sessionId: req.sessionID
+      });
 
       // Redirect to profile or home
       const redirectTo = req.session.returnTo || '/auth/profile';
       delete req.session.returnTo;
+      console.log('Redirecting to:', redirectTo);
       res.redirect(redirectTo);
 
     } catch (error) {

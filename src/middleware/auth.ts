@@ -2,9 +2,17 @@ import { Request, Response, NextFunction } from 'express';
 
 // Middleware to require authentication
 export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+  console.log('requireAuth check:', {
+    hasSession: !!req.session,
+    userId: req.session?.userId,
+    sessionId: req.sessionID,
+    originalUrl: req.originalUrl
+  });
+  
   if (!req.session || !req.session.userId) {
     // Store the original URL to redirect back after login
     req.session.returnTo = req.originalUrl;
+    console.log('Authentication required, redirecting to login');
     return res.redirect('/auth/login');
   }
   next();
