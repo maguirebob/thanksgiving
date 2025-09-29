@@ -46,7 +46,7 @@
                           <button 
                             class="btn btn-sm <%= user.role === 'admin' ? 'btn-warning' : 'btn-success' %>"
                             onclick="toggleUserRole(<%= user.user_id %>, '<%= user.role %>')"
-                            <%= user.user_id === user.user_id ? 'disabled' : '' %>
+                            <%= user.user_id === currentUser.user_id ? 'disabled' : '' %>
                           >
                             <i class="fas fa-user-<%= user.role === 'admin' ? 'minus' : 'plus' %> me-1"></i>
                             <%= user.role === 'admin' ? 'Make User' : 'Make Admin' %>
@@ -56,7 +56,7 @@
                           <button 
                             class="btn btn-sm btn-danger"
                             onclick="deleteUser(<%= user.user_id %>, '<%= user.username %>')"
-                            <%= user.user_id === user.user_id ? 'disabled' : '' %>
+                            <%= user.user_id === currentUser.user_id ? 'disabled' : '' %>
                           >
                             <i class="fas fa-trash me-1"></i>
                             Delete
@@ -99,6 +99,7 @@
 <script>
 // Toggle user role
 function toggleUserRole(userId, currentRole) {
+  console.log('toggleUserRole called:', { userId, currentRole });
   const newRole = currentRole === 'admin' ? 'user' : 'admin';
   const action = newRole === 'admin' ? 'promote to admin' : 'demote to user';
   
@@ -141,6 +142,7 @@ async function updateUserRole(userId, newRole) {
 
 // Delete user
 function deleteUser(userId, username) {
+  console.log('deleteUser called:', { userId, username });
   showConfirmModal(
     `Delete User`,
     `Are you sure you want to delete user "${username}"? This action cannot be undone.`,
