@@ -39,11 +39,25 @@ app.use(cors({
   optionsSuccessStatus: 200
 }));
 
-// Rate limiting
+// Rate limiting - more reasonable limits
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 1000, // limit each IP to 1000 requests per windowMs (increased for testing)
-  message: 'Too many requests from this IP, please try again later.'
+  max: 5000, // limit each IP to 5000 requests per windowMs (much more reasonable)
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  // Skip rate limiting for static assets
+  skip: (req) => {
+    // Skip rate limiting for static assets
+    if (req.path.startsWith('/css/') || 
+        req.path.startsWith('/js/') || 
+        req.path.startsWith('/images/') || 
+        req.path.startsWith('/photos/') ||
+        req.path.startsWith('/uploads/')) {
+      return true;
+    }
+    return false;
+  }
 });
 app.use(limiter);
 
@@ -127,7 +141,7 @@ app.get('/api/v1/version/display', (_req, res) => {
   res.json({
     success: true,
     data: {
-      version: '2.7.3',
+      version: '2.7.4',
       environment: config.getConfig().nodeEnv,
       buildDate: new Date().toISOString()
     }
@@ -253,7 +267,7 @@ app.get('/api/setup-database', async (_req, res) => {
 app.get('/about', requireAuth, (_req, res) => {
   res.render('about', {
     title: 'About - Thanksgiving Menu Collection',
-    version: '2.7.3',
+    version: '2.7.4',
     environment: config.getConfig().nodeEnv,
     buildDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
     dbStatus: 'Connected'
