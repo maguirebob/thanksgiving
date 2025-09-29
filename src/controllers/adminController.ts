@@ -60,7 +60,7 @@ export class AdminController {
 
       // Get current user info for the template
       const currentUser = await prisma.user.findUnique({
-        where: { user_id: req.session.userId },
+        where: { user_id: req.session.userId! },
         select: {
           user_id: true,
           username: true,
