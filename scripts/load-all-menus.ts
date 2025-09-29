@@ -50,7 +50,7 @@ const menuYears: MenuData[] = [
 async function loadAllMenus(forceReload: boolean = false) {
   try {
     console.log('🚀 Starting to load all Thanksgiving menus...');
-    console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`📊 Environment: ${process.env['NODE_ENV'] || 'development'}`);
     console.log(`🔄 Force reload: ${forceReload ? 'Yes' : 'No'}`);
     
     // Check if images directory exists
