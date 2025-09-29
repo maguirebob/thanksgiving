@@ -17,7 +17,12 @@ export class AdminController {
         orderBy: { event_date: 'desc' },
         include: {
           photos: {
-            take: 1
+            take: 1 // Only take 1 photo for thumbnail purposes
+          },
+          _count: {
+            select: {
+              photos: true // Get the actual count of photos
+            }
           }
         }
       });
@@ -33,7 +38,8 @@ export class AdminController {
         menu_title: event.menu_title,
         menu_image_filename: event.menu_image_filename,
         created_at: event.event_date, // Use event_date as created_at since we don't have created_at in the model
-        photos: event.photos
+        photos: event.photos,
+        photoCount: event._count.photos // Add the actual photo count
       }));
 
       res.render('admin/dashboard', {
