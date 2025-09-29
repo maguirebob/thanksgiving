@@ -176,31 +176,34 @@
         });
 
         // Logout functionality
-        document.getElementById('logoutBtn').addEventListener('click', async function(e) {
-            e.preventDefault();
-            
-            try {
-                const response = await fetch('/auth/logout', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                
+                try {
+                    const response = await fetch('/auth/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        localStorage.removeItem('authToken');
+                        window.location.href = '/auth/login';
+                    } else {
+                        console.error('Logout failed:', data.message);
+                        window.location.href = '/auth/login';
                     }
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    localStorage.removeItem('authToken');
-                    window.location.href = '/auth/login';
-                } else {
-                    console.error('Logout failed:', data.message);
+                } catch (error) {
+                    console.error('Logout error:', error);
                     window.location.href = '/auth/login';
                 }
-            } catch (error) {
-                console.error('Logout error:', error);
-                window.location.href = '/auth/login';
-            }
-        });
+            });
+        }
     </script>
 
     <!-- Toast Notifications -->
