@@ -200,4 +200,55 @@ router.put('/events/:id', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * Delete an event by ID
+ * DELETE /api/v1/events/:id
+ */
+router.delete('/events/:id', async (req: Request, res: Response) => {
+  try {
+    const eventId = parseInt(req.params['id'] || '');
+    
+    if (isNaN(eventId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid event ID'
+      });
+    }
+
+    // Check if event exists
+    const existingEvent = await prisma.event.findUnique({
+      where: { event_id: eventId }
+    });
+
+    if (!existingEvent) {
+      return res.status(404).json({
+        success: false,
+        message: 'Event not found'
+      });
+    }
+
+    // Delete associated photos first (cascade delete should handle this, but being explicit)
+    await prisma.photo.deleteMany({
+      where: { event_id: eventId }
+    });
+
+    // Delete the event
+    await prisma.event.delete({
+      where: { event_id: eventId }
+    });
+
+    return res.json({
+      success: true,
+      message: 'Event deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Error deleting event:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
 export default router;
