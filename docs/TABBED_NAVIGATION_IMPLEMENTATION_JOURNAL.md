@@ -9,9 +9,9 @@
 
 ### **Overall Progress**
 - **Total Estimated Hours**: 123 hours (updated from 115 hours)
-- **Actual Hours Logged**: ~1380 minutes (23 hours)
-- **Variance**: -6 hours (significantly ahead of schedule)
-- **Completion**: 60%
+- **Actual Hours Logged**: ~1500 minutes (25 hours)
+- **Variance**: -8 hours (significantly ahead of schedule)
+- **Completion**: 65%
 
 ### **Phase Progress**
 - **Phase 1**: 6/6 tasks (100%) - Foundation & Navigation + Tests + Deploy ✅
@@ -678,6 +678,62 @@ The project is significantly more complete than initially documented. All core f
 **Version**: 2.7.1 deployed successfully
 **Status**: Authentication system fully functional and secure
 
+### **Day 8: September 29, 2025**
+
+#### **Morning Session: Admin User Management Fixes**
+**Tasks Completed:**
+- [x] Fix Password Change Functionality - Implemented complete password change system
+- [x] Fix Admin User Management Buttons - Resolved Make User/Make Admin/Delete button issues
+- [x] Fix Rate Limiting Issues - Increased limits and excluded static assets
+- [x] Fix Template Errors - Resolved currentUser undefined errors in admin templates
+- [x] Deploy Admin Fixes - Version 2.7.6 deployed to test environment
+
+**Total Time Logged**: ~120 minutes (2 hours)
+**Key Achievements:**
+- Successfully implemented password change functionality with modal and API integration
+- Fixed admin user management buttons (Make User, Make Admin, Delete) with proper confirmation modals
+- Resolved rate limiting issues by increasing limits from 100 to 5000 requests per 15 minutes
+- Fixed template errors by properly passing currentUser to admin templates
+- Added comprehensive debugging logs for admin functionality troubleshooting
+- Achieved 100% admin functionality working in development environment
+
+**Technical Implementation:**
+- Added `changePassword` method to `src/controllers/authController.ts` with validation and bcrypt hashing
+- Added `PUT /auth/profile/password` route to `src/routes/authRoutes.ts` with requireAuth protection
+- Updated `public/js/profileManager.js` with event listeners, form validation, API calls, and toast notifications
+- Fixed disabled condition in `views/admin/users.ejs` from `user.user_id === user.user_id` to `user.user_id === currentUser.user_id`
+- Updated `showUsers` method in `src/controllers/adminController.ts` to fetch and pass currentUser to template
+- Increased rate limiting in `src/server.ts` to 5000 requests/15min with static asset exclusions
+- Added debugging logs to admin JavaScript functions for troubleshooting
+
+**Issues Resolved:**
+- Password change button not responding to clicks (missing event listeners and API route)
+- Admin user management buttons disabled due to incorrect template logic
+- Rate limiting too aggressive causing 429 errors during normal usage
+- Template errors due to currentUser not being passed from controller
+- TypeScript errors with req.session.userId potentially undefined
+- Static assets being counted against rate limits
+
+**Admin System Status:**
+- ✅ Password change functionality working with modal and API integration
+- ✅ Admin user management buttons functional (Make User, Make Admin, Delete)
+- ✅ Self-protection working (admin can't modify their own account)
+- ✅ Confirmation modals working for all admin actions
+- ✅ Rate limiting appropriate for production usage
+- ✅ All template errors resolved
+
+**Files Modified:**
+- `src/controllers/authController.ts`: Added changePassword method with validation and error handling
+- `src/routes/authRoutes.ts`: Added PUT /auth/profile/password route
+- `public/js/profileManager.js`: Added password change event listeners, validation, API calls, toast notifications
+- `views/admin/users.ejs`: Fixed disabled condition and added debugging logs
+- `src/controllers/adminController.ts`: Updated showUsers to fetch and pass currentUser
+- `src/server.ts`: Increased rate limiting and added static asset exclusions
+- `views/auth/profile.ejs`: Added null check for logoutBtn event listener
+
+**Version**: 2.7.6 deployed successfully
+**Status**: Admin user management system fully functional and secure
+
 ---
 
 ## 📈 **Progress Analytics**
@@ -690,6 +746,7 @@ The project is significantly more complete than initially documented. All core f
 - **Day 5**: 3 hours (Task 7.1 Photo Edit + Task 7.2 Blog Edit)
 - **Day 6**: 4 hours (Task 7.3 Camera Access Implementation)
 - **Day 7**: 3 hours (Authentication System Fixes)
+- **Day 8**: 2 hours (Admin User Management Fixes)
 
 ### **Phase Velocity**
 - **Phase 1**: 6/6 hours (100%) ✅
@@ -716,6 +773,7 @@ The project is significantly more complete than initially documented. All core f
 - **✅ Integration Testing**: 100% complete (E2E tests, cross-browser testing, smoke tests, performance testing)
 - **✅ Camera Functionality**: 100% complete (getUserMedia API, photo capture, saving, integration)
 - **✅ Authentication System**: 100% complete (login, session management, protected routes, admin access)
+- **✅ Admin User Management**: 100% complete (password change, user role management, user deletion)
 - **🚧 Recipe Management**: 0% complete (deferred to future phase)
 - **✅ Database Schema**: 100% complete (Photos, Recipes, BlogPosts models)
 - **✅ Authentication**: 100% complete (login, logout, registration, profile)
@@ -768,6 +826,10 @@ The project is significantly more complete than initially documented. All core f
 - **CORS Configuration**: Fixed production CORS settings for Railway deployment
 - **Session Management**: Resolved session cookie persistence issues in production environment
 - **TypeScript Compilation**: Fixed req.params.id undefined errors for Railway build
+- **Password Change Functionality**: Implemented complete password change system with modal, API, and validation
+- **Admin User Management**: Fixed Make User/Make Admin/Delete buttons with proper template logic and confirmation modals
+- **Rate Limiting Issues**: Increased limits from 100 to 5000 requests/15min and excluded static assets
+- **Template Errors**: Resolved currentUser undefined errors in admin templates by proper controller data passing
 
 ### **Risk Mitigation Actions**
 - **Dynamic Smoke Tests**: Implemented version-agnostic testing to prevent deployment failures
@@ -839,7 +901,7 @@ The project is significantly more complete than initially documented. All core f
 
 ---
 
-**Last Updated**: September 28, 2025 - 18:00  
+**Last Updated**: September 29, 2025 - 10:00  
 **Next Review**: After Phase 8 completion  
 **Journal Owner**: Development Team  
 **Stakeholders**: Bob Maguire, Development Team
