@@ -13,7 +13,7 @@ export class AdminController {
       const totalPhotos = await prisma.photo.count();
       
       // Get recent events
-      const recentEvents = await prisma.event.findMany({
+      const rawEvents = await prisma.event.findMany({
         orderBy: { event_date: 'desc' },
         take: 5,
         include: {
@@ -22,6 +22,20 @@ export class AdminController {
           }
         }
       });
+
+      // Transform events to match frontend expectations
+      const recentEvents = rawEvents.map(event => ({
+        id: event.event_id,
+        event_name: event.event_name,
+        event_type: event.event_type,
+        event_location: event.event_location,
+        event_date: event.event_date,
+        event_description: event.event_description,
+        menu_title: event.menu_title,
+        menu_image_filename: event.menu_image_filename,
+        created_at: event.event_date, // Use event_date as created_at since we don't have created_at in the model
+        photos: event.photos
+      }));
 
       res.render('admin/dashboard', {
         title: 'Admin Dashboard - Thanksgiving Menu Collection',
