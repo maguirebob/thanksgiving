@@ -13,13 +13,54 @@ class ProfileManager {
         // Set up edit profile button
         const editBtn = document.getElementById('editProfileBtn');
         if (editBtn) {
+            console.log('Found edit profile button');
             editBtn.addEventListener('click', () => this.toggleEditMode());
+        } else {
+            console.log('Edit profile button not found');
+        }
+
+        // Set up edit profile button (sidebar)
+        const editBtnSidebar = document.getElementById('editProfileBtnSidebar');
+        if (editBtnSidebar) {
+            console.log('Found edit profile button (sidebar)');
+            editBtnSidebar.addEventListener('click', () => this.toggleEditMode());
+        } else {
+            console.log('Edit profile button (sidebar) not found');
+        }
+
+        // Set up change password buttons
+        const changePasswordBtn = document.getElementById('changePasswordBtn');
+        if (changePasswordBtn) {
+            console.log('Found change password button');
+            changePasswordBtn.addEventListener('click', () => this.showChangePasswordModal());
+        } else {
+            console.log('Change password button not found');
+        }
+
+        const changePasswordBtnSidebar = document.getElementById('changePasswordBtnSidebar');
+        if (changePasswordBtnSidebar) {
+            console.log('Found change password button (sidebar)');
+            changePasswordBtnSidebar.addEventListener('click', () => this.showChangePasswordModal());
+        } else {
+            console.log('Change password button (sidebar) not found');
+        }
+
+        // Set up change password form
+        const changePasswordForm = document.getElementById('changePasswordForm');
+        if (changePasswordForm) {
+            console.log('Found change password form');
+            changePasswordForm.addEventListener('submit', (e) => this.handlePasswordChange(e));
+        } else {
+            console.log('Change password form not found');
         }
 
         // Set up logout button
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
+            console.log('Found logout button');
             logoutBtn.addEventListener('click', (e) => this.handleLogout(e));
+        } else {
+            console.log('Logout button not found');
         }
 
         // Set up save/cancel buttons if they exist
@@ -191,6 +232,120 @@ class ProfileManager {
             console.error('Logout error:', error);
             // Still redirect to login page even if logout fails
             window.location.href = '/auth/login';
+        }
+    }
+
+    // Password change functionality
+    showChangePasswordModal() {
+        console.log('showChangePasswordModal called');
+        const modalElement = document.getElementById('changePasswordModal');
+        console.log('Modal element:', modalElement);
+        
+        if (!modalElement) {
+            console.error('Change password modal not found!');
+            return;
+        }
+        
+        const modal = new bootstrap.Modal(modalElement);
+        console.log('Bootstrap modal instance:', modal);
+        modal.show();
+        
+        // Clear form when modal opens
+        const form = document.getElementById('changePasswordForm');
+        if (form) {
+            form.reset();
+            console.log('Form reset');
+        }
+    }
+
+    async handlePasswordChange(e) {
+        e.preventDefault();
+        
+        const form = e.target;
+        const formData = new FormData(form);
+        
+        const currentPassword = formData.get('current_password');
+        const newPassword = formData.get('new_password');
+        const confirmPassword = formData.get('confirm_password');
+
+        // Client-side validation
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            this.showToast('All fields are required', 'error');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            this.showToast('New passwords do not match', 'error');
+            return;
+        }
+
+        if (newPassword.length < 8) {
+            this.showToast('Password must be at least 8 characters long', 'error');
+            return;
+        }
+
+        try {
+            // Disable submit button to prevent double submission
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Changing...';
+
+            const response = await fetch('/auth/profile/password', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    current_password: currentPassword,
+                    new_password: newPassword,
+                    confirm_password: confirmPassword
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                this.showToast('Password changed successfully!', 'success');
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('changePasswordModal'));
+                if (modal) {
+                    modal.hide();
+                }
+                
+                // Clear form
+                form.reset();
+            } else {
+                this.showToast(data.error || 'Failed to change password', 'error');
+            }
+
+        } catch (error) {
+            console.error('Password change error:', error);
+            this.showToast('Network error occurred. Please try again.', 'error');
+        } finally {
+            // Re-enable submit button
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-key me-1"></i>Change Password';
+        }
+    }
+
+    // Toast notification system
+    showToast(message, type) {
+        const toastId = type === 'success' ? 'successToast' : 'errorToast';
+        const toastBodyId = type === 'success' ? 'successToastBody' : 'errorToastBody';
+        
+        const toastElement = document.getElementById(toastId);
+        const toastBody = document.getElementById(toastBodyId);
+        
+        if (toastElement && toastBody) {
+            toastBody.textContent = message;
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+        } else {
+            // Fallback to alert if toast system not available
+            alert(type === 'success' ? `Success: ${message}` : `Error: ${message}`);
         }
     }
 }
