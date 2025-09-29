@@ -12,10 +12,9 @@ export class AdminController {
       const totalEvents = await prisma.event.count();
       const totalPhotos = await prisma.photo.count();
       
-      // Get recent events
+      // Get all events for admin dashboard
       const rawEvents = await prisma.event.findMany({
         orderBy: { event_date: 'desc' },
-        take: 5,
         include: {
           photos: {
             take: 1
