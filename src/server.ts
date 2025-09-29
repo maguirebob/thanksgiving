@@ -99,8 +99,8 @@ app.get('/', requireAuth, async (_req, res) => {
   try {
     // Fetch events from database using Prisma
     const events = await prisma.event.findMany({
-      orderBy: { event_date: 'desc' },
-      take: 6 // Limit to 6 most recent events for homepage
+      orderBy: { event_date: 'desc' }
+      // Removed take: 6 limit to show all menus
     });
 
     // Transform data to include menu_image_url
@@ -142,7 +142,7 @@ app.get('/api/v1/version/display', (_req, res) => {
   res.json({
     success: true,
     data: {
-      version: '2.7.8',
+      version: '2.8.0',
       environment: config.getConfig().nodeEnv,
       buildDate: new Date().toISOString()
     }
@@ -268,7 +268,7 @@ app.get('/api/setup-database', async (_req, res) => {
 app.get('/about', requireAuth, (_req, res) => {
   res.render('about', {
     title: 'About - Thanksgiving Menu Collection',
-    version: '2.7.8',
+    version: '2.8.0',
     environment: config.getConfig().nodeEnv,
     buildDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
     dbStatus: 'Connected'

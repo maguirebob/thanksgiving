@@ -4,6 +4,51 @@ import prisma from '../lib/prisma';
 const router = Router();
 
 /**
+ * Get all events
+ * GET /api/v1/events
+ */
+router.get('/events', async (_req: Request, res: Response) => {
+  try {
+    const events = await prisma.event.findMany({
+      orderBy: { event_date: 'desc' },
+      include: {
+        photos: {
+          take: 1 // Include one photo per event for thumbnails
+        }
+      }
+    });
+
+    // Transform events to match frontend expectations
+    const transformedEvents = events.map(event => ({
+      id: event.event_id,
+      event_name: event.event_name,
+      event_type: event.event_type,
+      event_location: event.event_location,
+      event_date: event.event_date,
+      menu_image_url: `/images/${event.menu_image_filename}`,
+      description: event.event_description,
+      year: event.event_date.getFullYear(),
+      created_at: event.event_date,
+      updated_at: event.event_date,
+      photos: event.photos
+    }));
+
+    return res.json({
+      success: true,
+      events: transformedEvents,
+      count: transformedEvents.length
+    });
+
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
+/**
  * Get a single event by ID
  * GET /api/v1/events/:id
  */
