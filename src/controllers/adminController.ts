@@ -43,7 +43,7 @@ export class AdminController {
   };
 
   // Show user management page
-  showUsers = async (_req: Request, res: Response) => {
+  showUsers = async (req: Request, res: Response) => {
     try {
       const users = await prisma.user.findMany({
         orderBy: { created_at: 'desc' },
@@ -58,9 +58,20 @@ export class AdminController {
         }
       });
 
+      // Get current user info for the template
+      const currentUser = await prisma.user.findUnique({
+        where: { user_id: req.session.userId },
+        select: {
+          user_id: true,
+          username: true,
+          role: true
+        }
+      });
+
       res.render('admin/users', {
         title: 'User Management - Thanksgiving Menu Collection',
-        users
+        users,
+        currentUser
       });
     } catch (error) {
       console.error('Error loading users:', error);
