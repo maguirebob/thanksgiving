@@ -19,9 +19,9 @@ router.post('/events', upload.single('menu_image'), sanitizeMenuData, validateMe
       data: {
         event_name: event_name,
         event_type: 'Thanksgiving',
-        event_location: event_location || null,
+        event_location: event_location && event_location.trim() ? event_location.trim() : null,
         event_date: new Date(event_date),
-        event_description: event_description || null,
+        event_description: event_description && event_description.trim() ? event_description.trim() : null,
         menu_title: event_name,
         menu_image_filename: req.file!.filename
       }
