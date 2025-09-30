@@ -1,7 +1,60 @@
 import { Router, Request, Response } from 'express';
 import prisma from '../lib/prisma';
+import upload from '../middleware/upload';
+import { validateMenuCreation, sanitizeMenuData } from '../middleware/menuValidation';
 
 const router = Router();
+
+/**
+ * Create a new event
+ * POST /api/v1/events
+ */
+router.post('/events', upload.single('menu_image'), sanitizeMenuData, validateMenuCreation, async (req: Request, res: Response) => {
+  try {
+    // At this point, validation has passed, so we can safely use the data
+    const { event_name, event_date, event_location, event_description } = req.body;
+    
+    // Create the event
+    const newEvent = await prisma.event.create({
+      data: {
+        event_name: event_name,
+        event_type: 'Thanksgiving',
+        event_location: event_location || null,
+        event_date: new Date(event_date),
+        event_description: event_description || null,
+        menu_title: event_name,
+        menu_image_filename: req.file!.filename
+      }
+    });
+
+    // Transform the response to match what the frontend expects
+    const transformedEvent = {
+      id: newEvent.event_id,
+      event_name: newEvent.event_name,
+      event_type: newEvent.event_type,
+      event_location: newEvent.event_location,
+      event_date: newEvent.event_date,
+      menu_image_url: `/images/${newEvent.menu_image_filename}`,
+      description: newEvent.event_description,
+      year: newEvent.event_date.getFullYear(),
+      created_at: newEvent.event_date,
+      updated_at: newEvent.event_date
+    };
+
+    return res.status(201).json({
+      success: true,
+      event: transformedEvent,
+      message: 'Menu created successfully'
+    });
+
+  } catch (error) {
+    console.error('Error creating event:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
 
 /**
  * Get all events

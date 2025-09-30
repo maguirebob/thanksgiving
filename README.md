@@ -18,7 +18,194 @@ This project has been successfully migrated from JavaScript/Sequelize to TypeScr
 
 ## 🚀 Live Application
 
-**Test Environment:** https://thanksgiving-test-test.up.railway.app
+**Test Environment:** https://thanksgiving-test-test.up.railway.app  
+**Production Environment:** https://thanksgiving-prod-production.up.railway.app
+
+## 🚂 Railway Deployment
+
+### Railway CLI Setup
+
+The application is deployed on Railway with separate test and production environments. Use the Railway CLI to manage deployments and switch between environments.
+
+#### Install Railway CLI
+```bash
+npm install -g @railway/cli
+```
+
+#### Login to Railway
+```bash
+railway login
+```
+
+#### Link to Project
+```bash
+# Link to the thanksgiving project
+railway link --project thanksgiving
+```
+
+### Environment Management
+
+#### Switch Between Environments
+
+**Switch to Test Environment:**
+```bash
+railway link --project thanksgiving --environment test
+```
+
+**Switch to Production Environment:**
+```bash
+railway link --project thanksgiving --environment production
+```
+
+**Check Current Environment:**
+```bash
+railway status
+```
+
+#### Environment Variables
+
+Each environment has its own set of variables:
+
+**Test Environment Variables:**
+- `NODE_ENV=production`
+- `PORT=3000`
+- `DATABASE_URL=<test-database-url>`
+- `SESSION_SECRET=<test-session-secret>`
+- `CORS_ORIGIN=https://thanksgiving-test-test.up.railway.app`
+
+**Production Environment Variables:**
+- `NODE_ENV=production`
+- `PORT=3000`
+- `DATABASE_URL=<production-database-url>`
+- `SESSION_SECRET=<production-session-secret>`
+- `CORS_ORIGIN=https://thanksgiving-prod-production.up.railway.app`
+
+### Deployment Commands
+
+#### Deploy to Current Environment
+```bash
+# Deploy current branch to linked environment
+railway up
+```
+
+#### Deploy Specific Branch
+```bash
+# Deploy specific branch
+railway up --detach
+```
+
+#### View Deployment Logs
+```bash
+# View real-time logs
+railway logs
+
+# View logs with follow
+railway logs --follow
+```
+
+#### Database Management
+
+**Connect to Database:**
+```bash
+# Connect to current environment's database
+railway connect postgres
+```
+
+**Run Database Commands:**
+```bash
+# Run migrations
+railway run npx prisma migrate deploy
+
+# Seed database
+railway run npm run db:seed
+
+# Open Prisma Studio
+railway run npx prisma studio
+```
+
+### Railway Dashboard
+
+Access the Railway dashboard at https://railway.app/dashboard to:
+- View deployment status
+- Manage environment variables
+- Monitor application metrics
+- View logs and errors
+- Manage database connections
+
+### Troubleshooting Railway Deployments
+
+1. **Deployment Failures:**
+   ```bash
+   # Check logs for errors
+   railway logs
+   
+   # Redeploy if needed
+   railway up
+   ```
+
+2. **Environment Variable Issues:**
+   ```bash
+   # List current variables
+   railway variables
+   
+   # Set variables via CLI
+   railway variables set KEY=value
+   ```
+
+3. **Database Connection Issues:**
+   ```bash
+   # Test database connection
+   railway run npx prisma db push
+   
+   # Check database status
+   railway status
+   ```
+
+4. **Service Issues:**
+   ```bash
+   # Restart service
+   railway service restart
+   
+   # Check service status
+   railway status
+   ```
+
+### Railway Best Practices
+
+1. **Environment Separation:** Always use separate environments for test and production
+2. **Variable Management:** Use Railway dashboard for sensitive variables
+3. **Database Backups:** Railway handles automatic backups, but consider additional backup strategies
+4. **Monitoring:** Use Railway's built-in monitoring and set up alerts
+5. **Security:** Keep production secrets secure and rotate them regularly
+
+### Railway CLI Commands Reference
+
+```bash
+# Project Management
+railway login                    # Login to Railway
+railway link                     # Link to project
+railway status                   # Show current status
+railway projects                 # List projects
+
+# Environment Management
+railway environment              # Switch environment
+railway variables                # Manage environment variables
+railway variables set KEY=value # Set environment variable
+
+# Deployment
+railway up                       # Deploy current branch
+railway up --detach              # Deploy in background
+railway logs                     # View deployment logs
+railway logs --follow            # Follow logs in real-time
+
+# Database
+railway connect postgres         # Connect to database
+railway run <command>            # Run command in Railway environment
+
+# Service Management
+railway service restart          # Restart service
+railway service logs             # View service logs
+```
 
 ## 🛠️ Tech Stack
 
