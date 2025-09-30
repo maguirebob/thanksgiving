@@ -1,6 +1,6 @@
 {
   "name": "thanksgiving-website-ts",
-  "version": "2.8.2",
+  "version": "2.9.0",
   "description": "Thanksgiving Menu Website - TypeScript Version",
   "main": "dist/server.js",
   "scripts": {
@@ -37,7 +37,9 @@
     "db:reset": "prisma migrate reset --force && npm run db:seed",
     "db:studio": "prisma studio",
     "clean": "rimraf dist",
-    "postbuild": "npm run db:generate"
+    "postbuild": "npm run db:generate",
+    "deploy:production": "ts-node scripts/deploy-production.ts",
+    "deploy:production:help": "ts-node scripts/deploy-production.ts --help"
   },
   "keywords": [
     "thanksgiving",

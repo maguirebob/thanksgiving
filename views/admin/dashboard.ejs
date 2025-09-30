@@ -33,8 +33,11 @@
 
       <!-- Recent Events -->
       <div class="card">
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
           <h5 class="mb-0">Recent Events</h5>
+          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMenuModal">
+            <i class="fas fa-plus me-1"></i>Add Menu
+          </button>
         </div>
         <div class="card-body">
           <% if (recentEvents && recentEvents.length > 0) { %>
@@ -352,4 +355,175 @@ function showMessage(message, type) {
     }
   }, 5000);
 }
+
+// Add Menu Modal functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const addMenuForm = document.getElementById('addMenuForm');
+  const menuImageInput = document.getElementById('menu_image');
+  const imagePreview = document.getElementById('imagePreview');
+  const previewImage = document.getElementById('previewImage');
+  const submitBtn = document.getElementById('submitBtn');
+
+  // Image preview functionality
+  menuImageInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+      if (!allowedTypes.includes(file.type)) {
+        showMessage('Please select a JPEG or PNG image file.', 'error');
+        e.target.value = '';
+        return;
+      }
+
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        showMessage('File size must be less than 5MB.', 'error');
+        e.target.value = '';
+        return;
+      }
+
+      // Show preview
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        previewImage.src = e.target.result;
+        imagePreview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    } else {
+      imagePreview.style.display = 'none';
+    }
+  });
+
+  // Form submission
+  addMenuForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    // Disable submit button to prevent double submission
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creating...';
+
+    try {
+      const formData = new FormData(addMenuForm);
+      
+      const response = await fetch('/api/v1/events', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        showMessage('Menu created successfully!', 'success');
+        
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addMenuModal'));
+        modal.hide();
+        
+        // Reset form
+        addMenuForm.reset();
+        imagePreview.style.display = 'none';
+        
+        // Reload page to show new menu
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      } else {
+        showMessage(data.message || 'Failed to create menu', 'error');
+      }
+
+    } catch (error) {
+      console.error('Error creating menu:', error);
+      showMessage('Network error occurred. Please try again.', 'error');
+    } finally {
+      // Re-enable submit button
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fas fa-save me-1"></i>Create Menu';
+    }
+  });
+
+  // Reset form when modal is closed
+  document.getElementById('addMenuModal').addEventListener('hidden.bs.modal', function() {
+    addMenuForm.reset();
+    imagePreview.style.display = 'none';
+  });
+});
 </script>
+
+<!-- Add Menu Modal -->
+<div class="modal fade" id="addMenuModal" tabindex="-1" aria-labelledby="addMenuModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addMenuModalLabel">
+          <i class="fas fa-plus me-2"></i>Add New Menu
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="addMenuForm" enctype="multipart/form-data">
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="event_name" class="form-label">Event Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="event_name" name="event_name" required 
+                       placeholder="e.g., Thanksgiving 2025" maxlength="100">
+                <div class="form-text">Enter a descriptive name for the Thanksgiving event</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="event_date" class="form-label">Event Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" id="event_date" name="event_date" required>
+                <div class="form-text">Select the date of the Thanksgiving event</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="event_location" class="form-label">Location</label>
+                <input type="text" class="form-control" id="event_location" name="event_location" 
+                       placeholder="e.g., Family Home" maxlength="200">
+                <div class="form-text">Optional location where the event took place</div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="menu_image" class="form-label">Menu Image <span class="text-danger">*</span></label>
+                <input type="file" class="form-control" id="menu_image" name="menu_image" 
+                       accept="image/jpeg,image/jpg,image/png" required>
+                <div class="form-text">Upload a JPEG or PNG image (max 5MB)</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="event_description" class="form-label">Description</label>
+            <textarea class="form-control" id="event_description" name="event_description" 
+                      rows="3" placeholder="Optional description of the event..." maxlength="1000"></textarea>
+            <div class="form-text">Optional description or notes about the event</div>
+          </div>
+          
+          <!-- Preview Section -->
+          <div class="mb-3" id="imagePreview" style="display: none;">
+            <label class="form-label">Image Preview</label>
+            <div class="text-center">
+              <img id="previewImage" src="" alt="Preview" class="img-thumbnail" style="max-width: 300px; max-height: 200px;">
+            </div>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i>Cancel
+          </button>
+          <button type="submit" class="btn btn-primary" id="submitBtn">
+            <i class="fas fa-save me-1"></i>Create Menu
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
