@@ -219,7 +219,7 @@ router.get('/volume-contents', async (_req: Request, res: Response) => {
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
     
-    res.json({
+    return res.json({
       success: true,
       environment: process.env['NODE_ENV'] || 'unknown',
       mountPath: volumePath,
@@ -235,7 +235,7 @@ router.get('/volume-contents', async (_req: Request, res: Response) => {
     
   } catch (error) {
     console.error('Error reading volume contents:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to read volume contents',
       error: error instanceof Error ? error.message : 'Unknown error'
