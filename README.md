@@ -253,6 +253,46 @@ railway service logs             # View service logs
 5. **Access the application:**
    Open http://localhost:3000
 
+### Version Management
+
+The project uses semantic versioning (SemVer) with automated version management:
+
+#### Version Commands
+```bash
+# Check current version
+npm run version:check
+
+# Increment patch version (bug fixes)
+npm run version:patch
+
+# Increment minor version (new features)
+npm run version:minor
+
+# Increment major version (breaking changes)
+npm run version:major
+```
+
+#### Version Workflow
+1. **Make changes** in the `dev` branch
+2. **Version your changes** using the appropriate command above
+3. **Deploy to test** environment for testing
+4. **Deploy to production** after successful testing
+
+#### Version Display
+The current version is automatically displayed on the About page and can be accessed via:
+- **Web UI**: Visit `/about` page
+- **API**: `GET /api/v1/version/display`
+
+#### Database Migrations
+When making database schema changes:
+```bash
+# Generate migration
+npx prisma migrate dev --name describe_your_change
+
+# Apply migrations in production
+npm run db:migrate
+```
+
 ### Production Deployment
 
 The application is configured for Railway deployment:
