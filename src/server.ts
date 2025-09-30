@@ -145,7 +145,7 @@ app.get('/api/v1/version/display', (_req, res) => {
   res.json({
     success: true,
     data: {
-      version: '2.12.6',
+      version: '2.12.7',
       environment: config.getConfig().nodeEnv,
       buildDate: new Date().toISOString()
     }
