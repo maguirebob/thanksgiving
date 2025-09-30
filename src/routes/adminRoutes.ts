@@ -8,6 +8,13 @@ const router = Router();
 router.use(requireAuth);
 
 /**
+ * Admin dashboard root - redirect to dashboard
+ */
+router.get('/', async (_req: Request, res: Response) => {
+  res.redirect('/admin/dashboard');
+});
+
+/**
  * Admin dashboard
  */
 router.get('/dashboard', async (_req: Request, res: Response) => {
