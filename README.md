@@ -278,6 +278,30 @@ npm run version:major
 3. **Deploy to test** environment for testing
 4. **Deploy to production** after successful testing
 
+#### Branch Promotion Commands
+The project enforces a strict dev → test → main workflow:
+
+**Deploy to Test Environment:**
+```bash
+git checkout test
+git merge dev
+git push origin test
+# → Railway automatically deploys to test environment
+```
+
+**Deploy to Production:**
+```bash
+git checkout main
+git merge test
+git push origin main
+# → Railway automatically deploys to production environment
+```
+
+#### Workflow Enforcement
+- **GitHub Branch Protection**: Prevents direct pushes to `test` and `main` branches
+- **GitHub Workflow**: Enforces correct branch promotion order (dev → test → main)
+- **Required**: All code must flow through dev → test → main sequence
+
 #### Version Display
 The current version is automatically displayed on the About page and can be accessed via:
 - **Web UI**: Visit `/about` page
