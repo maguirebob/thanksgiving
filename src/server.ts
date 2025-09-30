@@ -85,8 +85,11 @@ app.use(session({
 // Authentication middleware
 app.use(addUserToLocals);
 
-// Static files
-app.use(express.static(path.join(__dirname, '../public')));
+// Static files - use absolute path for Railway environment
+const publicPath = process.env['NODE_ENV'] === 'development' 
+  ? path.join(__dirname, '../public')
+  : '/app/public';
+app.use(express.static(publicPath));
 
 // View engine setup
 app.use(expressLayouts);
@@ -142,7 +145,7 @@ app.get('/api/v1/version/display', (_req, res) => {
   res.json({
     success: true,
     data: {
-      version: '2.12.4',
+      version: '2.12.5',
       environment: config.getConfig().nodeEnv,
       buildDate: new Date().toISOString()
     }
