@@ -497,10 +497,27 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('viewVolumeBtn').addEventListener('click', function() {
           const modal = new bootstrap.Modal(document.getElementById('volumeContentsModal'));
           modal.show();
-          loadVolumeContents();
-        });
-        
-        document.getElementById('refreshVolumeBtn').addEventListener('click', function() {
+          
+          // Set up event listeners for buttons inside the modal after it's shown
+          setTimeout(() => {
+            const refreshBtn = document.getElementById('refreshVolumeBtn');
+            const syncBtn = document.getElementById('syncLocalImagesBtn');
+            
+            if (refreshBtn && !refreshBtn.hasAttribute('data-listener-added')) {
+              refreshBtn.addEventListener('click', function() {
+                loadVolumeContents();
+              });
+              refreshBtn.setAttribute('data-listener-added', 'true');
+            }
+            
+            if (syncBtn && !syncBtn.hasAttribute('data-listener-added')) {
+              syncBtn.addEventListener('click', function() {
+                syncLocalImages();
+              });
+              syncBtn.setAttribute('data-listener-added', 'true');
+            }
+          }, 100);
+          
           loadVolumeContents();
         });
         
