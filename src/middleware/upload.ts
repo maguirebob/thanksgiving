@@ -1,11 +1,27 @@
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 import { Request } from 'express';
+
+// Get the appropriate upload path based on environment
+const getUploadPath = (): string => {
+  // Development: use local directory
+  if (process.env['NODE_ENV'] === 'development') {
+    return path.join(process.cwd(), 'public/images');
+  }
+  
+  // Test/Production: use Railway volume
+  return '/app/public/images';
+};
 
 // Configure multer for image uploads
 const storage = multer.diskStorage({
   destination: (_req: Request, _file: Express.Multer.File, cb: Function) => {
-    cb(null, 'public/images/');
+    const uploadDir = getUploadPath();
+    
+    // Create directory if it doesn't exist
+    fs.mkdirSync(uploadDir, { recursive: true });
+    cb(null, uploadDir);
   },
   filename: (_req: Request, file: Express.Multer.File, cb: Function) => {
     // Generate unique filename with timestamp and original extension
