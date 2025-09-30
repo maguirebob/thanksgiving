@@ -504,6 +504,10 @@ document.addEventListener('DOMContentLoaded', function() {
           loadVolumeContents();
         });
         
+        document.getElementById('syncLocalImagesBtn').addEventListener('click', function() {
+          syncLocalImages();
+        });
+        
         async function loadVolumeContents() {
           const volumeContents = document.getElementById('volumeContents');
           const refreshBtn = document.getElementById('refreshVolumeBtn');
@@ -654,6 +658,46 @@ document.addEventListener('DOMContentLoaded', function() {
             this.remove();
           });
         }
+        
+        async function syncLocalImages() {
+          const syncBtn = document.getElementById('syncLocalImagesBtn');
+          const originalText = syncBtn.innerHTML;
+          
+          // Disable button and show loading
+          syncBtn.disabled = true;
+          syncBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Syncing...';
+          
+          try {
+            const response = await fetch('/admin/sync-local-images', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+              showMessage(`✅ ${data.message}`, 'success');
+              console.log('Sync results:', data.results);
+              
+              // Refresh volume contents to show new files
+              setTimeout(() => {
+                loadVolumeContents();
+              }, 1000);
+            } else {
+              showMessage(`❌ ${data.message}`, 'error');
+            }
+            
+          } catch (error) {
+            console.error('Error syncing local images:', error);
+            showMessage('❌ Network error occurred during sync. Please try again.', 'error');
+          } finally {
+            // Re-enable button
+            syncBtn.disabled = false;
+            syncBtn.innerHTML = originalText;
+          }
+        }
         </script>
 
 <!-- Add Menu Modal -->
@@ -774,9 +818,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h6><i class="fas fa-list me-1"></i>File Contents</h6>
-          <button type="button" class="btn btn-sm btn-outline-primary" id="refreshVolumeBtn">
-            <i class="fas fa-sync-alt me-1"></i>Refresh
-          </button>
+          <div>
+            <button type="button" class="btn btn-sm btn-success me-2" id="syncLocalImagesBtn">
+              <i class="fas fa-sync me-1"></i>Sync Local Images
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="refreshVolumeBtn">
+              <i class="fas fa-sync-alt me-1"></i>Refresh
+            </button>
+          </div>
         </div>
         
         <div id="volumeContents">
