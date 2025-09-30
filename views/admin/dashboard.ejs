@@ -35,9 +35,14 @@
       <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
           <h5 class="mb-0">Recent Events</h5>
-          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMenuModal">
-            <i class="fas fa-plus me-1"></i>Add Menu
-          </button>
+          <div>
+            <button type="button" class="btn btn-warning me-2" id="fixFilenamesBtn">
+              <i class="fas fa-wrench me-1"></i>Fix Filenames
+            </button>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMenuModal">
+              <i class="fas fa-plus me-1"></i>Add Menu
+            </button>
+          </div>
         </div>
         <div class="card-body">
           <% if (recentEvents && recentEvents.length > 0) { %>
@@ -447,8 +452,44 @@ document.addEventListener('DOMContentLoaded', function() {
     addMenuForm.reset();
     imagePreview.style.display = 'none';
   });
-});
-</script>
+        });
+
+        // Fix filenames functionality
+        document.getElementById('fixFilenamesBtn').addEventListener('click', async function() {
+          const btn = this;
+          const originalText = btn.innerHTML;
+          
+          // Disable button and show loading
+          btn.disabled = true;
+          btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Fixing...';
+          
+          try {
+            const response = await fetch('/admin/fix-filenames', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+              showMessage(`✅ ${data.message}`, 'success');
+              console.log('Fix results:', data.results);
+            } else {
+              showMessage(`❌ ${data.message}`, 'error');
+            }
+            
+          } catch (error) {
+            console.error('Error fixing filenames:', error);
+            showMessage('❌ Network error occurred. Please try again.', 'error');
+          } finally {
+            // Re-enable button
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+          }
+        });
+        </script>
 
 <!-- Add Menu Modal -->
 <div class="modal fade" id="addMenuModal" tabindex="-1" aria-labelledby="addMenuModalLabel" aria-hidden="true">
