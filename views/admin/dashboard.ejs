@@ -36,6 +36,9 @@
         <div class="card-header d-flex justify-content-between align-items-center">
           <h5 class="mb-0">Recent Events</h5>
           <div>
+            <button type="button" class="btn btn-info me-2" id="viewVolumeBtn">
+              <i class="fas fa-hdd me-1"></i>View Volume
+            </button>
             <button type="button" class="btn btn-warning me-2" id="fixFilenamesBtn">
               <i class="fas fa-wrench me-1"></i>Fix Filenames
             </button>
@@ -489,6 +492,168 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.innerHTML = originalText;
           }
         });
+        
+        // Volume Contents functionality
+        document.getElementById('viewVolumeBtn').addEventListener('click', function() {
+          const modal = new bootstrap.Modal(document.getElementById('volumeContentsModal'));
+          modal.show();
+          loadVolumeContents();
+        });
+        
+        document.getElementById('refreshVolumeBtn').addEventListener('click', function() {
+          loadVolumeContents();
+        });
+        
+        async function loadVolumeContents() {
+          const volumeContents = document.getElementById('volumeContents');
+          const refreshBtn = document.getElementById('refreshVolumeBtn');
+          
+          // Show loading state
+          volumeContents.innerHTML = `
+            <div class="text-center">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-2">Loading volume contents...</p>
+            </div>
+          `;
+          
+          // Disable refresh button
+          refreshBtn.disabled = true;
+          
+          try {
+            const response = await fetch('/admin/volume-contents', {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+              // Update volume information
+              document.getElementById('volumeEnvironment').textContent = data.environment || 'Unknown';
+              document.getElementById('volumeMountPath').textContent = data.mountPath || 'Unknown';
+              document.getElementById('volumeName').textContent = data.volumeName || 'Unknown';
+              document.getElementById('volumeLastUpdated').textContent = new Date().toLocaleString();
+              
+              // Update statistics
+              document.getElementById('volumeFileCount').textContent = data.stats.totalFiles || 0;
+              document.getElementById('volumeTotalSize').textContent = data.stats.totalSize || '0 B';
+              document.getElementById('volumeImageCount').textContent = data.stats.imageFiles || 0;
+              document.getElementById('volumeOtherCount').textContent = data.stats.otherFiles || 0;
+              
+              // Display file contents
+              if (data.files && data.files.length > 0) {
+                let filesHtml = '<div class="table-responsive"><table class="table table-striped table-hover">';
+                filesHtml += '<thead><tr><th>Filename</th><th>Size</th><th>Type</th><th>Modified</th><th>Actions</th></tr></thead><tbody>';
+                
+                data.files.forEach(file => {
+                  const isImage = file.type === 'image';
+                  const iconClass = isImage ? 'fas fa-image text-primary' : 'fas fa-file text-secondary';
+                  const sizeFormatted = formatFileSize(file.size);
+                  const modifiedFormatted = new Date(file.modified).toLocaleString();
+                  
+                  filesHtml += `
+                    <tr>
+                      <td><i class="${iconClass} me-2"></i>${file.name}</td>
+                      <td>${sizeFormatted}</td>
+                      <td><span class="badge ${isImage ? 'bg-primary' : 'bg-secondary'}">${file.type}</span></td>
+                      <td>${modifiedFormatted}</td>
+                      <td>
+                        ${isImage ? `<button class="btn btn-sm btn-outline-primary" onclick="previewImage('${file.name}')">
+                          <i class="fas fa-eye me-1"></i>Preview
+                        </button>` : ''}
+                      </td>
+                    </tr>
+                  `;
+                });
+                
+                filesHtml += '</tbody></table></div>';
+                volumeContents.innerHTML = filesHtml;
+              } else {
+                volumeContents.innerHTML = `
+                  <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No files found in the volume.
+                  </div>
+                `;
+              }
+              
+            } else {
+              volumeContents.innerHTML = `
+                <div class="alert alert-danger text-center">
+                  <i class="fas fa-exclamation-triangle me-2"></i>
+                  Error loading volume contents: ${data.message || 'Unknown error'}
+                </div>
+              `;
+            }
+            
+          } catch (error) {
+            console.error('Error loading volume contents:', error);
+            volumeContents.innerHTML = `
+              <div class="alert alert-danger text-center">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Network error occurred while loading volume contents.
+              </div>
+            `;
+          } finally {
+            // Re-enable refresh button
+            refreshBtn.disabled = false;
+          }
+        }
+        
+        function formatFileSize(bytes) {
+          if (bytes === 0) return '0 B';
+          const k = 1024;
+          const sizes = ['B', 'KB', 'MB', 'GB'];
+          const i = Math.floor(Math.log(bytes) / Math.log(k));
+          return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        function previewImage(filename) {
+          const imageUrl = `/images/${filename}`;
+          const previewModal = `
+            <div class="modal fade" id="imagePreviewModal" tabindex="-1">
+              <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Image Preview: ${filename}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body text-center">
+                    <img src="${imageUrl}" class="img-fluid" alt="${filename}" style="max-height: 70vh;">
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <a href="${imageUrl}" target="_blank" class="btn btn-primary">
+                      <i class="fas fa-external-link-alt me-1"></i>Open in New Tab
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          // Remove existing preview modal if any
+          const existingModal = document.getElementById('imagePreviewModal');
+          if (existingModal) {
+            existingModal.remove();
+          }
+          
+          // Add new preview modal
+          document.body.insertAdjacentHTML('beforeend', previewModal);
+          
+          // Show the modal
+          const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
+          modal.show();
+          
+          // Clean up when modal is hidden
+          document.getElementById('imagePreviewModal').addEventListener('hidden.bs.modal', function() {
+            this.remove();
+          });
+        }
         </script>
 
 <!-- Add Menu Modal -->
@@ -565,6 +730,70 @@ document.addEventListener('DOMContentLoaded', function() {
           </button>
         </div>
       </form>
+    </div>
+  </div>
+</div>
+
+<!-- Volume Contents Modal -->
+<div class="modal fade" id="volumeContentsModal" tabindex="-1" aria-labelledby="volumeContentsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="volumeContentsModalLabel">
+          <i class="fas fa-hdd me-2"></i>Railway Volume Contents
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6">
+            <h6><i class="fas fa-folder me-1"></i>Volume Information</h6>
+            <div class="card">
+              <div class="card-body">
+                <p><strong>Environment:</strong> <span id="volumeEnvironment">Loading...</span></p>
+                <p><strong>Mount Path:</strong> <span id="volumeMountPath">Loading...</span></p>
+                <p><strong>Volume Name:</strong> <span id="volumeName">Loading...</span></p>
+                <p><strong>Last Updated:</strong> <span id="volumeLastUpdated">Loading...</span></p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <h6><i class="fas fa-chart-bar me-1"></i>Statistics</h6>
+            <div class="card">
+              <div class="card-body">
+                <p><strong>Total Files:</strong> <span id="volumeFileCount">Loading...</span></p>
+                <p><strong>Total Size:</strong> <span id="volumeTotalSize">Loading...</span></p>
+                <p><strong>Image Files:</strong> <span id="volumeImageCount">Loading...</span></p>
+                <p><strong>Other Files:</strong> <span id="volumeOtherCount">Loading...</span></p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <hr>
+        
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6><i class="fas fa-list me-1"></i>File Contents</h6>
+          <button type="button" class="btn btn-sm btn-outline-primary" id="refreshVolumeBtn">
+            <i class="fas fa-sync-alt me-1"></i>Refresh
+          </button>
+        </div>
+        
+        <div id="volumeContents">
+          <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading volume contents...</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="downloadVolumeLogBtn">
+          <i class="fas fa-download me-1"></i>Download Log
+        </button>
+      </div>
     </div>
   </div>
 </div>
