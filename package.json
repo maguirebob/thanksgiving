@@ -31,6 +31,8 @@
     "db:migrate:status": "prisma migrate status",
     "db:push": "prisma db push",
     "db:seed": "ts-node scripts/insert-sample-data.ts",
+    "upload:images": "ts-node scripts/upload-images-to-railway.ts",
+    "fix:filenames": "ts-node scripts/fix-menu-filenames.ts",
     "deploy": "npm run build && npm run db:migrate && npm start",
     "deploy:dev": "npm run build && npm run db:migrate:dev && npm run dev",
     "lint": "eslint src/**/*.ts",
