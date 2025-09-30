@@ -19,6 +19,11 @@ router.get('/', async (_req: Request, res: Response) => {
  */
 router.get('/dashboard', async (_req: Request, res: Response) => {
   try {
+    // Get statistics
+    const totalUsers = await prisma.user.count();
+    const totalEvents = await prisma.event.count();
+    const totalPhotos = await prisma.photo.count();
+
     // Get recent events
     const recentEvents = await prisma.event.findMany({
       orderBy: { event_date: 'desc' },
@@ -39,6 +44,11 @@ router.get('/dashboard', async (_req: Request, res: Response) => {
 
     res.render('admin/dashboard', {
       title: 'Admin Dashboard',
+      stats: {
+        totalUsers,
+        totalEvents,
+        totalPhotos
+      },
       recentEvents: transformedEvents
     });
   } catch (error) {
