@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import { requireAuth } from '../middleware/auth';
+import fs from 'fs';
+import path from 'path';
 
 const router = Router();
 
@@ -143,6 +145,99 @@ router.post('/fix-filenames', async (_req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fix filenames',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * Get volume contents
+ * GET /admin/volume-contents
+ */
+router.get('/volume-contents', async (_req: Request, res: Response) => {
+  try {
+    // Determine the volume path based on environment
+    const volumePath = process.env['NODE_ENV'] === 'development' 
+      ? path.join(process.cwd(), 'public/images')
+      : '/app/public/images';
+    
+    console.log(`🔍 Checking volume contents at: ${volumePath}`);
+    
+    // Check if directory exists
+    if (!fs.existsSync(volumePath)) {
+      return res.json({
+        success: false,
+        message: `Volume directory does not exist: ${volumePath}`,
+        environment: process.env['NODE_ENV'] || 'unknown',
+        mountPath: volumePath,
+        volumeName: 'images-storage-thanksgiving-test',
+        files: [],
+        stats: {
+          totalFiles: 0,
+          totalSize: '0 B',
+          imageFiles: 0,
+          otherFiles: 0
+        }
+      });
+    }
+    
+    // Read directory contents
+    const files = fs.readdirSync(volumePath);
+    const fileStats: any[] = [];
+    let totalSize = 0;
+    let imageFiles = 0;
+    let otherFiles = 0;
+    
+    files.forEach(filename => {
+      const filePath = path.join(volumePath, filename);
+      const stats = fs.statSync(filePath);
+      
+      const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(filename);
+      if (isImage) imageFiles++;
+      else otherFiles++;
+      
+      totalSize += stats.size;
+      
+      fileStats.push({
+        name: filename,
+        size: stats.size,
+        type: isImage ? 'image' : 'file',
+        modified: stats.mtime,
+        path: filePath
+      });
+    });
+    
+    // Sort files by modification date (newest first)
+    fileStats.sort((a, b) => b.modified.getTime() - a.modified.getTime());
+    
+    // Format total size
+    const formatFileSize = (bytes: number): string => {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+    
+    res.json({
+      success: true,
+      environment: process.env['NODE_ENV'] || 'unknown',
+      mountPath: volumePath,
+      volumeName: 'images-storage-thanksgiving-test',
+      files: fileStats,
+      stats: {
+        totalFiles: files.length,
+        totalSize: formatFileSize(totalSize),
+        imageFiles,
+        otherFiles
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error reading volume contents:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to read volume contents',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
