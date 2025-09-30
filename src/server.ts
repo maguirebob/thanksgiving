@@ -266,9 +266,10 @@ app.get('/api/setup-database', async (_req, res) => {
 
 // About page route
 app.get('/about', requireAuth, (_req, res) => {
+  const packageJson = require('../package.json');
   res.render('about', {
     title: 'About - Thanksgiving Menu Collection',
-    version: '2.10.1',
+    version: packageJson.version,
     environment: config.getConfig().nodeEnv,
     buildDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
     dbStatus: 'Connected'
