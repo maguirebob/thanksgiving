@@ -588,9 +588,15 @@ document.addEventListener('DOMContentLoaded', function() {
                       <td>${statusBadge}</td>
                       <td>${modifiedFormatted}</td>
                       <td>
-                        ${isImage ? `<button class="btn btn-sm btn-outline-primary" onclick="previewImage('${file.name}')">
-                          <i class="fas fa-eye me-1"></i>Preview
-                        </button>` : ''}
+                        <div class="btn-group btn-group-sm">
+                          ${isImage ? `<button class="btn btn-outline-primary" onclick="previewImage('${file.name}')" title="Preview Image">
+                            <i class="fas fa-eye"></i>
+                          </button>` : ''}
+                          <button class="btn btn-outline-danger" onclick="deleteFile('${file.name}')" 
+                                  ${file.isLinked ? 'disabled title="Cannot delete linked file"' : 'title="Delete File"'}">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   `;
@@ -776,6 +782,46 @@ function showImageModal(imageUrl, filename) {
   document.getElementById('imagePreviewModal').addEventListener('hidden.bs.modal', function() {
     this.remove();
   });
+}
+
+// File deletion function
+async function deleteFile(filename) {
+  console.log('deleteFile called with filename:', filename);
+  
+  // Show confirmation dialog
+  const confirmed = confirm(`Are you sure you want to delete "${filename}"?\n\nThis action cannot be undone.`);
+  
+  if (!confirmed) {
+    console.log('File deletion cancelled by user');
+    return;
+  }
+  
+  try {
+    console.log('Sending delete request for:', filename);
+    const response = await fetch(`/admin/volume-file/${filename}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const data = await response.json();
+    console.log('Delete response:', data);
+    
+    if (data.success) {
+      showMessage(`✅ ${data.message}`, 'success');
+      // Refresh volume contents to show updated file list
+      setTimeout(() => {
+        loadVolumeContents();
+      }, 1000);
+    } else {
+      showMessage(`❌ ${data.message}`, 'error');
+    }
+    
+  } catch (error) {
+    console.error('Error deleting file:', error);
+    showMessage('❌ Network error occurred while deleting file', 'error');
+  }
 }
 
         </script>
