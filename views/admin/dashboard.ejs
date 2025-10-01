@@ -366,7 +366,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const addMenuForm = document.getElementById('addMenuForm');
   const menuImageInput = document.getElementById('menu_image');
   const imagePreview = document.getElementById('imagePreview');
-  const previewImage = document.getElementById('previewImage');
+  const previewImageElement = document.getElementById('previewImage');
   const submitBtn = document.getElementById('submitBtn');
 
   // Image preview functionality
@@ -391,7 +391,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // Show preview
       const reader = new FileReader();
       reader.onload = function(e) {
-        previewImage.src = e.target.result;
+        previewImageElement.src = e.target.result;
         imagePreview.style.display = 'block';
       };
       reader.readAsDataURL(file);
