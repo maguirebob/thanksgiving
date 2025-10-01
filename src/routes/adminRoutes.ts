@@ -30,7 +30,7 @@ router.get('/dashboard', async (_req: Request, res: Response) => {
     // Get recent events
     const recentEvents = await prisma.event.findMany({
       orderBy: { event_date: 'desc' },
-      take: 10,
+      take: 50, // Increased limit to show more events
       include: {
         photos: {
           take: 1
