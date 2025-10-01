@@ -642,48 +642,6 @@ document.addEventListener('DOMContentLoaded', function() {
           return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
         
-        function previewImage(filename) {
-          const imageUrl = `/images/${filename}`;
-          const previewModal = `
-            <div class="modal fade" id="imagePreviewModal" tabindex="-1">
-              <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title">Image Preview: ${filename}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                  </div>
-                  <div class="modal-body text-center">
-                    <img src="${imageUrl}" class="img-fluid" alt="${filename}" style="max-height: 70vh;">
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <a href="${imageUrl}" target="_blank" class="btn btn-primary">
-                      <i class="fas fa-external-link-alt me-1"></i>Open in New Tab
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          `;
-          
-          // Remove existing preview modal if any
-          const existingModal = document.getElementById('imagePreviewModal');
-          if (existingModal) {
-            existingModal.remove();
-          }
-          
-          // Add new preview modal
-          document.body.insertAdjacentHTML('beforeend', previewModal);
-          
-          // Show the modal
-          const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
-          modal.show();
-          
-          // Clean up when modal is hidden
-          document.getElementById('imagePreviewModal').addEventListener('hidden.bs.modal', function() {
-            this.remove();
-          });
-        }
         
         async function syncLocalImages() {
           console.log('syncLocalImages function called');
@@ -759,6 +717,71 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
 }); // End of DOMContentLoaded
+
+// Move previewImage function to global scope so onclick handlers can access it
+function previewImage(filename) {
+  console.log('previewImage called with filename:', filename);
+  
+  const imageUrl = `/images/${filename}`;
+  console.log('Image URL:', imageUrl);
+  
+  // Test if image loads before showing modal
+  const testImg = new Image();
+  testImg.onload = function() {
+    console.log('Image loaded successfully, showing modal');
+    showImageModal(imageUrl, filename);
+  };
+  testImg.onerror = function() {
+    console.error('Image failed to load:', imageUrl);
+    showMessage(`❌ Failed to load image: ${filename}`, 'error');
+    // Fallback to new tab
+    window.open(imageUrl, '_blank');
+  };
+  testImg.src = imageUrl;
+}
+
+function showImageModal(imageUrl, filename) {
+  const previewModal = `
+    <div class="modal fade" id="imagePreviewModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Image Preview: ${filename}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body text-center">
+            <img src="${imageUrl}" class="img-fluid" alt="${filename}" style="max-height: 70vh;">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <a href="${imageUrl}" target="_blank" class="btn btn-primary">
+              <i class="fas fa-external-link-alt me-1"></i>Open in New Tab
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Remove existing preview modal if any
+  const existingModal = document.getElementById('imagePreviewModal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
+  // Add new preview modal
+  document.body.insertAdjacentHTML('beforeend', previewModal);
+  
+  // Show the modal
+  const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
+  modal.show();
+  
+  // Clean up when modal is hidden
+  document.getElementById('imagePreviewModal').addEventListener('hidden.bs.modal', function() {
+    this.remove();
+  });
+}
+
         </script>
 
 <!-- Add Menu Modal -->
