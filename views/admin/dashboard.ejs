@@ -477,9 +477,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             if (syncBtn && !syncBtn.hasAttribute('data-listener-added')) {
-              syncBtn.addEventListener('click', function() {
-                console.log('Sync button clicked');
-                syncLocalImages();
+              syncBtn.addEventListener('click', function(e) {
+                console.log('Sync button clicked', e);
+                console.log('About to call syncLocalImages()');
+                try {
+                  syncLocalImages();
+                } catch (error) {
+                  console.error('Error calling syncLocalImages:', error);
+                }
               });
               syncBtn.setAttribute('data-listener-added', 'true');
               console.log('Sync button event listener added');
@@ -643,8 +648,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         async function syncLocalImages() {
+          console.log('syncLocalImages function called');
           const syncBtn = document.getElementById('syncLocalImagesBtn');
           const fileInput = document.getElementById('menuImagesUpload');
+          
+          console.log('Elements found:', { syncBtn: !!syncBtn, fileInput: !!fileInput });
           
           if (!syncBtn) {
             console.error('syncLocalImagesBtn element not found');
@@ -657,6 +665,9 @@ document.addEventListener('DOMContentLoaded', function() {
             showMessage('❌ File input not found. Please refresh the page.', 'error');
             return;
           }
+          
+          console.log('File input files:', fileInput.files);
+          console.log('Number of files:', fileInput.files ? fileInput.files.length : 'no files object');
           
           const originalText = syncBtn.innerHTML;
           
