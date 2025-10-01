@@ -639,7 +639,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         function previewImage(filename) {
+          console.log('previewImage called with filename:', filename);
+          
           const imageUrl = `/images/${filename}`;
+          console.log('Image URL:', imageUrl);
+          
+          // Test if image loads before showing modal
+          const testImg = new Image();
+          testImg.onload = function() {
+            console.log('Image loaded successfully, showing modal');
+            showImageModal(imageUrl, filename);
+          };
+          testImg.onerror = function() {
+            console.error('Image failed to load:', imageUrl);
+            showMessage(`❌ Failed to load image: ${filename}`, 'error');
+            // Fallback to new tab
+            window.open(imageUrl, '_blank');
+          };
+          testImg.src = imageUrl;
+        }
+        
+        function showImageModal(imageUrl, filename) {
           const previewModal = `
             <div class="modal fade" id="imagePreviewModal" tabindex="-1">
               <div class="modal-dialog modal-lg">
