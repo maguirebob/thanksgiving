@@ -251,6 +251,15 @@ router.post('/sync-local-images', async (_req: Request, res: Response) => {
   try {
     console.log('🔄 Starting local images sync...');
     
+    // Only allow sync in development environment
+    if (process.env['NODE_ENV'] !== 'development') {
+      return res.json({
+        success: false,
+        message: 'Sync local images is only available in development environment',
+        results: [`❌ This feature is only available in development environment`]
+      });
+    }
+    
     // Define the menu years and their details (same as load-all-menus.ts)
     const menuYears = [
       { year: 1994, filename: '1994_Menu.png', eventName: 'Thanksgiving 1994' },
@@ -283,9 +292,13 @@ router.post('/sync-local-images', async (_req: Request, res: Response) => {
     
     // Determine paths based on environment
     const localImagesPath = path.join(process.cwd(), 'public/images');
+<<<<<<< HEAD
     const volumePath = process.env['NODE_ENV'] === 'development' 
       ? localImagesPath
       : '/app/public/images';
+=======
+    const volumePath = '/app/public/images';
+>>>>>>> dev
     
     console.log(`📁 Local images path: ${localImagesPath}`);
     console.log(`📁 Volume path: ${volumePath}`);
