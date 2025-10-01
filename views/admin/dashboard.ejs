@@ -463,18 +463,26 @@ document.addEventListener('DOMContentLoaded', function() {
             const refreshBtn = document.getElementById('refreshVolumeBtn');
             const syncBtn = document.getElementById('syncLocalImagesBtn');
             
+            console.log('Setting up volume modal buttons:', { refreshBtn: !!refreshBtn, syncBtn: !!syncBtn });
+            
             if (refreshBtn && !refreshBtn.hasAttribute('data-listener-added')) {
               refreshBtn.addEventListener('click', function() {
+                console.log('Refresh button clicked');
                 loadVolumeContents();
               });
               refreshBtn.setAttribute('data-listener-added', 'true');
+              console.log('Refresh button event listener added');
+            } else if (!refreshBtn) {
+              console.warn('refreshVolumeBtn element not found');
             }
             
             if (syncBtn && !syncBtn.hasAttribute('data-listener-added')) {
               syncBtn.addEventListener('click', function() {
+                console.log('Sync button clicked');
                 syncLocalImages();
               });
               syncBtn.setAttribute('data-listener-added', 'true');
+              console.log('Sync button event listener added');
             } else if (!syncBtn) {
               console.warn('syncLocalImagesBtn element not found');
             }
