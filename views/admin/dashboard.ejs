@@ -477,6 +477,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 syncLocalImages();
               });
               syncBtn.setAttribute('data-listener-added', 'true');
+            } else if (!syncBtn) {
+              console.warn('syncLocalImagesBtn element not found');
             }
           }, 100);
           
@@ -637,6 +639,19 @@ document.addEventListener('DOMContentLoaded', function() {
         async function syncLocalImages() {
           const syncBtn = document.getElementById('syncLocalImagesBtn');
           const fileInput = document.getElementById('menuImagesUpload');
+          
+          if (!syncBtn) {
+            console.error('syncLocalImagesBtn element not found');
+            showMessage('❌ Sync button not found. Please refresh the page.', 'error');
+            return;
+          }
+          
+          if (!fileInput) {
+            console.error('menuImagesUpload element not found');
+            showMessage('❌ File input not found. Please refresh the page.', 'error');
+            return;
+          }
+          
           const originalText = syncBtn.innerHTML;
           
           // Check if files are selected
