@@ -42,7 +42,7 @@ const fileFilter = (_req: Request, file: Express.Multer.File, cb: Function) => {
   }
 };
 
-// Configure multer
+// Configure multer for single file uploads
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
@@ -52,4 +52,15 @@ const upload = multer({
   }
 });
 
+// Configure multer for bulk file uploads
+const uploadMultiple = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit per file
+    files: 25 // Allow up to 25 files
+  }
+});
+
 export default upload;
+export { uploadMultiple };
