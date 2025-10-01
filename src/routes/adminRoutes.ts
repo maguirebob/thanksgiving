@@ -292,13 +292,7 @@ router.post('/sync-local-images', async (_req: Request, res: Response) => {
     
     // Determine paths based on environment
     const localImagesPath = path.join(process.cwd(), 'public/images');
-<<<<<<< HEAD
-    const volumePath = process.env['NODE_ENV'] === 'development' 
-      ? localImagesPath
-      : '/app/public/images';
-=======
     const volumePath = '/app/public/images';
->>>>>>> dev
     
     console.log(`📁 Local images path: ${localImagesPath}`);
     console.log(`📁 Volume path: ${volumePath}`);
