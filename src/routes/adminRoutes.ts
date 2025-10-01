@@ -365,4 +365,66 @@ router.post('/sync-local-images', uploadMultiple.array('menu_images', 25), async
   }
 });
 
+/**
+ * Delete file from volume
+ * DELETE /admin/volume-file/:filename
+ */
+router.delete('/volume-file/:filename', async (req: Request, res: Response) => {
+  try {
+    const filename = req.params['filename'];
+    console.log(`🗑️ Attempting to delete file: ${filename}`);
+    
+    if (!filename) {
+      return res.status(400).json({
+        success: false,
+        message: 'Filename parameter is required'
+      });
+    }
+    
+    // Safety check: prevent deletion of linked files
+    const linkedEvent = await prisma.event.findFirst({
+      where: { menu_image_filename: filename }
+    });
+    
+    if (linkedEvent) {
+      console.log(`❌ Cannot delete linked file: ${filename} (linked to ${linkedEvent.event_name})`);
+      return res.status(400).json({
+        success: false,
+        message: `Cannot delete file "${filename}" - it is linked to event "${linkedEvent.event_name}"`
+      });
+    }
+    
+    // Get the appropriate volume path based on environment
+    const volumePath = process.env['NODE_ENV'] === 'development' 
+      ? path.join(process.cwd(), 'public/images')
+      : '/app/public/images';
+    
+    const filePath = path.join(volumePath, filename);
+    
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      console.log(`✅ File deleted successfully: ${filename}`);
+      
+      return res.json({
+        success: true,
+        message: `File "${filename}" deleted successfully`
+      });
+    } else {
+      console.log(`❌ File not found: ${filePath}`);
+      return res.status(404).json({
+        success: false,
+        message: `File "${filename}" not found in volume`
+      });
+    }
+    
+  } catch (error) {
+    console.error('Error deleting file:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to delete file',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 export default router;
