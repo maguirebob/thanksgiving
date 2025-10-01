@@ -3,6 +3,7 @@ import prisma from '../lib/prisma';
 import { requireAuth } from '../middleware/auth';
 import fs from 'fs';
 import path from 'path';
+import upload from '../middleware/upload';
 
 const router = Router();
 
@@ -244,145 +245,66 @@ router.get('/volume-contents', async (_req: Request, res: Response) => {
 });
 
 /**
- * Sync local images to volume and create event records
+ * Sync uploaded images to volume and create event records
  * POST /admin/sync-local-images
  */
-router.post('/sync-local-images', async (_req: Request, res: Response) => {
+router.post('/sync-local-images', upload.array('menu_images', 25), async (req: Request, res: Response) => {
   try {
-    console.log('🔄 Starting local images sync...');
+    console.log('🔄 Starting bulk image sync...');
     
-    // Only allow sync in development environment
-    if (process.env['NODE_ENV'] !== 'development') {
-      return res.json({
-        success: false,
-        message: 'Sync local images is only available in development environment',
-        results: [`❌ This feature is only available in development environment`]
-      });
-    }
-    
-    // Define the menu years and their details (same as load-all-menus.ts)
-    const menuYears = [
-      { year: 1994, filename: '1994_Menu.png', eventName: 'Thanksgiving 1994' },
-      { year: 1997, filename: '1997_Menu.jpeg', eventName: 'Thanksgiving 1997' },
-      { year: 1999, filename: '1999_Menu.jpeg', eventName: 'Thanksgiving 1999' },
-      { year: 2000, filename: '2000_Menu.jpeg', eventName: 'Thanksgiving 2000' },
-      { year: 2002, filename: '2002_Menu.jpeg', eventName: 'Thanksgiving 2002' },
-      { year: 2004, filename: '2004_Menu.jpeg', eventName: 'Thanksgiving 2004' },
-      { year: 2005, filename: '2005_Menu.jpeg', eventName: 'Thanksgiving 2005' },
-      { year: 2006, filename: '2006_Menu.jpeg', eventName: 'Thanksgiving 2006' },
-      { year: 2007, filename: '2007_Menu.jpeg', eventName: 'Thanksgiving 2007' },
-      { year: 2008, filename: '2008_Menu.jpeg', eventName: 'Thanksgiving 2008' },
-      { year: 2009, filename: '2009_Menu.jpeg', eventName: 'Thanksgiving 2009' },
-      { year: 2010, filename: '2010_Menu.jpeg', eventName: 'Thanksgiving 2010' },
-      { year: 2011, filename: '2011_Menu.jpeg', eventName: 'Thanksgiving 2011' },
-      { year: 2012, filename: '2012_Menu.jpeg', eventName: 'Thanksgiving 2012' },
-      { year: 2013, filename: '2013_Menu.jpeg', eventName: 'Thanksgiving 2013' },
-      { year: 2014, filename: '2014_Menu.jpeg', eventName: 'Thanksgiving 2014' },
-      { year: 2015, filename: '2015_Menu.jpeg', eventName: 'Thanksgiving 2015' },
-      { year: 2016, filename: '2016_Menu.jpeg', eventName: 'Thanksgiving 2016' },
-      { year: 2017, filename: '2017_Menu.jpeg', eventName: 'Thanksgiving 2017' },
-      { year: 2018, filename: '2018_Menu.jpeg', eventName: 'Thanksgiving 2018' },
-      { year: 2019, filename: '2019_Menu.jpeg', eventName: 'Thanksgiving 2019' },
-      { year: 2020, filename: '2020_Menu.jpeg', eventName: 'Thanksgiving 2020' },
-      { year: 2021, filename: '2021_Menu.jpeg', eventName: 'Thanksgiving 2021' },
-      { year: 2022, filename: '2022_Menu.jpeg', eventName: 'Thanksgiving 2022' },
-      { year: 2023, filename: '2023_Menu.jpeg', eventName: 'Thanksgiving 2023' },
-      { year: 2024, filename: '2024_Menu.jpeg', eventName: 'Thanksgiving 2024' }
-    ];
-    
-    // Determine paths based on environment
-    const localImagesPath = path.join(process.cwd(), 'public/images');
-    const volumePath = '/app/public/images';
-    
-    console.log(`📁 Local images path: ${localImagesPath}`);
-    console.log(`📁 Volume path: ${volumePath}`);
-    
+    const uploadedFiles = Array.isArray(req.files) ? req.files : [req.files];
     const results: string[] = [];
-    let copiedCount = 0;
+    let processedCount = 0;
     let createdCount = 0;
     let skippedCount = 0;
     
-    // Check if local images directory exists
-    if (!fs.existsSync(localImagesPath)) {
-      return res.json({
-        success: false,
-        message: `Local images directory does not exist: ${localImagesPath}`,
-        results: [`❌ Local directory not found: ${localImagesPath}`]
-      });
-    }
-    
-    // Ensure volume directory exists
-    if (!fs.existsSync(volumePath)) {
-      fs.mkdirSync(volumePath, { recursive: true });
-      results.push(`📁 Created volume directory: ${volumePath}`);
-    }
-    
-    // Process each menu year
-    for (const menu of menuYears) {
-      const localFilePath = path.join(localImagesPath, menu.filename);
-      const volumeFilePath = path.join(volumePath, menu.filename);
+    // Process each uploaded file
+    for (const file of uploadedFiles) {
+      const filename = file.originalname;
+      const yearMatch = filename.match(/(\d{4})/);
       
-      // Check if local file exists
-      if (!fs.existsSync(localFilePath)) {
-        results.push(`⚠️  Local file not found: ${menu.filename}`);
+      if (!yearMatch) {
+        results.push(`⚠️  Skipped ${filename}: Could not extract year from filename`);
         skippedCount++;
         continue;
       }
       
-      // Copy file to volume if not already there
-      if (!fs.existsSync(volumeFilePath)) {
-        try {
-          fs.copyFileSync(localFilePath, volumeFilePath);
-          results.push(`📤 Copied: ${menu.filename}`);
-          copiedCount++;
-        } catch (error) {
-          results.push(`❌ Failed to copy ${menu.filename}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-          continue;
-        }
-      } else {
-        results.push(`✅ Already exists: ${menu.filename}`);
-        skippedCount++;
-      }
+      const year = parseInt(yearMatch[1]);
+      const eventName = `Thanksgiving ${year}`;
       
-      // Check if event record exists in database
+      // Check if event already exists
       const existingEvent = await prisma.event.findFirst({
-        where: { event_name: menu.eventName }
+        where: { event_name: eventName }
       });
       
-      if (!existingEvent) {
-        try {
-          // Create event record
-          await prisma.event.create({
-            data: {
-              event_name: menu.eventName,
-              event_type: 'Thanksgiving',
-              event_location: null,
-              event_date: new Date(menu.year, 10, 22), // November 22nd of the year
-              event_description: null,
-              menu_title: menu.eventName,
-              menu_image_filename: menu.filename
-            }
-          });
-          results.push(`📝 Created event record: ${menu.eventName}`);
-          createdCount++;
-        } catch (error) {
-          results.push(`❌ Failed to create event ${menu.eventName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
+      if (existingEvent) {
+        // Update existing event with new filename
+        await prisma.event.update({
+          where: { event_id: existingEvent.event_id },
+          data: { menu_image_filename: file.filename }
+        });
+        results.push(`🔄 Updated ${eventName}: ${filename} → ${file.filename}`);
+        processedCount++;
       } else {
-        // Update existing event with correct filename if needed
-        if (existingEvent.menu_image_filename !== menu.filename) {
-          await prisma.event.update({
-            where: { event_id: existingEvent.event_id },
-            data: { menu_image_filename: menu.filename }
-          });
-          results.push(`🔄 Updated filename: ${menu.eventName} → ${menu.filename}`);
-        } else {
-          results.push(`✅ Event record exists: ${menu.eventName}`);
-        }
+        // Create new event record
+        await prisma.event.create({
+          data: {
+            event_name: eventName,
+            event_type: 'Thanksgiving',
+            event_location: null,
+            event_date: new Date(year, 10, 22), // November 22nd of the year
+            event_description: null,
+            menu_title: eventName,
+            menu_image_filename: file.filename
+          }
+        });
+        results.push(`📝 Created ${eventName}: ${filename} → ${file.filename}`);
+        createdCount++;
+        processedCount++;
       }
     }
     
-    const summary = `Synced ${copiedCount} files, created ${createdCount} events, skipped ${skippedCount} items`;
+    const summary = `Processed ${processedCount} files, created ${createdCount} events, skipped ${skippedCount} items`;
     results.push(`\n📊 Summary: ${summary}`);
     
     console.log(`✅ Sync completed: ${summary}`);
@@ -392,10 +314,10 @@ router.post('/sync-local-images', async (_req: Request, res: Response) => {
       message: summary,
       results,
       stats: {
-        copiedFiles: copiedCount,
+        processedFiles: processedCount,
         createdEvents: createdCount,
         skippedItems: skippedCount,
-        totalProcessed: menuYears.length
+        totalUploaded: uploadedFiles.length
       }
     });
     
