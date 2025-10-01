@@ -452,11 +452,9 @@ document.addEventListener('DOMContentLoaded', function() {
     addMenuForm.reset();
     imagePreview.style.display = 'none';
   });
-        });
 
-        
-        // Volume Contents functionality
-        document.getElementById('viewVolumeBtn').addEventListener('click', function() {
+  // Volume Contents functionality
+  document.getElementById('viewVolumeBtn').addEventListener('click', function() {
           const modal = new bootstrap.Modal(document.getElementById('volumeContentsModal'));
           modal.show();
           
@@ -703,6 +701,7 @@ document.addEventListener('DOMContentLoaded', function() {
             syncBtn.innerHTML = originalText;
           }
         }
+}); // End of DOMContentLoaded
         </script>
 
 <!-- Add Menu Modal -->
