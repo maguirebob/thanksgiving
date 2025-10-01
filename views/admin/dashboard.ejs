@@ -477,6 +477,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             if (syncBtn && !syncBtn.hasAttribute('data-listener-added')) {
+              // Add visual debugging - change button color to confirm it's the right button
+              syncBtn.style.border = '3px solid red';
+              syncBtn.style.backgroundColor = '#ffcccc';
+              
               syncBtn.addEventListener('click', function(e) {
                 console.log('Sync button clicked', e);
                 console.log('About to call syncLocalImages()');
@@ -488,10 +492,34 @@ document.addEventListener('DOMContentLoaded', function() {
               });
               syncBtn.setAttribute('data-listener-added', 'true');
               console.log('Sync button event listener added');
+              console.log('Sync button element:', syncBtn);
+              console.log('Sync button disabled:', syncBtn.disabled);
+              console.log('Sync button visible:', syncBtn.offsetWidth > 0 && syncBtn.offsetHeight > 0);
             } else if (!syncBtn) {
               console.warn('syncLocalImagesBtn element not found');
+            } else {
+              console.log('Sync button already has listener or not found');
             }
           }, 100);
+          
+          // Add a test button to manually trigger sync
+          setTimeout(() => {
+            const testBtn = document.createElement('button');
+            testBtn.textContent = 'TEST SYNC';
+            testBtn.style.position = 'fixed';
+            testBtn.style.top = '10px';
+            testBtn.style.right = '10px';
+            testBtn.style.zIndex = '9999';
+            testBtn.style.backgroundColor = 'red';
+            testBtn.style.color = 'white';
+            testBtn.style.padding = '10px';
+            testBtn.addEventListener('click', function() {
+              console.log('TEST SYNC button clicked');
+              syncLocalImages();
+            });
+            document.body.appendChild(testBtn);
+            console.log('Test sync button added');
+          }, 200);
           
           loadVolumeContents();
         });
