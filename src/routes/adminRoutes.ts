@@ -252,14 +252,28 @@ router.post('/sync-local-images', upload.array('menu_images', 25), async (req: R
   try {
     console.log('🔄 Starting bulk image sync...');
     
-    const uploadedFiles = Array.isArray(req.files) ? req.files : [req.files];
+    const uploadedFiles = req.files as Express.Multer.File[];
     const results: string[] = [];
     let processedCount = 0;
     let createdCount = 0;
     let skippedCount = 0;
     
+    if (!uploadedFiles || uploadedFiles.length === 0) {
+      return res.json({
+        success: false,
+        message: 'No files uploaded for sync',
+        results: [`❌ Please upload menu image files to sync`]
+      });
+    }
+    
     // Process each uploaded file
     for (const file of uploadedFiles) {
+      if (!file) {
+        results.push(`⚠️  Skipped: File is undefined`);
+        skippedCount++;
+        continue;
+      }
+      
       const filename = file.originalname;
       const yearMatch = filename.match(/(\d{4})/);
       
@@ -269,7 +283,7 @@ router.post('/sync-local-images', upload.array('menu_images', 25), async (req: R
         continue;
       }
       
-      const year = parseInt(yearMatch[1]);
+      const year = parseInt(yearMatch[1]!);
       const eventName = `Thanksgiving ${year}`;
       
       // Check if event already exists
