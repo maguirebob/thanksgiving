@@ -524,7 +524,8 @@ document.addEventListener('DOMContentLoaded', function() {
           loadVolumeContents();
         });
         
-        async function loadVolumeContents() {
+        // Move loadVolumeContents to global scope so deleteFile can access it
+        window.loadVolumeContents = async function() {
           const volumeContents = document.getElementById('volumeContents');
           const refreshBtn = document.getElementById('refreshVolumeBtn');
           
@@ -811,9 +812,15 @@ async function deleteFile(filename) {
     if (data.success) {
       showMessage(`✅ ${data.message}`, 'success');
       // Refresh volume contents to show updated file list
+      console.log('Refreshing volume contents after successful deletion');
       setTimeout(() => {
-        loadVolumeContents();
-      }, 1000);
+        if (window.loadVolumeContents) {
+          window.loadVolumeContents();
+        } else {
+          console.error('loadVolumeContents function not found, refreshing page');
+          window.location.reload();
+        }
+      }, 500);
     } else {
       showMessage(`❌ ${data.message}`, 'error');
     }
