@@ -39,9 +39,6 @@
             <button type="button" class="btn btn-info me-2" id="viewVolumeBtn">
               <i class="fas fa-hdd me-1"></i>View Volume
             </button>
-            <button type="button" class="btn btn-warning me-2" id="fixFilenamesBtn">
-              <i class="fas fa-wrench me-1"></i>Fix Filenames
-            </button>
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMenuModal">
               <i class="fas fa-plus me-1"></i>Add Menu
             </button>
@@ -457,41 +454,6 @@ document.addEventListener('DOMContentLoaded', function() {
   });
         });
 
-        // Fix filenames functionality
-        document.getElementById('fixFilenamesBtn').addEventListener('click', async function() {
-          const btn = this;
-          const originalText = btn.innerHTML;
-          
-          // Disable button and show loading
-          btn.disabled = true;
-          btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Fixing...';
-          
-          try {
-            const response = await fetch('/admin/fix-filenames', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              }
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-              showMessage(`✅ ${data.message}`, 'success');
-              console.log('Fix results:', data.results);
-            } else {
-              showMessage(`❌ ${data.message}`, 'error');
-            }
-            
-          } catch (error) {
-            console.error('Error fixing filenames:', error);
-            showMessage('❌ Network error occurred. Please try again.', 'error');
-          } finally {
-            // Re-enable button
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-          }
-        });
         
         // Volume Contents functionality
         document.getElementById('viewVolumeBtn').addEventListener('click', function() {
@@ -671,6 +633,61 @@ document.addEventListener('DOMContentLoaded', function() {
             this.remove();
           });
         }
+        
+        async function syncLocalImages() {
+          const syncBtn = document.getElementById('syncLocalImagesBtn');
+          const fileInput = document.getElementById('menuImagesUpload');
+          const originalText = syncBtn.innerHTML;
+          
+          // Check if files are selected
+          if (!fileInput.files || fileInput.files.length === 0) {
+            showMessage('❌ Please select menu images to upload', 'error');
+            return;
+          }
+          
+          // Disable button and show loading
+          syncBtn.disabled = true;
+          syncBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Syncing...';
+          
+          try {
+            const formData = new FormData();
+            
+            // Add all selected files
+            for (let i = 0; i < fileInput.files.length; i++) {
+              formData.append('menu_images', fileInput.files[i]);
+            }
+            
+            const response = await fetch('/admin/sync-local-images', {
+              method: 'POST',
+              body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+              showMessage(`✅ ${data.message}`, 'success');
+              console.log('Sync results:', data.results);
+              
+              // Clear file input
+              fileInput.value = '';
+              
+              // Refresh volume contents to show new files
+              setTimeout(() => {
+                loadVolumeContents();
+              }, 1000);
+            } else {
+              showMessage(`❌ ${data.message}`, 'error');
+            }
+            
+          } catch (error) {
+            console.error('Error syncing local images:', error);
+            showMessage('❌ Network error occurred during sync. Please try again.', 'error');
+          } finally {
+            // Re-enable button
+            syncBtn.disabled = false;
+            syncBtn.innerHTML = originalText;
+          }
+        }
         </script>
 
 <!-- Add Menu Modal -->
@@ -793,6 +810,19 @@ document.addEventListener('DOMContentLoaded', function() {
           <h6><i class="fas fa-list me-1"></i>File Contents</h6>
           <button type="button" class="btn btn-sm btn-outline-primary" id="refreshVolumeBtn">
             <i class="fas fa-sync-alt me-1"></i>Refresh
+          </button>
+        </div>
+        
+        <!-- File Upload Section -->
+        <div class="mb-3">
+          <label for="menuImagesUpload" class="form-label">
+            <i class="fas fa-upload me-1"></i>Upload Menu Images
+          </label>
+          <input type="file" class="form-control" id="menuImagesUpload" name="menu_images" 
+                 accept="image/jpeg,image/jpg,image/png" multiple>
+          <div class="form-text">Select multiple menu images (1994_Menu.png, 1997_Menu.jpeg, etc.)</div>
+          <button type="button" class="btn btn-sm btn-success mt-2" id="syncLocalImagesBtn">
+            <i class="fas fa-sync me-1"></i>Sync Uploaded Images
           </button>
         </div>
         
