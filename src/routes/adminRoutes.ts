@@ -208,6 +208,20 @@ router.get('/volume-contents', async (_req: Request, res: Response) => {
       });
     });
     
+    // Get linked filenames from database
+    const linkedFilenames = await prisma.event.findMany({
+      select: { menu_image_filename: true }
+    }).then(events => events.map(e => e.menu_image_filename).filter(Boolean));
+    
+    console.log(`Found ${linkedFilenames.length} linked filenames in database`);
+    console.log('Linked filenames:', linkedFilenames);
+    
+    // Add file status to each file
+    fileStats.forEach(file => {
+      file.isLinked = linkedFilenames.includes(file.name);
+      file.status = file.isLinked ? 'linked' : 'orphaned';
+    });
+    
     // Sort files by modification date (newest first)
     fileStats.sort((a, b) => b.modified.getTime() - a.modified.getTime());
     
@@ -220,6 +234,10 @@ router.get('/volume-contents', async (_req: Request, res: Response) => {
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
     
+    // Calculate file status statistics
+    const linkedFiles = fileStats.filter(f => f.isLinked).length;
+    const orphanedFiles = fileStats.filter(f => !f.isLinked).length;
+    
     return res.json({
       success: true,
       environment: process.env['NODE_ENV'] || 'unknown',
@@ -230,7 +248,9 @@ router.get('/volume-contents', async (_req: Request, res: Response) => {
         totalFiles: files.length,
         totalSize: formatFileSize(totalSize),
         imageFiles,
-        otherFiles
+        otherFiles,
+        linkedFiles,
+        orphanedFiles
       }
     });
     
