@@ -563,23 +563,29 @@ document.addEventListener('DOMContentLoaded', function() {
               document.getElementById('volumeTotalSize').textContent = data.stats.totalSize || '0 B';
               document.getElementById('volumeImageCount').textContent = data.stats.imageFiles || 0;
               document.getElementById('volumeOtherCount').textContent = data.stats.otherFiles || 0;
+              document.getElementById('volumeLinkedCount').textContent = data.stats.linkedFiles || 0;
+              document.getElementById('volumeOrphanedCount').textContent = data.stats.orphanedFiles || 0;
               
               // Display file contents
               if (data.files && data.files.length > 0) {
                 let filesHtml = '<div class="table-responsive"><table class="table table-striped table-hover">';
-                filesHtml += '<thead><tr><th>Filename</th><th>Size</th><th>Type</th><th>Modified</th><th>Actions</th></tr></thead><tbody>';
+                filesHtml += '<thead><tr><th>Filename</th><th>Size</th><th>Type</th><th>Status</th><th>Modified</th><th>Actions</th></tr></thead><tbody>';
                 
                 data.files.forEach(file => {
                   const isImage = file.type === 'image';
                   const iconClass = isImage ? 'fas fa-image text-primary' : 'fas fa-file text-secondary';
                   const sizeFormatted = formatFileSize(file.size);
                   const modifiedFormatted = new Date(file.modified).toLocaleString();
+                  const statusBadge = file.isLinked 
+                    ? '<span class="badge bg-success">Linked</span>' 
+                    : '<span class="badge bg-danger">Orphaned</span>';
                   
                   filesHtml += `
                     <tr>
                       <td><i class="${iconClass} me-2"></i>${file.name}</td>
                       <td>${sizeFormatted}</td>
                       <td><span class="badge ${isImage ? 'bg-primary' : 'bg-secondary'}">${file.type}</span></td>
+                      <td>${statusBadge}</td>
                       <td>${modifiedFormatted}</td>
                       <td>
                         ${isImage ? `<button class="btn btn-sm btn-outline-primary" onclick="previewImage('${file.name}')">
@@ -860,6 +866,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 <p><strong>Total Size:</strong> <span id="volumeTotalSize">Loading...</span></p>
                 <p><strong>Image Files:</strong> <span id="volumeImageCount">Loading...</span></p>
                 <p><strong>Other Files:</strong> <span id="volumeOtherCount">Loading...</span></p>
+                <p><strong>Linked Files:</strong> <span id="volumeLinkedCount" class="text-success">Loading...</span></p>
+                <p><strong>Orphaned Files:</strong> <span id="volumeOrphanedCount" class="text-danger">Loading...</span></p>
               </div>
             </div>
           </div>
