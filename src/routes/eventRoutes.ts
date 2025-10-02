@@ -11,15 +11,6 @@ const router = Router();
  */
 router.post('/events', upload.single('menu_image'), sanitizeMenuData, validateMenuCreation, async (req: Request, res: Response) => {
   try {
-    // Debug logging
-    console.log('Creating event with data:', {
-      event_name: req.body.event_name,
-      event_date: req.body.event_date,
-      event_location: req.body.event_location,
-      event_description: req.body.event_description,
-      hasFile: !!req.file
-    });
-
     // At this point, validation has passed, so we can safely use the data
     const { event_name, event_date, event_location, event_description } = req.body;
     
@@ -36,7 +27,6 @@ router.post('/events', upload.single('menu_image'), sanitizeMenuData, validateMe
       }
     });
 
-    console.log('Successfully created event:', newEvent.event_id);
 
     // Transform the response to match what the frontend expects
     const transformedEvent = {

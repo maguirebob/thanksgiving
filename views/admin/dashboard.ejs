@@ -463,63 +463,25 @@ document.addEventListener('DOMContentLoaded', function() {
             const refreshBtn = document.getElementById('refreshVolumeBtn');
             const syncBtn = document.getElementById('syncLocalImagesBtn');
             
-            console.log('Setting up volume modal buttons:', { refreshBtn: !!refreshBtn, syncBtn: !!syncBtn });
             
             if (refreshBtn && !refreshBtn.hasAttribute('data-listener-added')) {
               refreshBtn.addEventListener('click', function() {
-                console.log('Refresh button clicked');
                 loadVolumeContents();
               });
               refreshBtn.setAttribute('data-listener-added', 'true');
-              console.log('Refresh button event listener added');
             } else if (!refreshBtn) {
               console.warn('refreshVolumeBtn element not found');
             }
             
             if (syncBtn && !syncBtn.hasAttribute('data-listener-added')) {
-              // Add visual debugging - change button color to confirm it's the right button
-              syncBtn.style.border = '3px solid red';
-              syncBtn.style.backgroundColor = '#ffcccc';
-              
               syncBtn.addEventListener('click', function(e) {
-                console.log('Sync button clicked', e);
-                console.log('About to call syncLocalImages()');
-                try {
-                  syncLocalImages();
-                } catch (error) {
-                  console.error('Error calling syncLocalImages:', error);
-                }
+                e.preventDefault();
+                syncLocalImages();
               });
               syncBtn.setAttribute('data-listener-added', 'true');
-              console.log('Sync button event listener added');
-              console.log('Sync button element:', syncBtn);
-              console.log('Sync button disabled:', syncBtn.disabled);
-              console.log('Sync button visible:', syncBtn.offsetWidth > 0 && syncBtn.offsetHeight > 0);
-            } else if (!syncBtn) {
-              console.warn('syncLocalImagesBtn element not found');
-            } else {
-              console.log('Sync button already has listener or not found');
             }
           }, 100);
           
-          // Add a test button to manually trigger sync
-          setTimeout(() => {
-            const testBtn = document.createElement('button');
-            testBtn.textContent = 'TEST SYNC';
-            testBtn.style.position = 'fixed';
-            testBtn.style.top = '10px';
-            testBtn.style.right = '10px';
-            testBtn.style.zIndex = '9999';
-            testBtn.style.backgroundColor = 'red';
-            testBtn.style.color = 'white';
-            testBtn.style.padding = '10px';
-            testBtn.addEventListener('click', function() {
-              console.log('TEST SYNC button clicked');
-              syncLocalImages();
-            });
-            document.body.appendChild(testBtn);
-            console.log('Test sync button added');
-          }, 200);
           
           loadVolumeContents();
         });
@@ -647,11 +609,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         
         async function syncLocalImages() {
-          console.log('syncLocalImages function called');
           const syncBtn = document.getElementById('syncLocalImagesBtn');
           const fileInput = document.getElementById('menuImagesUpload');
-          
-          console.log('Elements found:', { syncBtn: !!syncBtn, fileInput: !!fileInput });
           
           if (!syncBtn) {
             console.error('syncLocalImagesBtn element not found');
@@ -664,9 +623,6 @@ document.addEventListener('DOMContentLoaded', function() {
             showMessage('❌ File input not found. Please refresh the page.', 'error');
             return;
           }
-          
-          console.log('File input files:', fileInput.files);
-          console.log('Number of files:', fileInput.files ? fileInput.files.length : 'no files object');
           
           const originalText = syncBtn.innerHTML;
           
@@ -697,7 +653,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (data.success) {
               showMessage(`✅ ${data.message}`, 'success');
-              console.log('Sync results:', data.results);
               
               // Clear file input
               fileInput.value = '';
@@ -723,15 +678,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Move previewImage function to global scope so onclick handlers can access it
 function previewImage(filename) {
-  console.log('previewImage called with filename:', filename);
-  
   const imageUrl = `/images/${filename}`;
-  console.log('Image URL:', imageUrl);
   
   // Test if image loads before showing modal
   const testImg = new Image();
   testImg.onload = function() {
-    console.log('Image loaded successfully, showing modal');
     showImageModal(imageUrl, filename);
   };
   testImg.onerror = function() {
@@ -787,18 +738,14 @@ function showImageModal(imageUrl, filename) {
 
 // File deletion function
 async function deleteFile(filename) {
-  console.log('deleteFile called with filename:', filename);
-  
   // Show confirmation dialog
   const confirmed = confirm(`Are you sure you want to delete "${filename}"?\n\nThis action cannot be undone.`);
   
   if (!confirmed) {
-    console.log('File deletion cancelled by user');
     return;
   }
   
   try {
-    console.log('Sending delete request for:', filename);
     const response = await fetch(`/admin/volume-file/${filename}`, {
       method: 'DELETE',
       headers: {
@@ -807,12 +754,10 @@ async function deleteFile(filename) {
     });
     
     const data = await response.json();
-    console.log('Delete response:', data);
     
     if (data.success) {
       showMessage(`✅ ${data.message}`, 'success');
       // Refresh volume contents to show updated file list
-      console.log('Refreshing volume contents after successful deletion');
       setTimeout(() => {
         if (window.loadVolumeContents) {
           window.loadVolumeContents();
