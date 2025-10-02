@@ -14,13 +14,23 @@ router.post('/events', upload.single('menu_image'), sanitizeMenuData, validateMe
     // At this point, validation has passed, so we can safely use the data
     const { event_name, event_date, event_location, event_description } = req.body;
     
+    // Validate and parse date as local date to avoid timezone issues
+    const [year, month, day] = event_date.split('-').map(Number);
+    const eventDate = new Date(year, month - 1, day); // month is 0-indexed
+    if (isNaN(eventDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid date format'
+      });
+    }
+
     // Create the event
     const newEvent = await prisma.event.create({
       data: {
         event_name: event_name,
         event_type: 'Thanksgiving',
         event_location: event_location && event_location.trim() ? event_location.trim() : null,
-        event_date: new Date(event_date),
+        event_date: eventDate,
         event_description: event_description && event_description.trim() ? event_description.trim() : null,
         menu_title: event_name,
         menu_image_filename: req.file!.filename
@@ -38,8 +48,8 @@ router.post('/events', upload.single('menu_image'), sanitizeMenuData, validateMe
       menu_image_url: `/images/${newEvent.menu_image_filename}`,
       description: newEvent.event_description,
       year: newEvent.event_date.getFullYear(),
-      created_at: newEvent.event_date,
-      updated_at: newEvent.event_date
+      created_at: newEvent.created_at,
+      updated_at: newEvent.updated_at
     };
 
     return res.status(201).json({
@@ -211,7 +221,16 @@ router.put('/events/:id', async (req: Request, res: Response) => {
       eventUpdateData.event_location = updateData.event_location;
     }
     if (updateData.event_date) {
-      eventUpdateData.event_date = new Date(updateData.event_date);
+      // Parse date as local date to avoid timezone issues
+      const [year, month, day] = updateData.event_date.split('-').map(Number);
+      const eventDate = new Date(year, month - 1, day); // month is 0-indexed
+      if (isNaN(eventDate.getTime())) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid date format'
+        });
+      }
+      eventUpdateData.event_date = eventDate;
     }
     if (updateData.menu_image_url) {
       // Extract filename from URL if it's a full URL
@@ -240,8 +259,8 @@ router.put('/events/:id', async (req: Request, res: Response) => {
       menu_image_url: `/images/${updatedEvent.menu_image_filename}`,
       description: updatedEvent.event_description,
       year: updatedEvent.event_date.getFullYear(),
-      created_at: updatedEvent.event_date,
-      updated_at: updatedEvent.event_date
+      created_at: updatedEvent.created_at,
+      updated_at: updatedEvent.updated_at
     };
 
     return res.json({
