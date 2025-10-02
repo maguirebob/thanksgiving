@@ -8,59 +8,45 @@ class ProfileManager {
     }
 
     init() {
-        console.log('ProfileManager initialized');
-        
         // Set up edit profile button
         const editBtn = document.getElementById('editProfileBtn');
         if (editBtn) {
-            console.log('Found edit profile button');
             editBtn.addEventListener('click', () => this.toggleEditMode());
         } else {
-            console.log('Edit profile button not found');
         }
 
         // Set up edit profile button (sidebar)
         const editBtnSidebar = document.getElementById('editProfileBtnSidebar');
         if (editBtnSidebar) {
-            console.log('Found edit profile button (sidebar)');
             editBtnSidebar.addEventListener('click', () => this.toggleEditMode());
         } else {
-            console.log('Edit profile button (sidebar) not found');
         }
 
         // Set up change password buttons
         const changePasswordBtn = document.getElementById('changePasswordBtn');
         if (changePasswordBtn) {
-            console.log('Found change password button');
             changePasswordBtn.addEventListener('click', () => this.showChangePasswordModal());
         } else {
-            console.log('Change password button not found');
         }
 
         const changePasswordBtnSidebar = document.getElementById('changePasswordBtnSidebar');
         if (changePasswordBtnSidebar) {
-            console.log('Found change password button (sidebar)');
             changePasswordBtnSidebar.addEventListener('click', () => this.showChangePasswordModal());
         } else {
-            console.log('Change password button (sidebar) not found');
         }
 
         // Set up change password form
         const changePasswordForm = document.getElementById('changePasswordForm');
         if (changePasswordForm) {
-            console.log('Found change password form');
             changePasswordForm.addEventListener('submit', (e) => this.handlePasswordChange(e));
         } else {
-            console.log('Change password form not found');
         }
 
         // Set up logout button
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
-            console.log('Found logout button');
             logoutBtn.addEventListener('click', (e) => this.handleLogout(e));
         } else {
-            console.log('Logout button not found');
         }
 
         // Set up save/cancel buttons if they exist
@@ -237,9 +223,7 @@ class ProfileManager {
 
     // Password change functionality
     showChangePasswordModal() {
-        console.log('showChangePasswordModal called');
         const modalElement = document.getElementById('changePasswordModal');
-        console.log('Modal element:', modalElement);
         
         if (!modalElement) {
             console.error('Change password modal not found!');
@@ -247,14 +231,12 @@ class ProfileManager {
         }
         
         const modal = new bootstrap.Modal(modalElement);
-        console.log('Bootstrap modal instance:', modal);
         modal.show();
         
         // Clear form when modal opens
         const form = document.getElementById('changePasswordForm');
         if (form) {
             form.reset();
-            console.log('Form reset');
         }
     }
 
