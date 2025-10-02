@@ -45,7 +45,7 @@
     "db:reset": "prisma migrate reset --force && npm run db:seed",
     "db:studio": "prisma studio",
     "clean": "rimraf dist",
-    "postbuild": "npm run db:generate && npm run db:migrate",
+    "postbuild": "npm run db:generate",
     "deploy:production": "ts-node scripts/deploy-production.ts",
     "deploy:production:help": "ts-node scripts/deploy-production.ts --help"
   },
