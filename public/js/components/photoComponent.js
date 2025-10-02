@@ -18,15 +18,12 @@ class PhotoComponent {
     }
 
     init() {
-        console.log('PhotoComponent: Initializing...', { eventId: this.eventId, containerId: this.containerId });
-        console.log('PhotoComponent: Container found:', !!this.container);
         
         this.createPhotoGrid();
         this.createUploadModal();
         
         // Wait for DOM to be ready before binding events
         setTimeout(() => {
-            console.log('PhotoComponent: Binding events...');
             this.bindEvents();
         }, 100);
         
@@ -170,33 +167,27 @@ class PhotoComponent {
 
     bindEvents() {
         if (this.eventsBound) {
-            console.log('PhotoComponent: Events already bound, skipping...');
             return;
         }
         
-        console.log('PhotoComponent: Starting bindEvents...');
         
         // Upload button events - find buttons created by this component
         const uploadBtn = document.getElementById('uploadPhotoBtn');
         const uploadFirstBtn = document.getElementById('uploadFirstPhotoBtn');
         const takePhotoBtn = document.getElementById('takePhotoBtn');
         
-        console.log('PhotoComponent: Buttons found:', {
             uploadBtn: !!uploadBtn,
             uploadFirstBtn: !!uploadFirstBtn,
             takePhotoBtn: !!takePhotoBtn
         });
         
         if (uploadBtn) {
-            console.log('PhotoComponent: Binding uploadBtn');
             uploadBtn.addEventListener('click', () => this.openUploadModal());
         }
         if (uploadFirstBtn) {
-            console.log('PhotoComponent: Binding uploadFirstBtn');
             uploadFirstBtn.addEventListener('click', () => this.openUploadModal());
         }
         if (takePhotoBtn) {
-            console.log('PhotoComponent: Binding takePhotoBtn');
             takePhotoBtn.addEventListener('click', () => this.openCameraCapture());
         }
 
@@ -207,7 +198,6 @@ class PhotoComponent {
                 e.preventDefault();
                 e.stopPropagation();
                 
-                console.log('Photo upload form submitted');
                 
                 const formData = new FormData();
                 const fileInput = document.getElementById('photoFile');
@@ -272,7 +262,6 @@ class PhotoComponent {
         }
         
         this.eventsBound = true;
-        console.log('PhotoComponent: Events bound successfully');
     }
 
     async loadPhotos(page = 1) {

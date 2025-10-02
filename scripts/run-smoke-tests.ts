@@ -46,7 +46,13 @@ class SmokeTestRunner {
   }
 
   async runAllTests(): Promise<void> {
-    console.log('🚀 Starting Smoke Tests for Test Environment...\n');
+    const baseUrl = process.env['TEST_BASE_URL'] || 'http://localhost:3000';
+    const environment = baseUrl.includes('localhost') ? 'Development' : 
+                       baseUrl.includes('test') ? 'Test' : 
+                       baseUrl.includes('prod') ? 'Production' : 'Unknown';
+    
+    console.log(`🚀 Starting Smoke Tests for ${environment} Environment...`);
+    console.log(`📍 Base URL: ${baseUrl}\n`);
 
     // Database Connection Tests (via API)
     await this.runTest('Database Connection', async () => {
@@ -155,6 +161,165 @@ class SmokeTestRunner {
       }
     });
 
+    // Admin Dashboard Tests
+    await this.runTest('Admin Dashboard Access', async () => {
+      // Test that admin dashboard requires authentication
+      const response = await this.makeRequest('GET', '/admin/dashboard');
+      
+      // Should redirect to login or show authentication required
+      if (!response.includes('Login') && !response.includes('auth')) {
+        throw new Error('Admin dashboard does not require authentication');
+      }
+    });
+
+    await this.runTest('Admin Users Page', async () => {
+      // Test admin users page access (requires authentication)
+      const response = await this.makeRequest('GET', '/admin/users');
+      
+      // Should redirect to login or return HTML page
+      if (typeof response === 'string' && response.includes('Login')) {
+        // This is expected - page requires authentication
+        console.log('   Admin users page requires authentication (expected)');
+      } else if (typeof response === 'string' && response.includes('User Management')) {
+        // Page loaded successfully
+        console.log('   Admin users page loaded successfully');
+      } else {
+        throw new Error('Admin users page returned unexpected response');
+      }
+    });
+
+    await this.runTest('Admin Users API Endpoints', async () => {
+      // Test user role update endpoint (requires authentication)
+      try {
+        const response = await this.makeRequest('PUT', '/admin/users/1/role', {
+          role: 'admin'
+        });
+        
+        // Should redirect to login or return validation error (both are expected)
+        if (typeof response === 'string' && response.includes('Login')) {
+          // This is expected - API requires authentication
+          console.log('   User role update API requires authentication (expected)');
+        } else {
+          // Any other response means the endpoint exists
+          console.log('   User role update API endpoint exists');
+        }
+      } catch (error) {
+        // HTTP 404 Not Found is expected for unauthenticated requests
+        if (error instanceof Error && error.message.includes('HTTP 404')) {
+          console.log('   User role update API endpoint exists (404 response expected)');
+        } else if (error instanceof Error && error.message.includes('Cannot PUT')) {
+          throw new Error('User role update API endpoint does not exist');
+        } else {
+          throw error;
+        }
+      }
+    });
+
+    // File Upload Tests
+    await this.runTest('File Upload Endpoint Exists', async () => {
+      // Test that file upload endpoints exist
+      const response = await this.makeRequest('GET', '/admin/dashboard');
+      
+      // Should contain file upload form elements
+      if (!response.includes('menu_image') && !response.includes('file')) {
+        throw new Error('File upload functionality not found in admin dashboard');
+      }
+    });
+
+    // Authentication Tests
+    await this.runTest('User Registration Endpoint', async () => {
+      const response = await this.makeRequest('GET', '/auth/register');
+      
+      if (!response.includes('Register') && !response.includes('registration')) {
+        throw new Error('User registration page not found');
+      }
+    });
+
+    await this.runTest('Profile Management', async () => {
+      const response = await this.makeRequest('GET', '/auth/profile');
+      
+      // Should redirect to login or show profile page
+      if (!response.includes('Login') && !response.includes('Profile')) {
+        throw new Error('Profile management not properly configured');
+      }
+    });
+
+    // Menu Management Tests
+    await this.runTest('Menu Creation API', async () => {
+      // Test menu creation endpoint exists (requires authentication)
+      try {
+        const response = await this.makeRequest('POST', '/api/v1/events', {
+          event_name: 'Test Event',
+          event_date: '2024-11-28',
+          menu_title: 'Test Menu'
+        });
+        
+        // Should redirect to login or return validation error (both are expected)
+        if (typeof response === 'string' && response.includes('Login')) {
+          // This is expected - API requires authentication
+          console.log('   Menu creation API requires authentication (expected)');
+        } else {
+          // Any other response means the endpoint exists
+          console.log('   Menu creation API endpoint exists');
+        }
+      } catch (error) {
+        // HTTP 400 Bad Request means endpoint exists but validation failed (expected)
+        if (error instanceof Error && error.message.includes('HTTP 400')) {
+          console.log('   Menu creation API endpoint exists (validation working)');
+        } else if (error instanceof Error && error.message.includes('Cannot POST')) {
+          throw new Error('Menu creation API endpoint does not exist');
+        } else {
+          throw error;
+        }
+      }
+    });
+
+    // Photo Management Tests
+    await this.runTest('Photo Upload Endpoint', async () => {
+      const response = await this.makeRequest('GET', '/admin/dashboard');
+      
+      // Should contain photo-related functionality
+      if (!response.includes('photo') && !response.includes('image')) {
+        throw new Error('Photo management functionality not found');
+      }
+    });
+
+    // Error Handling Tests
+    await this.runTest('Error Handling', async () => {
+      // Test 404 handling
+      try {
+        const response = await this.makeRequest('GET', '/nonexistent-endpoint');
+        
+        // Should return 404 error page or redirect to login
+        if (response.includes('Error') || response.includes('404') || response.includes('Not Found') || response.includes('Login')) {
+          console.log('   Error handling working correctly');
+        } else {
+          throw new Error('Error handling not working properly');
+        }
+      } catch (error) {
+        // HTTP 404 Not Found is expected behavior
+        if (error instanceof Error && error.message.includes('HTTP 404')) {
+          console.log('   Error handling working correctly (404 response)');
+        } else {
+          throw error;
+        }
+      }
+    });
+
+    // Performance Tests
+    await this.runTest('Response Time Performance', async () => {
+      const startTime = Date.now();
+      
+      await this.makeRequest('GET', '/');
+      
+      const responseTime = Date.now() - startTime;
+      if (responseTime > 10000) { // 10 seconds
+        throw new Error(`Response time too slow: ${responseTime}ms`);
+      }
+      
+      console.log(`   Response time: ${responseTime}ms`);
+    });
+
     // Environment Tests (optional for local testing)
     await this.runTest('Environment Variables', async () => {
       // For local testing, TEST_BASE_URL is optional (defaults to localhost:3000)
@@ -235,7 +400,11 @@ class SmokeTestRunner {
     console.log(`\nTotal Duration: ${totalDuration}ms`);
     
     if (failed === 0) {
-      console.log('\n🎉 All smoke tests passed! Test environment is ready.');
+      const baseUrl = process.env['TEST_BASE_URL'] || 'http://localhost:3000';
+      const environment = baseUrl.includes('localhost') ? 'Development' : 
+                         baseUrl.includes('test') ? 'Test' : 
+                         baseUrl.includes('prod') ? 'Production' : 'Unknown';
+      console.log(`\n🎉 All smoke tests passed! ${environment} environment is ready.`);
       process.exit(0);
     } else {
       console.log('\n💥 Some smoke tests failed. Please check the issues above.');

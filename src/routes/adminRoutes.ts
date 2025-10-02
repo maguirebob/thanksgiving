@@ -69,8 +69,6 @@ router.get('/dashboard', async (_req: Request, res: Response) => {
  */
 router.post('/fix-filenames', async (_req: Request, res: Response) => {
   try {
-    console.log('🔧 Running filename fix...');
-    
     // Define expected filenames
     const expectedFilenames: Record<number, string> = {
       1994: '1994_Menu.png',
@@ -132,8 +130,6 @@ router.post('/fix-filenames', async (_req: Request, res: Response) => {
       }
     }
     
-    console.log(`📊 Fixed ${updatedCount} filenames`);
-    
     res.json({
       success: true,
       message: `Fixed ${updatedCount} filenames`,
@@ -161,8 +157,6 @@ router.get('/volume-contents', async (_req: Request, res: Response) => {
     const volumePath = process.env['NODE_ENV'] === 'development' 
       ? path.join(process.cwd(), 'public/images')
       : '/app/public/images';
-    
-    console.log(`🔍 Checking volume contents at: ${volumePath}`);
     
     // Check if directory exists
     if (!fs.existsSync(volumePath)) {
@@ -212,9 +206,6 @@ router.get('/volume-contents', async (_req: Request, res: Response) => {
     const linkedFilenames = await prisma.event.findMany({
       select: { menu_image_filename: true }
     }).then(events => events.map(e => e.menu_image_filename).filter(Boolean));
-    
-    console.log(`Found ${linkedFilenames.length} linked filenames in database`);
-    console.log('Linked filenames:', linkedFilenames);
     
     // Add file status to each file
     fileStats.forEach(file => {
@@ -270,8 +261,6 @@ router.get('/volume-contents', async (_req: Request, res: Response) => {
  */
 router.post('/sync-local-images', uploadMultiple.array('menu_images', 50), async (req: Request, res: Response) => {
   try {
-    console.log('🔄 Starting bulk image sync...');
-    
     const uploadedFiles = req.files as Express.Multer.File[];
     const results: string[] = [];
     let processedCount = 0;
@@ -341,8 +330,6 @@ router.post('/sync-local-images', uploadMultiple.array('menu_images', 50), async
     const summary = `Processed ${processedCount} files, created ${createdCount} events, skipped ${skippedCount} items`;
     results.push(`\n📊 Summary: ${summary}`);
     
-    console.log(`✅ Sync completed: ${summary}`);
-    
     return res.json({
       success: true,
       message: summary,
@@ -372,7 +359,6 @@ router.post('/sync-local-images', uploadMultiple.array('menu_images', 50), async
 router.delete('/volume-file/:filename', async (req: Request, res: Response) => {
   try {
     const filename = req.params['filename'];
-    console.log(`🗑️ Attempting to delete file: ${filename}`);
     
     if (!filename) {
       return res.status(400).json({
@@ -387,7 +373,6 @@ router.delete('/volume-file/:filename', async (req: Request, res: Response) => {
     });
     
     if (linkedEvent) {
-      console.log(`❌ Cannot delete linked file: ${filename} (linked to ${linkedEvent.event_name})`);
       return res.status(400).json({
         success: false,
         message: `Cannot delete file "${filename}" - it is linked to event "${linkedEvent.event_name}"`
@@ -403,14 +388,12 @@ router.delete('/volume-file/:filename', async (req: Request, res: Response) => {
     
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
-      console.log(`✅ File deleted successfully: ${filename}`);
       
       return res.json({
         success: true,
         message: `File "${filename}" deleted successfully`
       });
     } else {
-      console.log(`❌ File not found: ${filePath}`);
       return res.status(404).json({
         success: false,
         message: `File "${filename}" not found in volume`
@@ -423,6 +406,137 @@ router.delete('/volume-file/:filename', async (req: Request, res: Response) => {
       success: false,
       message: 'Failed to delete file',
       error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * GET /admin/users - User management page
+ */
+router.get('/users', async (req: Request, res: Response) => {
+  try {
+    // Get all users
+    const users = await prisma.user.findMany({
+      select: {
+        user_id: true,
+        username: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        role: true,
+        created_at: true
+      },
+      orderBy: {
+        created_at: 'desc'
+      }
+    });
+
+    // Get current user info
+    const currentUser = await prisma.user.findUnique({
+      where: { user_id: req.session.userId! },
+      select: {
+        user_id: true,
+        username: true,
+        role: true
+      }
+    });
+
+    res.render('admin/users', {
+      users,
+      currentUser,
+      title: 'User Management'
+    });
+  } catch (error) {
+    console.error('Error loading users page:', error);
+    res.status(500).render('error', {
+      message: 'Failed to load user management page',
+      error: process.env['NODE_ENV'] === 'development' ? error : {}
+    });
+  }
+});
+
+/**
+ * PUT /admin/users/:userId/role - Update user role
+ */
+router.put('/users/:userId/role', async (req: Request, res: Response) => {
+  try {
+    const userId = parseInt(req.params['userId']!);
+    const { role } = req.body;
+
+    if (!userId || !role || !['admin', 'user'].includes(role)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid user ID or role'
+      });
+    }
+
+    // Prevent self-demotion
+    if (userId === req.session.userId && role === 'user') {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot demote yourself'
+      });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { user_id: userId },
+      data: { role },
+      select: {
+        user_id: true,
+        username: true,
+        role: true
+      }
+    });
+
+    return res.json({
+      success: true,
+      message: `User role updated to ${role}`,
+      user: updatedUser
+    });
+  } catch (error) {
+    console.error('Error updating user role:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to update user role'
+    });
+  }
+});
+
+/**
+ * DELETE /admin/users/:userId - Delete user
+ */
+router.delete('/users/:userId', async (req: Request, res: Response) => {
+  try {
+    const userId = parseInt(req.params['userId']!);
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid user ID'
+      });
+    }
+
+    // Prevent self-deletion
+    if (userId === req.session.userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Cannot delete yourself'
+      });
+    }
+
+    await prisma.user.delete({
+      where: { user_id: userId }
+    });
+
+    return res.json({
+      success: true,
+      message: 'User deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to delete user'
     });
   }
 });
