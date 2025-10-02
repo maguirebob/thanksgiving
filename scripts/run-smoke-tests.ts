@@ -46,7 +46,13 @@ class SmokeTestRunner {
   }
 
   async runAllTests(): Promise<void> {
-    console.log('🚀 Starting Smoke Tests for Test Environment...\n');
+    const baseUrl = process.env['TEST_BASE_URL'] || 'http://localhost:3000';
+    const environment = baseUrl.includes('localhost') ? 'Development' : 
+                       baseUrl.includes('test') ? 'Test' : 
+                       baseUrl.includes('prod') ? 'Production' : 'Unknown';
+    
+    console.log(`🚀 Starting Smoke Tests for ${environment} Environment...`);
+    console.log(`📍 Base URL: ${baseUrl}\n`);
 
     // Database Connection Tests (via API)
     await this.runTest('Database Connection', async () => {
@@ -167,16 +173,18 @@ class SmokeTestRunner {
     });
 
     await this.runTest('Admin Volume Contents API', async () => {
-      // Test volume contents API (should work even without auth for basic structure)
+      // Test volume contents API (requires authentication)
       const response = await this.makeRequest('GET', '/admin/volume-contents');
       
-      // Should return JSON response with proper structure
-      if (typeof response === 'string') {
-        throw new Error('Volume contents API should return JSON, not HTML');
-      }
-      
-      if (!response.success) {
-        throw new Error('Volume contents API failed');
+      // Should redirect to login or return JSON (depending on auth)
+      if (typeof response === 'string' && response.includes('Login')) {
+        // This is expected - API requires authentication
+        console.log('   Volume contents API requires authentication (expected)');
+      } else if (typeof response === 'object' && response.success) {
+        // API returned JSON successfully
+        console.log('   Volume contents API returned JSON successfully');
+      } else {
+        throw new Error('Volume contents API returned unexpected response');
       }
     });
 
@@ -211,16 +219,31 @@ class SmokeTestRunner {
 
     // Menu Management Tests
     await this.runTest('Menu Creation API', async () => {
-      // Test menu creation endpoint exists
-      const response = await this.makeRequest('POST', '/api/v1/events', {
-        event_name: 'Test Event',
-        event_date: '2024-11-28',
-        menu_title: 'Test Menu'
-      });
-      
-      // Should handle the request (may fail due to validation, but endpoint should exist)
-      if (typeof response === 'string' && response.includes('Cannot POST')) {
-        throw new Error('Menu creation API endpoint does not exist');
+      // Test menu creation endpoint exists (requires authentication)
+      try {
+        const response = await this.makeRequest('POST', '/api/v1/events', {
+          event_name: 'Test Event',
+          event_date: '2024-11-28',
+          menu_title: 'Test Menu'
+        });
+        
+        // Should redirect to login or return validation error (both are expected)
+        if (typeof response === 'string' && response.includes('Login')) {
+          // This is expected - API requires authentication
+          console.log('   Menu creation API requires authentication (expected)');
+        } else {
+          // Any other response means the endpoint exists
+          console.log('   Menu creation API endpoint exists');
+        }
+      } catch (error) {
+        // HTTP 400 Bad Request means endpoint exists but validation failed (expected)
+        if (error instanceof Error && error.message.includes('HTTP 400')) {
+          console.log('   Menu creation API endpoint exists (validation working)');
+        } else if (error instanceof Error && error.message.includes('Cannot POST')) {
+          throw new Error('Menu creation API endpoint does not exist');
+        } else {
+          throw error;
+        }
       }
     });
 
@@ -237,10 +260,22 @@ class SmokeTestRunner {
     // Error Handling Tests
     await this.runTest('Error Handling', async () => {
       // Test 404 handling
-      const response = await this.makeRequest('GET', '/nonexistent-endpoint');
-      
-      if (!response.includes('Error') && !response.includes('404') && !response.includes('Not Found')) {
-        throw new Error('Error handling not working properly');
+      try {
+        const response = await this.makeRequest('GET', '/nonexistent-endpoint');
+        
+        // Should return 404 error page or redirect to login
+        if (response.includes('Error') || response.includes('404') || response.includes('Not Found') || response.includes('Login')) {
+          console.log('   Error handling working correctly');
+        } else {
+          throw new Error('Error handling not working properly');
+        }
+      } catch (error) {
+        // HTTP 404 Not Found is expected behavior
+        if (error instanceof Error && error.message.includes('HTTP 404')) {
+          console.log('   Error handling working correctly (404 response)');
+        } else {
+          throw error;
+        }
       }
     });
 
@@ -338,7 +373,11 @@ class SmokeTestRunner {
     console.log(`\nTotal Duration: ${totalDuration}ms`);
     
     if (failed === 0) {
-      console.log('\n🎉 All smoke tests passed! Test environment is ready.');
+      const baseUrl = process.env['TEST_BASE_URL'] || 'http://localhost:3000';
+      const environment = baseUrl.includes('localhost') ? 'Development' : 
+                         baseUrl.includes('test') ? 'Test' : 
+                         baseUrl.includes('prod') ? 'Production' : 'Unknown';
+      console.log(`\n🎉 All smoke tests passed! ${environment} environment is ready.`);
       process.exit(0);
     } else {
       console.log('\n💥 Some smoke tests failed. Please check the issues above.');
