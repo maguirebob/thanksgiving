@@ -433,7 +433,7 @@ router.get('/users', async (req: Request, res: Response) => {
 
     // Get current user info
     const currentUser = await prisma.user.findUnique({
-      where: { user_id: req.session.userId },
+      where: { user_id: req.session.userId! },
       select: {
         user_id: true,
         username: true,
@@ -460,7 +460,7 @@ router.get('/users', async (req: Request, res: Response) => {
  */
 router.put('/users/:userId/role', async (req: Request, res: Response) => {
   try {
-    const userId = parseInt(req.params['userId']);
+    const userId = parseInt(req.params['userId']!);
     const { role } = req.body;
 
     if (!userId || !role || !['admin', 'user'].includes(role)) {
@@ -488,14 +488,14 @@ router.put('/users/:userId/role', async (req: Request, res: Response) => {
       }
     });
 
-    res.json({
+    return res.json({
       success: true,
       message: `User role updated to ${role}`,
       user: updatedUser
     });
   } catch (error) {
     console.error('Error updating user role:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to update user role'
     });
@@ -507,7 +507,7 @@ router.put('/users/:userId/role', async (req: Request, res: Response) => {
  */
 router.delete('/users/:userId', async (req: Request, res: Response) => {
   try {
-    const userId = parseInt(req.params['userId']);
+    const userId = parseInt(req.params['userId']!);
 
     if (!userId) {
       return res.status(400).json({
@@ -528,13 +528,13 @@ router.delete('/users/:userId', async (req: Request, res: Response) => {
       where: { user_id: userId }
     });
 
-    res.json({
+    return res.json({
       success: true,
       message: 'User deleted successfully'
     });
   } catch (error) {
     console.error('Error deleting user:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to delete user'
     });
