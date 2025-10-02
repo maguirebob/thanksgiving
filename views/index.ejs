@@ -51,7 +51,8 @@
                 weekday: 'long', 
                 year: 'numeric', 
                 month: 'long', 
-                day: 'numeric' 
+                day: 'numeric',
+                timeZone: 'UTC'
             }) %></div>
             <h2 class="menu-title"><%= events[0].event_name %></h2>
             <p class="menu-description"><%= events[0].description || 'A wonderful Thanksgiving celebration with family and friends.' %></p>
@@ -80,7 +81,8 @@
                             weekday: 'long', 
                             year: 'numeric', 
                             month: 'long', 
-                            day: 'numeric' 
+                            day: 'numeric',
+                            timeZone: 'UTC'
                         }) %></div>
                         <h3 class="menu-title"><%= event.event_name %></h3>
                         <p class="menu-description"><%= event.description || 'A wonderful Thanksgiving celebration with family and friends.' %></p>
