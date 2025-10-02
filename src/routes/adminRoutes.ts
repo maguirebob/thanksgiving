@@ -268,7 +268,7 @@ router.get('/volume-contents', async (_req: Request, res: Response) => {
  * Sync uploaded images to volume and create event records
  * POST /admin/sync-local-images
  */
-router.post('/sync-local-images', uploadMultiple.array('menu_images', 25), async (req: Request, res: Response) => {
+router.post('/sync-local-images', uploadMultiple.array('menu_images', 50), async (req: Request, res: Response) => {
   try {
     console.log('🔄 Starting bulk image sync...');
     
