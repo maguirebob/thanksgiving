@@ -155,6 +155,109 @@ class SmokeTestRunner {
       }
     });
 
+    // Admin Dashboard Tests
+    await this.runTest('Admin Dashboard Access', async () => {
+      // Test that admin dashboard requires authentication
+      const response = await this.makeRequest('GET', '/admin/dashboard');
+      
+      // Should redirect to login or show authentication required
+      if (!response.includes('Login') && !response.includes('auth')) {
+        throw new Error('Admin dashboard does not require authentication');
+      }
+    });
+
+    await this.runTest('Admin Volume Contents API', async () => {
+      // Test volume contents API (should work even without auth for basic structure)
+      const response = await this.makeRequest('GET', '/admin/volume-contents');
+      
+      // Should return JSON response with proper structure
+      if (typeof response === 'string') {
+        throw new Error('Volume contents API should return JSON, not HTML');
+      }
+      
+      if (!response.success) {
+        throw new Error('Volume contents API failed');
+      }
+    });
+
+    // File Upload Tests
+    await this.runTest('File Upload Endpoint Exists', async () => {
+      // Test that file upload endpoints exist
+      const response = await this.makeRequest('GET', '/admin/dashboard');
+      
+      // Should contain file upload form elements
+      if (!response.includes('menu_image') && !response.includes('file')) {
+        throw new Error('File upload functionality not found in admin dashboard');
+      }
+    });
+
+    // Authentication Tests
+    await this.runTest('User Registration Endpoint', async () => {
+      const response = await this.makeRequest('GET', '/auth/register');
+      
+      if (!response.includes('Register') && !response.includes('registration')) {
+        throw new Error('User registration page not found');
+      }
+    });
+
+    await this.runTest('Profile Management', async () => {
+      const response = await this.makeRequest('GET', '/auth/profile');
+      
+      // Should redirect to login or show profile page
+      if (!response.includes('Login') && !response.includes('Profile')) {
+        throw new Error('Profile management not properly configured');
+      }
+    });
+
+    // Menu Management Tests
+    await this.runTest('Menu Creation API', async () => {
+      // Test menu creation endpoint exists
+      const response = await this.makeRequest('POST', '/api/v1/events', {
+        event_name: 'Test Event',
+        event_date: '2024-11-28',
+        menu_title: 'Test Menu'
+      });
+      
+      // Should handle the request (may fail due to validation, but endpoint should exist)
+      if (typeof response === 'string' && response.includes('Cannot POST')) {
+        throw new Error('Menu creation API endpoint does not exist');
+      }
+    });
+
+    // Photo Management Tests
+    await this.runTest('Photo Upload Endpoint', async () => {
+      const response = await this.makeRequest('GET', '/admin/dashboard');
+      
+      // Should contain photo-related functionality
+      if (!response.includes('photo') && !response.includes('image')) {
+        throw new Error('Photo management functionality not found');
+      }
+    });
+
+    // Error Handling Tests
+    await this.runTest('Error Handling', async () => {
+      // Test 404 handling
+      const response = await this.makeRequest('GET', '/nonexistent-endpoint');
+      
+      if (!response.includes('Error') && !response.includes('404') && !response.includes('Not Found')) {
+        throw new Error('Error handling not working properly');
+      }
+    });
+
+    // Performance Tests
+    await this.runTest('Response Time Performance', async () => {
+      const startTime = Date.now();
+      
+      await this.makeRequest('GET', '/');
+      
+      const responseTime = Date.now() - startTime;
+      if (responseTime > 10000) { // 10 seconds
+        throw new Error(`Response time too slow: ${responseTime}ms`);
+      }
+      
+      console.log(`   Response time: ${responseTime}ms`);
+    });
+
     // Environment Tests (optional for local testing)
     await this.runTest('Environment Variables', async () => {
       // For local testing, TEST_BASE_URL is optional (defaults to localhost:3000)
