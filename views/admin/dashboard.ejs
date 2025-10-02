@@ -66,12 +66,12 @@
                           <%= event.event_name %>
                         </a>
                       </td>
-                      <td><%= new Date(event.event_date).toLocaleDateString() %></td>
-                      <td>Family Home</td>
+                      <td><%= new Date(event.event_date).toLocaleDateString('en-US', { timeZone: 'UTC' }) %></td>
+                      <td><%= event.event_location || 'Family Home' %></td>
                       <td>
                         <span class="badge bg-secondary"><%= event.photoCount %></span>
                       </td>
-                      <td><%= new Date(event.created_at).toLocaleDateString() %></td>
+                      <td><%= new Date(event.created_at).toLocaleDateString('en-US', { timeZone: 'UTC' }) %></td>
                       <td>
                         <div class="btn-group btn-group-sm">
                           <button class="btn btn-outline-primary" onclick="editEvent(<%= event.id %>)" title="Edit Event">
