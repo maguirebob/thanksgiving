@@ -1,41 +1,30 @@
-#!/usr/bin/env node
-
-/**
- * Startup script that runs database migrations before starting the server
- * This ensures migrations are applied even if they fail during build
- */
-
 const { execSync } = require('child_process');
 const path = require('path');
 
-async function startWithMigrations() {
+async function runMigrationsAndStartServer() {
   try {
-    console.log('🚀 Starting application with database migrations...');
+    console.log('🚀 Running database migrations...');
+    // Add timeout to prevent hanging
+    const timeout = setTimeout(() => {
+      console.error('⏰ Migration timeout after 60 seconds');
+      throw new Error('Migration timeout');
+    }, 60000);
     
-    // Run database migrations
-    console.log('📋 Running database migrations...');
-    try {
-      execSync('npx prisma migrate deploy', { 
-        stdio: 'inherit',
-        cwd: path.join(__dirname, '..')
-      });
-      console.log('✅ Database migrations completed successfully');
-    } catch (migrationError) {
-      console.warn('⚠️  Database migration failed, but continuing with startup...');
-      console.warn('Migration error:', migrationError.message);
-    }
-    
-    // Start the server
-    console.log('🌐 Starting server...');
-    execSync('npm start', { 
-      stdio: 'inherit',
-      cwd: path.join(__dirname, '..')
-    });
-    
-  } catch (error) {
-    console.error('❌ Failed to start application:', error.message);
+    execSync('npx prisma migrate deploy', { stdio: 'inherit', timeout: 60000 });
+    clearTimeout(timeout);
+    console.log('✅ Database migrations applied successfully.');
+  } catch (migrationError) {
+    console.error('⚠️ Migration failed, but continuing with server start:', migrationError.message);
+    console.log('📝 Note: Server will start but may have database issues. Check logs for details.');
+  }
+
+  try {
+    console.log('🚀 Starting server...');
+    require(path.join(__dirname, '../dist/server.js'));
+  } catch (serverError) {
+    console.error('❌ Failed to start server:', serverError);
     process.exit(1);
   }
 }
 
-startWithMigrations();
+runMigrationsAndStartServer();
