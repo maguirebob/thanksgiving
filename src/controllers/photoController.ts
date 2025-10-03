@@ -11,7 +11,7 @@ const prisma = new PrismaClient();
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     // Save to volume-mounted directory to persist across deployments
-    const uploadDir = process.env.NODE_ENV === 'production' ? '/app/uploads/photos' : 'public/uploads/photos';
+    const uploadDir = process.env['NODE_ENV'] === 'production' ? '/app/uploads/photos' : 'public/uploads/photos';
     try {
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
@@ -519,7 +519,7 @@ export const servePhotoFile = async (req: Request, res: Response): Promise<void>
     }
 
     // Use the same path logic as upload to find the file
-    const uploadDir = process.env.NODE_ENV === 'production' ? '/app/uploads/photos' : 'public/uploads/photos';
+    const uploadDir = process.env['NODE_ENV'] === 'production' ? '/app/uploads/photos' : 'public/uploads/photos';
     const filePath = path.join(uploadDir, photo.filename);
 
     if (!fs.existsSync(filePath)) {
