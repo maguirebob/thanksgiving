@@ -11,6 +11,7 @@ import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/authRoutes';
 import adminRoutes from './routes/adminRoutes';
 import photoRoutes from './routes/photoRoutes';
+import photosRoutes from './routes/photosRoutes';
 import blogRoutes from './routes/blogRoutes';
 import eventRoutes from './routes/eventRoutes';
 import { addUserToLocals, requireAuth } from './middleware/auth';
@@ -336,6 +337,9 @@ app.use('/auth', authRoutes);
 
 // Admin routes
 app.use('/admin', adminRoutes);
+
+// Photos page route
+app.use('/', photosRoutes);
 
 // API routes
 app.use('/api', photoRoutes);
