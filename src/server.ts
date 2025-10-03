@@ -86,6 +86,9 @@ app.use(session({
 // Authentication middleware
 app.use(addUserToLocals);
 
+// Photos page route (must be before static file serving to avoid conflict with /public/photos/)
+app.use('/', photosRoutes);
+
 // Static files - use absolute path for Railway environment
 const publicPath = process.env['NODE_ENV'] === 'development' 
   ? path.join(__dirname, '../public')
@@ -337,9 +340,6 @@ app.use('/auth', authRoutes);
 
 // Admin routes
 app.use('/admin', adminRoutes);
-
-// Photos page route
-app.use('/', photosRoutes);
 
 // API routes
 app.use('/api', photoRoutes);
