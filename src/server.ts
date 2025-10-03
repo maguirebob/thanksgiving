@@ -165,9 +165,9 @@ app.get('/api/setup-database', async (_req, res) => {
       execSync('npx prisma generate', { stdio: 'inherit' });
       console.log('✅ Prisma client generated');
       
-      // Push schema to database (creates tables)
-      execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' });
-      console.log('✅ Database schema created');
+      // Run database migrations
+      execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+      console.log('✅ Database migrations applied');
     } catch (schemaError) {
       console.error('❌ Failed to create database schema:', schemaError);
       return res.status(500).json({
