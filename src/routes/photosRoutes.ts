@@ -117,9 +117,17 @@ router.get('/', async (_req: Request, res: Response) => {
  * Serve photo preview
  * GET /api/photos/:filename/preview
  */
-router.get('/api/photos/:filename/preview', async (req: Request, res: Response) => {
+router.get('/api/photos/:filename/preview', async (req: Request, res: Response): Promise<void> => {
   try {
     const { filename } = req.params;
+    
+    if (!filename) {
+      res.status(400).json({
+        success: false,
+        message: 'Filename parameter is required'
+      });
+      return;
+    }
     
     // Determine the photos path based on environment
     const photosPath = process.env['NODE_ENV'] === 'development' 
@@ -130,10 +138,11 @@ router.get('/api/photos/:filename/preview', async (req: Request, res: Response) 
     
     // Check if file exists
     if (!fs.existsSync(filePath)) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         message: 'Photo not found'
       });
+      return;
     }
     
     // Set appropriate headers
