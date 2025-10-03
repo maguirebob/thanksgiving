@@ -1,6 +1,6 @@
 {
   "name": "thanksgiving-website-ts",
-  "version": "2.12.26",
+  "version": "2.12.33",
   "description": "Thanksgiving Menu Website - TypeScript Version",
   "main": "dist/server.js",
   "scripts": {
@@ -19,6 +19,8 @@
     "test:smoke:api": "jest tests/smoke/api.test.ts",
     "test:smoke:db": "jest tests/smoke/database.test.ts",
     "test:smoke:runner": "ts-node scripts/run-smoke-tests.ts",
+    "test:smoke:test": "TEST_BASE_URL=https://thanksgiving-test-test.up.railway.app ts-node scripts/run-smoke-tests.ts",
+    "test:smoke:production": "TEST_BASE_URL=https://thanksgiving-prod-production.up.railway.app ts-node scripts/run-smoke-tests.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:smoke": "playwright test tests/e2e/smoke.spec.ts",
@@ -27,6 +29,7 @@
     "version:major": "ts-node scripts/version-manager.ts major",
     "version:check": "ts-node scripts/version-manager.ts",
     "db:migrate": "prisma migrate deploy",
+    "deploy:railway": "bash scripts/railway-deploy.sh",
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:status": "prisma migrate status",
     "db:push": "prisma db push",
