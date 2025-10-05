@@ -3,17 +3,19 @@
 # Railway Deployment Script
 # This script ensures migrations are applied before starting the server
 
-set -e  # Exit on any error
-
 echo "🚀 Starting Railway deployment process..."
 
 # Step 1: Generate Prisma client
 echo "📦 Generating Prisma client..."
-npx prisma generate
+npx prisma generate || {
+    echo "⚠️ Prisma client generation failed, but continuing..."
+}
 
 # Step 2: Check migration status
 echo "🔍 Checking migration status..."
-npx prisma migrate status
+npx prisma migrate status || {
+    echo "⚠️ Migration status check failed, but continuing..."
+}
 
 # Step 3: Apply migrations with timeout
 echo "🔄 Applying database migrations..."
