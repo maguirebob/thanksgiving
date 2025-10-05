@@ -219,8 +219,8 @@ app.get('/api/migrate-menu-images', async (_req, res) => {
     const { execSync } = require('child_process');
     
     try {
-      // Run the migration script
-      execSync('npx ts-node scripts/migrate-menu-images-to-s3.ts --live', { 
+      // Run the migration script using the compiled JavaScript version
+      execSync('node dist/scripts/migrate-menu-images-to-s3.js --live', { 
         stdio: 'inherit',
         env: { ...process.env }
       });
