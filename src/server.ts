@@ -14,6 +14,7 @@ import photoRoutes from './routes/photoRoutes';
 import photosRoutes from './routes/photosRoutes';
 import blogRoutes from './routes/blogRoutes';
 import eventRoutes from './routes/eventRoutes';
+import uploadRoutes from './routes/uploadRoutes';
 import { addUserToLocals, requireAuth } from './middleware/auth';
 
 const app = express();
@@ -505,6 +506,7 @@ app.use('/admin', adminRoutes);
 app.use('/api', photoRoutes);
 app.use('/api', blogRoutes);
 app.use('/api/v1', eventRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Error handling middleware
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
