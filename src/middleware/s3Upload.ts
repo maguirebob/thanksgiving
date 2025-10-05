@@ -110,18 +110,51 @@ export const uploadMixed = s3Upload.fields([
 /**
  * Error handling middleware for multer errors
  */
-export const handleUploadError = (error: any, _req: any, res: any, _next: any) => {
+export const handleUploadError = (error: any, req: any, res: any, _next: any) => {
+  console.error('=== S3 UPLOAD ERROR ===');
+  console.error('Error type:', error.constructor.name);
+  console.error('Error message:', error.message);
+  console.error('Error code:', error.code);
+  console.error('Error stack:', error.stack);
+  console.error('Request details:', {
+    params: req.params,
+    body: req.body,
+    file: req.file ? {
+      filename: req.file.filename,
+      originalname: req.file.originalname,
+      size: req.file.size,
+      mimetype: req.file.mimetype,
+      fieldname: req.file.fieldname
+    } : null
+  });
+  console.error('S3 Environment:', {
+    S3_BUCKET_NAME: process.env['S3_BUCKET_NAME'],
+    AWS_REGION: process.env['AWS_REGION'],
+    AWS_ACCESS_KEY_ID: process.env['AWS_ACCESS_KEY_ID'] ? 'SET' : 'NOT SET',
+    AWS_SECRET_ACCESS_KEY: process.env['AWS_SECRET_ACCESS_KEY'] ? 'SET' : 'NOT SET'
+  });
+  console.error('=== END S3 UPLOAD ERROR ===');
+
   if (error instanceof multer.MulterError) {
     if (error.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({
         success: false,
-        message: 'File too large. Maximum size is 10MB.'
+        message: 'File too large. Maximum size is 10MB.',
+        debug: { errorCode: error.code, errorMessage: error.message }
       });
     }
     if (error.code === 'LIMIT_FILE_COUNT') {
       return res.status(400).json({
         success: false,
-        message: 'Too many files. Maximum is 10 files.'
+        message: 'Too many files. Maximum is 10 files.',
+        debug: { errorCode: error.code, errorMessage: error.message }
+      });
+    }
+    if (error.code === 'LIMIT_UNEXPECTED_FILE') {
+      return res.status(400).json({
+        success: false,
+        message: 'Unexpected file field.',
+        debug: { errorCode: error.code, errorMessage: error.message }
       });
     }
   }
@@ -129,14 +162,37 @@ export const handleUploadError = (error: any, _req: any, res: any, _next: any) =
   if (error.message === 'Only image files are allowed (JPEG, JPG, PNG, GIF, WEBP)') {
     return res.status(400).json({
       success: false,
-      message: 'Only image files are allowed (JPEG, JPG, PNG, GIF, WEBP)'
+      message: 'Only image files are allowed (JPEG, JPG, PNG, GIF, WEBP)',
+      debug: { errorMessage: error.message }
     });
   }
   
-  console.error('Upload error:', error);
+  // AWS S3 specific errors
+  if (error.name === 'NoSuchBucket') {
+    return res.status(500).json({
+      success: false,
+      message: 'S3 bucket not found',
+      debug: { errorName: error.name, errorMessage: error.message }
+    });
+  }
+  
+  if (error.name === 'AccessDenied') {
+    return res.status(500).json({
+      success: false,
+      message: 'S3 access denied',
+      debug: { errorName: error.name, errorMessage: error.message }
+    });
+  }
+  
   res.status(500).json({
     success: false,
-    message: 'File upload failed'
+    message: 'File upload failed',
+    debug: {
+      errorType: error.constructor.name,
+      errorMessage: error.message,
+      errorCode: error.code,
+      errorName: error.name
+    }
   });
 };
 

@@ -257,6 +257,9 @@
 </div>
 
 <script>
+// Flag to prevent global error handler from closing modals during uploads
+let isUploading = false;
+
 // Image zoom functionality
 function toggleZoom() {
     const overlay = document.getElementById('zoomOverlay');
@@ -889,9 +892,6 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="/js/components/blogComponent.js"></script>
 
 <script>
-// Flag to prevent global error handler from closing modals during uploads
-let isUploading = false;
-
 // Set event ID for API calls
 window.eventId = <%= eventId %>;
 
