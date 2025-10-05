@@ -12,23 +12,86 @@ const router = Router();
  */
 router.post('/events', uploadSingleMenu, handleUploadError, sanitizeMenuData, validateMenuCreation, async (req: Request, res: Response) => {
   try {
+    console.log('=== MENU UPLOAD DEBUG START ===');
+    console.log('Request params:', req.params);
+    console.log('Request body:', req.body);
+    console.log('Request file:', req.file ? {
+      filename: req.file.filename,
+      originalname: req.file.originalname,
+      size: req.file.size,
+      mimetype: req.file.mimetype,
+      fieldname: req.file.fieldname,
+      location: (req.file as any).location,
+      key: (req.file as any).key
+    } : 'NO FILE');
+    console.log('Environment:', {
+      NODE_ENV: process.env['NODE_ENV'],
+      S3_BUCKET_NAME: process.env['S3_BUCKET_NAME'],
+      AWS_REGION: process.env['AWS_REGION'],
+      AWS_ACCESS_KEY_ID: process.env['AWS_ACCESS_KEY_ID'] ? 'SET' : 'NOT SET',
+      AWS_SECRET_ACCESS_KEY: process.env['AWS_SECRET_ACCESS_KEY'] ? 'SET' : 'NOT SET'
+    });
+
     // At this point, validation has passed, so we can safely use the data
     const { event_name, event_date, event_location, event_description } = req.body;
+    console.log('Parsed menu data:', { event_name, event_date, event_location, event_description });
     
     // Validate and parse date as local date to avoid timezone issues
+    console.log('Parsing date:', event_date);
     const [year, month, day] = event_date.split('-').map(Number);
     const eventDate = new Date(year, month - 1, day); // month is 0-indexed
     if (isNaN(eventDate.getTime())) {
+      console.log('ERROR: Invalid date format:', event_date);
       return res.status(400).json({
         success: false,
-        message: 'Invalid date format'
+        message: 'Invalid date format',
+        debug: { event_date, parsedDate: eventDate }
       });
     }
+    console.log('Date parsed successfully:', eventDate);
+
+    // Check if file was uploaded
+    if (!req.file) {
+      console.log('ERROR: No file in request');
+      console.log('Request body keys:', Object.keys(req.body));
+      console.log('Request files:', req.files);
+      return res.status(400).json({
+        success: false,
+        message: 'No menu image file provided',
+        debug: { 
+          hasFile: !!req.file,
+          bodyKeys: Object.keys(req.body),
+          files: req.files
+        }
+      });
+    }
+
+    console.log('File validation passed, processing upload...');
 
     // Extract filename from S3 key or use original name
     const s3Key = (req.file as any).key;
     const filename = s3Key ? s3Key.split('/').pop() : req.file!.originalname;
+    console.log('Extracted filename:', filename);
 
+    if (!s3Key) {
+      console.log('ERROR: No S3 key found in file object');
+      return res.status(500).json({
+        success: false,
+        message: 'File upload failed - no S3 key',
+        debug: { file: req.file }
+      });
+    }
+
+    if (!(req.file as any).location) {
+      console.log('ERROR: No S3 location URL found in file object');
+      return res.status(500).json({
+        success: false,
+        message: 'File upload failed - no S3 URL',
+        debug: { file: req.file }
+      });
+    }
+
+    console.log('Creating database record...');
     // Create the event
     const newEvent = await prisma.event.create({
       data: {
@@ -43,6 +106,8 @@ router.post('/events', uploadSingleMenu, handleUploadError, sanitizeMenuData, va
       }
     });
 
+    console.log('Event created successfully:', newEvent);
+    console.log('=== MENU UPLOAD DEBUG END ===');
 
     // Transform the response to match what the frontend expects
     const transformedEvent = {
@@ -67,15 +132,37 @@ router.post('/events', uploadSingleMenu, handleUploadError, sanitizeMenuData, va
     });
 
   } catch (error) {
-    console.error('Error creating event:', error);
-    console.error('Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
+    console.error('=== MENU UPLOAD ERROR ===');
+    console.error('Error type:', (error as Error).constructor.name);
+    console.error('Error message:', (error as Error).message);
+    console.error('Error stack:', (error as Error).stack);
+    console.error('Request details:', {
+      params: req.params,
+      body: req.body,
+      file: req.file ? {
+        filename: req.file.filename,
+        originalname: req.file.originalname,
+        size: req.file.size,
+        mimetype: req.file.mimetype
+      } : null
     });
+    console.error('Environment at error:', {
+      NODE_ENV: process.env['NODE_ENV'],
+      S3_BUCKET_NAME: process.env['S3_BUCKET_NAME'],
+      AWS_REGION: process.env['AWS_REGION'],
+      AWS_ACCESS_KEY_ID: process.env['AWS_ACCESS_KEY_ID'] ? 'SET' : 'NOT SET',
+      AWS_SECRET_ACCESS_KEY: process.env['AWS_SECRET_ACCESS_KEY'] ? 'SET' : 'NOT SET'
+    });
+    console.error('=== END MENU UPLOAD ERROR ===');
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
-      error: process.env['NODE_ENV'] === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : undefined
+      debug: {
+        errorType: (error as Error).constructor.name,
+        errorMessage: (error as Error).message,
+        hasFile: !!req.file,
+        eventName: req.body.event_name
+      }
     });
   }
 });

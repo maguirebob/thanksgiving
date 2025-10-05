@@ -107,54 +107,102 @@ export const getEventPhotos = async (req: Request, res: Response): Promise<void>
  */
 export const uploadEventPhoto = async (req: Request, res: Response): Promise<void> => {
   try {
+    console.log('=== PHOTO UPLOAD DEBUG START ===');
+    console.log('Request params:', req.params);
+    console.log('Request body:', req.body);
+    console.log('Request file:', req.file ? {
+      filename: req.file.filename,
+      originalname: req.file.originalname,
+      size: req.file.size,
+      mimetype: req.file.mimetype,
+      fieldname: req.file.fieldname,
+      location: (req.file as any).location,
+      key: (req.file as any).key
+    } : 'NO FILE');
+    console.log('Environment:', {
+      NODE_ENV: process.env['NODE_ENV'],
+      S3_BUCKET_NAME: process.env['S3_BUCKET_NAME'],
+      AWS_REGION: process.env['AWS_REGION'],
+      AWS_ACCESS_KEY_ID: process.env['AWS_ACCESS_KEY_ID'] ? 'SET' : 'NOT SET',
+      AWS_SECRET_ACCESS_KEY: process.env['AWS_SECRET_ACCESS_KEY'] ? 'SET' : 'NOT SET'
+    });
+
     const { eventId } = req.params;
     if (!eventId) {
+      console.log('ERROR: Event ID is missing');
       res.status(400).json({
         success: false,
-        message: 'Event ID is required'
+        message: 'Event ID is required',
+        debug: { eventId: req.params['eventId'] }
       });
       return;
     }
-    const { description, caption } = req.body;
 
-    console.log('Photo upload request:', { eventId, hasFile: !!req.file, description, caption });
+    const { description, caption } = req.body;
+    console.log('Parsed data:', { eventId, description, caption });
 
     // Validate event exists
+    console.log('Checking if event exists...');
     const event = await prisma.event.findUnique({
       where: { event_id: parseInt(eventId, 10) }
     });
 
     if (!event) {
+      console.log('ERROR: Event not found for ID:', eventId);
       res.status(404).json({
         success: false,
-        message: 'Event not found'
+        message: 'Event not found',
+        debug: { eventId: parseInt(eventId, 10) }
       });
       return;
     }
+    console.log('Event found:', { event_id: event.event_id, event_name: event.event_name });
 
     // Check if file was uploaded
     if (!req.file) {
-      console.log('No file in request:', req.body);
+      console.log('ERROR: No file in request');
+      console.log('Request body keys:', Object.keys(req.body));
+      console.log('Request files:', req.files);
       res.status(400).json({
         success: false,
-        message: 'No photo file provided'
+        message: 'No photo file provided',
+        debug: { 
+          hasFile: !!req.file,
+          bodyKeys: Object.keys(req.body),
+          files: req.files
+        }
       });
       return;
     }
 
-    console.log('File details:', {
-      filename: req.file.filename,
-      originalname: req.file.originalname,
-      size: req.file.size,
-      mimetype: req.file.mimetype,
-      location: (req.file as any).location, // S3 URL from multer-s3
-      key: (req.file as any).key // S3 key from multer-s3
-    });
+    console.log('File validation passed, processing upload...');
 
     // Extract filename from S3 key or use original name
     const s3Key = (req.file as any).key;
     const filename = s3Key ? s3Key.split('/').pop() : req.file.originalname;
+    console.log('Extracted filename:', filename);
 
+    if (!s3Key) {
+      console.log('ERROR: No S3 key found in file object');
+      res.status(500).json({
+        success: false,
+        message: 'File upload failed - no S3 key',
+        debug: { file: req.file }
+      });
+      return;
+    }
+
+    if (!(req.file as any).location) {
+      console.log('ERROR: No S3 location URL found in file object');
+      res.status(500).json({
+        success: false,
+        message: 'File upload failed - no S3 URL',
+        debug: { file: req.file }
+      });
+      return;
+    }
+
+    console.log('Creating database record...');
     // Create photo record with S3 URL
     const photo = await prisma.photo.create({
       data: {
@@ -182,16 +230,40 @@ export const uploadEventPhoto = async (req: Request, res: Response): Promise<voi
       }
     });
 
+    console.log('Photo created successfully:', photo);
+    console.log('=== PHOTO UPLOAD DEBUG END ===');
+
     res.status(201).json({
       success: true,
       data: { photo },
       message: 'Photo uploaded successfully'
     });
   } catch (error) {
-    console.error('Error uploading photo:', error);
+    console.error('=== PHOTO UPLOAD ERROR ===');
+    console.error('Error type:', (error as Error).constructor.name);
+    console.error('Error message:', (error as Error).message);
+    console.error('Error stack:', (error as Error).stack);
+    console.error('Request details:', {
+      params: req.params,
+      body: req.body,
+      file: req.file ? {
+        filename: req.file.filename,
+        originalname: req.file.originalname,
+        size: req.file.size,
+        mimetype: req.file.mimetype
+      } : null
+    });
+    console.error('=== END PHOTO UPLOAD ERROR ===');
+
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: 'Internal server error',
+      debug: {
+        errorType: (error as Error).constructor.name,
+        errorMessage: (error as Error).message,
+        hasFile: !!req.file,
+        eventId: req.params['eventId']
+      }
     });
   }
 };

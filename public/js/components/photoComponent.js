@@ -176,6 +176,7 @@ class PhotoComponent {
         const uploadFirstBtn = document.getElementById('uploadFirstPhotoBtn');
         const takePhotoBtn = document.getElementById('takePhotoBtn');
         
+        console.log('Photo component buttons found:', {
             uploadBtn: !!uploadBtn,
             uploadFirstBtn: !!uploadFirstBtn,
             takePhotoBtn: !!takePhotoBtn
