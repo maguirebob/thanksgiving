@@ -201,6 +201,53 @@ app.get('/api/v1/version/display', (_req, res) => {
   });
 });
 
+// Migration endpoint for S3 menu images
+app.get('/api/migrate-menu-images', async (_req, res) => {
+  try {
+    console.log('🚀 Starting menu image migration to S3...');
+    
+    // Check if database is available
+    if (!prisma) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database not available',
+        message: 'Prisma client is not initialized'
+      });
+    }
+
+    // Import the migration script dynamically
+    const { execSync } = require('child_process');
+    
+    try {
+      // Run the migration script
+      execSync('npx ts-node scripts/migrate-menu-images-to-s3.ts --live', { 
+        stdio: 'inherit',
+        env: { ...process.env }
+      });
+      
+      return res.json({
+        success: true,
+        message: 'Menu image migration completed successfully'
+      });
+    } catch (migrationError) {
+      console.error('❌ Migration failed:', migrationError);
+      return res.status(500).json({
+        success: false,
+        error: 'Migration failed',
+        message: migrationError instanceof Error ? migrationError.message : 'Unknown error'
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Error running migration:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Migration endpoint failed',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // Database setup endpoint (for Railway initialization)
 app.get('/api/setup-database', async (_req, res) => {
   try {
