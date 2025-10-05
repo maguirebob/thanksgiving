@@ -56,6 +56,7 @@ model Event {
   event_description   String?  @db.Text
   menu_title          String   @db.VarChar(255)
   menu_image_filename String   @db.VarChar(255)
+  menu_image_s3_url   String?  @db.VarChar(500)
   created_at          DateTime @default(now())
   updated_at          DateTime @updatedAt
 
@@ -78,6 +79,7 @@ model Photo {
   file_size        Int?
   mime_type        String?  @db.VarChar(100)
   file_data        String?  @db.Text
+  s3_url           String?  @db.VarChar(500)
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 
@@ -101,6 +103,7 @@ model Recipe {
   difficulty_level String?  @db.VarChar(20) // Easy, Medium, Hard
   category         String?  @db.VarChar(50) // Main Course, Side Dish, Dessert, Appetizer, Beverage
   image_filename   String?  @db.VarChar(255)
+  image_s3_url     String?  @db.VarChar(500)
   is_featured      Boolean  @default(false)
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt

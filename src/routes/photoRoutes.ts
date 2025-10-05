@@ -7,7 +7,8 @@ import {
   deletePhoto,
   searchPhotos,
   servePhotoFile,
-  uploadSingle
+  uploadSinglePhoto,
+  handleUploadError
 } from '../controllers/photoController';
 // import { validatePhotoUpload } from '../middleware/validation'; // Temporarily disabled for file uploads
 
@@ -17,7 +18,7 @@ const router = Router();
 router.get('/events/:eventId/photos', getEventPhotos);
 
 // Upload a new photo for an event
-router.post('/events/:eventId/photos', uploadSingle, uploadEventPhoto);
+router.post('/events/:eventId/photos', uploadSinglePhoto, handleUploadError, uploadEventPhoto);
 
 // Get a specific photo by ID
 router.get('/photos/:photoId', getPhoto);

@@ -127,6 +127,39 @@
         <div class="tab-content" id="contentTabsContent">
             <!-- Photos Tab -->
             <div class="tab-pane fade show active" id="photos" role="tabpanel" aria-labelledby="photos-tab">
+                <!-- Fallback photo controls if PhotoComponent fails to load -->
+                <div id="fallbackPhotoControls" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="mb-0">
+                            <i class="fas fa-images me-2"></i>Photos
+                        </h3>
+                        <div class="photo-controls">
+                            <button class="btn btn-primary me-2" onclick="openPhotoUpload()">
+                                <i class="fas fa-upload me-2"></i>Upload Photo
+                            </button>
+                            <button class="btn btn-success" onclick="openCameraCapture()">
+                                <i class="fas fa-camera me-2"></i>Take Photo
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Photos Grid -->
+                    <div id="fallbackPhotosGrid" class="row">
+                        <!-- Photos will be loaded here -->
+                    </div>
+                    
+                    <!-- No Photos Message -->
+                    <div id="fallbackNoPhotosMessage" class="text-center text-muted py-5">
+                        <i class="fas fa-images fa-3x mb-3" style="color: #dee2e6;"></i>
+                        <h4>No photos yet</h4>
+                        <p>Upload some memories from this Thanksgiving!</p>
+                        <button class="btn btn-primary" onclick="openPhotoUpload()">
+                            <i class="fas fa-upload me-2"></i>Upload First Photo
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- PhotoComponent container -->
                 <div id="photoComponentContainer"></div>
             </div>
 
@@ -856,11 +889,11 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="/js/components/blogComponent.js"></script>
 
 <script>
-// Set event ID for API calls
-window.eventId = <%= eventId %>;
-
 // Flag to prevent global error handler from closing modals during uploads
 let isUploading = false;
+
+// Set event ID for API calls
+window.eventId = <%= eventId %>;
 
 // Photo event listeners - Now handled by PhotoComponent
 
@@ -1052,14 +1085,183 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize components
     if (typeof PhotoComponent !== 'undefined') {
         console.log('Initializing PhotoComponent with eventId:', window.eventId);
-        window.photoComponent = new PhotoComponent(window.eventId, 'photoComponentContainer');
-        console.log('PhotoComponent initialized:', window.photoComponent);
+        try {
+            window.photoComponent = new PhotoComponent(window.eventId, 'photoComponentContainer');
+            console.log('PhotoComponent initialized:', window.photoComponent);
+        } catch (error) {
+            console.error('PhotoComponent failed to initialize:', error);
+            showFallbackPhotoControls();
+        }
     } else {
-        console.warn('PhotoComponent not available');
+        console.warn('PhotoComponent not available, showing fallback controls');
+        showFallbackPhotoControls();
     }
     
     if (typeof BlogComponent !== 'undefined') {
         window.blogComponent = new BlogComponent(window.eventId, 'blogComponentContainer');
     }
 });
+
+// Show fallback photo controls when PhotoComponent fails
+function showFallbackPhotoControls() {
+    const fallbackControls = document.getElementById('fallbackPhotoControls');
+    const photoComponentContainer = document.getElementById('photoComponentContainer');
+    
+    if (fallbackControls && photoComponentContainer) {
+        fallbackControls.style.display = 'block';
+        photoComponentContainer.style.display = 'none';
+        
+        // Load photos using fallback method
+        loadFallbackPhotos();
+    }
+}
+
+// Fallback photo upload function
+function openPhotoUpload() {
+    // Create a simple file input
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            uploadFallbackPhoto(file);
+        }
+    };
+    input.click();
+}
+
+// Upload photo using fallback method
+async function uploadFallbackPhoto(file) {
+    const formData = new FormData();
+    formData.append('photo', file);
+    formData.append('description', 'Uploaded via fallback');
+    formData.append('caption', file.name);
+
+    try {
+        const response = await fetch(`/api/events/${window.eventId}/photos`, {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert('Photo uploaded successfully!');
+            loadFallbackPhotos(); // Reload photos
+        } else {
+            alert('Upload failed: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Upload error:', error);
+        alert('Upload failed: ' + error.message);
+    }
+}
+
+// Load photos using fallback method
+async function loadFallbackPhotos() {
+    try {
+        const response = await fetch(`/api/events/${window.eventId}/photos`);
+        const result = await response.json();
+        
+        const photosGrid = document.getElementById('fallbackPhotosGrid');
+        const noPhotosMessage = document.getElementById('fallbackNoPhotosMessage');
+        
+        if (result.success && result.data.photos.length > 0) {
+            if (photosGrid) {
+                photosGrid.innerHTML = result.data.photos.map(photo => `
+                    <div class="col-md-4 col-sm-6 mb-3">
+                        <div class="card photo-card">
+                            <img src="/api/photos/${photo.photo_id}/file" 
+                                 class="card-img-top" 
+                                 alt="${photo.caption || photo.original_filename || 'Photo'}"
+                                 style="height: 200px; object-fit: cover; cursor: pointer;"
+                                 onclick="viewFallbackPhoto('${photo.photo_id}', '${photo.caption || ''}', '${photo.description || ''}')">
+                            <div class="card-body">
+                                <h6 class="card-title">${photo.caption || 'Untitled'}</h6>
+                                <p class="card-text small text-muted">${photo.description || ''}</p>
+                                <div class="btn-group btn-group-sm w-100" role="group">
+                                    <button type="button" class="btn btn-outline-primary" 
+                                            onclick="viewFallbackPhoto('${photo.photo_id}', '${photo.caption || ''}', '${photo.description || ''}')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger" 
+                                            onclick="deleteFallbackPhoto('${photo.photo_id}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            if (noPhotosMessage) {
+                noPhotosMessage.style.display = 'none';
+            }
+            
+            // Update photo count
+            updatePhotoCount(result.data.photos.length);
+        } else {
+            if (photosGrid) {
+                photosGrid.innerHTML = '';
+            }
+            if (noPhotosMessage) {
+                noPhotosMessage.style.display = 'block';
+            }
+            updatePhotoCount(0);
+        }
+    } catch (error) {
+        console.error('Error loading photos:', error);
+    }
+}
+
+// View photo in fallback modal
+function viewFallbackPhoto(photoId, caption, description) {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background-color: rgba(0,0,0,0.9); z-index: 10001; 
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer;
+    `;
+    modal.onclick = () => document.body.removeChild(modal);
+    
+    modal.innerHTML = `
+        <div style="max-width: 90%; max-height: 90%; text-align: center;">
+            <img src="/api/photos/${photoId}/file" 
+                 style="max-width: 100%; max-height: 80%; object-fit: contain; border-radius: 8px;">
+            <div style="color: white; margin-top: 1rem;">
+                <h4>${caption || 'Untitled'}</h4>
+                <p>${description || 'No description'}</p>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+// Delete photo using fallback method
+async function deleteFallbackPhoto(photoId) {
+    if (!confirm('Are you sure you want to delete this photo?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/photos/${photoId}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Photo deleted successfully!');
+            loadFallbackPhotos(); // Reload photos
+        } else {
+            alert('Delete failed: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Delete error:', error);
+        alert('Delete failed: ' + error.message);
+    }
+}
 </script>

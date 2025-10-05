@@ -3,6 +3,19 @@
  * Provides reusable components for blog creation, display, and management
  */
 
+// Utility function for debouncing
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
 class BlogComponent {
     constructor(eventId, containerId) {
         this.eventId = eventId;
