@@ -16,13 +16,29 @@ class S3Service {
     this.region = process.env['AWS_REGION'] || 'us-east-1';
     this.bucketName = process.env['S3_BUCKET_NAME'] || 'thanksgiving-images-dev';
     
-    this.s3Client = new S3Client({
-      region: this.region,
-      credentials: {
-        accessKeyId: process.env['AWS_ACCESS_KEY_ID']!,
-        secretAccessKey: process.env['AWS_SECRET_ACCESS_KEY']!
-      }
-    });
+    // Check if S3 credentials are available
+    const accessKeyId = process.env['AWS_ACCESS_KEY_ID'];
+    const secretAccessKey = process.env['AWS_SECRET_ACCESS_KEY'];
+    
+    if (!accessKeyId || !secretAccessKey) {
+      console.warn('⚠️ S3 credentials not configured. S3Service will operate in fallback mode.');
+      // Create a dummy client that will fail gracefully
+      this.s3Client = new S3Client({
+        region: this.region,
+        credentials: {
+          accessKeyId: 'dummy',
+          secretAccessKey: 'dummy'
+        }
+      });
+    } else {
+      this.s3Client = new S3Client({
+        region: this.region,
+        credentials: {
+          accessKeyId,
+          secretAccessKey
+        }
+      });
+    }
 
     console.log(`S3Service initialized for bucket: ${this.bucketName} in region: ${this.region}`);
   }
