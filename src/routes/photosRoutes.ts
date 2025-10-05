@@ -1,8 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import s3Service from '../services/s3Service';
-import path from 'path';
-import fs from 'fs';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -13,95 +11,81 @@ const prisma = new PrismaClient();
  */
 router.get('/', async (_req: Request, res: Response) => {
   try {
-    // Determine the photos path based on environment
-    const photosPath = process.env['NODE_ENV'] === 'development' 
-      ? path.join(process.cwd(), 'public/uploads/photos')
-      : '/app/uploads/photos';
-    
-    // Check if directory exists
-    const directoryExists = fs.existsSync(photosPath);
-    
-    let files: any[] = [];
-    let stats = {
-      totalFiles: 0,
-      totalSize: '0 B',
-      imageFiles: 0,
-      otherFiles: 0,
-      linkedFiles: 0,
-      orphanedFiles: 0
+    // Get all photos from database with event information
+    const photos = await prisma.photo.findMany({
+      select: {
+        photo_id: true,
+        filename: true,
+        original_filename: true,
+        description: true,
+        caption: true,
+        file_size: true,
+        mime_type: true,
+        s3_url: true,
+        taken_date: true,
+        created_at: true,
+        event: {
+          select: {
+            event_id: true,
+            event_name: true,
+            event_date: true
+          }
+        }
+      },
+      orderBy: {
+        created_at: 'desc'
+      }
+    });
+
+    // Format file size helper
+    const formatFileSize = (bytes: number): string => {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
+
+    // Calculate statistics
+    const totalSize = photos.reduce((sum, photo) => sum + (photo.file_size || 0), 0);
+    const imageFiles = photos.length;
+    const otherFiles = 0; // All photos are images
     
-    if (directoryExists) {
-      // Read directory contents
-      const fileList = fs.readdirSync(photosPath);
-      let totalSize = 0;
-      let imageFiles = 0;
-      let otherFiles = 0;
-      
-      files = fileList.map(filename => {
-        const filePath = path.join(photosPath, filename);
-        const fileStats = fs.statSync(filePath);
-        
-        const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(filename);
-        if (isImage) imageFiles++;
-        else otherFiles++;
-        
-        totalSize += fileStats.size;
-        
-        return {
-          name: filename,
-          size: fileStats.size,
-          type: isImage ? 'image' : 'file',
-          modified: fileStats.mtime,
-          path: filePath
-        };
-      });
-      
-      // Get linked filenames from database
-      const linkedFilenames = await prisma.photo.findMany({
-        select: { filename: true }
-      }).then(photos => photos.map(p => p.filename).filter(Boolean));
-      
-      // Add file status to each file
-      files.forEach(file => {
-        file.isLinked = linkedFilenames.includes(file.name);
-        file.status = file.isLinked ? 'linked' : 'orphaned';
-      });
-      
-      // Sort files by modification date (newest first)
-      files.sort((a, b) => b.modified.getTime() - a.modified.getTime());
-      
-      // Format total size
-      const formatFileSize = (bytes: number): string => {
-        if (bytes === 0) return '0 B';
-        const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-      };
-      
-      // Calculate file status statistics
-      const linkedFiles = files.filter(f => f.isLinked).length;
-      const orphanedFiles = files.filter(f => !f.isLinked).length;
-      
-      stats = {
-        totalFiles: files.length,
-        totalSize: formatFileSize(totalSize),
-        imageFiles,
-        otherFiles,
-        linkedFiles,
-        orphanedFiles
-      };
-    }
+    const stats = {
+      totalFiles: photos.length,
+      totalSize: formatFileSize(totalSize),
+      imageFiles,
+      otherFiles,
+      linkedFiles: photos.length, // All photos in DB are "linked"
+      orphanedFiles: 0 // No orphaned files with S3 approach
+    };
+
+    // Transform photos for template
+    const files = photos.map(photo => ({
+      name: photo.filename,
+      originalName: photo.original_filename,
+      size: photo.file_size || 0,
+      type: 'image',
+      modified: photo.created_at,
+      description: photo.description,
+      caption: photo.caption,
+      eventName: photo.event?.event_name,
+      eventDate: photo.event?.event_date,
+      s3Url: photo.s3_url,
+      previewUrl: `/api/photos/${photo.filename}/preview`,
+      isLinked: true,
+      status: 'linked'
+    }));
     
     res.render('photos', {
-      title: 'Photos Volume',
+      title: 'Photos',
       environment: process.env['NODE_ENV'] || 'unknown',
-      mountPath: photosPath,
-      volumeName: 'images-storage-thanksgiving-test',
+      mountPath: 'S3 Storage',
+      volumeName: process.env['S3_BUCKET_NAME'] || 'S3 Bucket',
       files,
       stats,
-      directoryExists
+      directoryExists: true, // Always true with S3
+      useS3: true // Flag for template to know we're using S3
     });
     
   } catch (error) {
