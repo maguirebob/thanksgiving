@@ -350,6 +350,15 @@ app.get('/menu/:id', requireAuth, async (req, res) => {
       });
     }
 
+    // Check if database is available
+    if (!prisma) {
+      return res.status(503).render('error', {
+        title: 'Service Unavailable',
+        message: 'Database connection is not available. Please try again later.',
+        error: 'Database not connected'
+      });
+    }
+
     // Fetch event from database using Prisma
     const event = await prisma.event.findUnique({
       where: { event_id: menuId }
