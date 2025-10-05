@@ -147,6 +147,181 @@ export const uploadMenuImagesToS3 = async (_req: Request, res: Response): Promis
   }
 };
 
+/**
+ * API endpoint to fix S3 URLs in database to match actual uploaded filenames
+ * POST /api/upload/fix-s3-urls
+ */
+export const fixS3Urls = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    console.log('🚀 Starting S3 URL fix...');
+    
+    const bucketName = process.env['S3_BUCKET_NAME'] || 'thanksgiving-images-prod';
+    const region = process.env['AWS_REGION'] || 'us-east-1';
+    
+    // Map of event years to actual S3 filenames we uploaded
+    const yearToFilename: Record<number, string> = {
+      1994: '1994_Menu.png',
+      1997: '1997_Menu.jpeg',
+      1999: '1999_Menu.jpeg',
+      2000: '2000_Menu.jpeg',
+      2002: '2002_Menu.jpeg',
+      2004: '2004_Menu.jpeg',
+      2005: '2005_Menu.jpeg',
+      2006: '2006_Menu.jpeg',
+      2007: '2007_Menu.jpeg',
+      2008: '2008_Menu.jpeg',
+      2009: '2009_Menu.jpeg',
+      2010: '2010_Menu.jpeg',
+      2011: '2011_Menu.jpeg',
+      2012: '2012_Menu.jpeg',
+      2013: '2013_Menu.jpeg',
+      2014: '2014_Menu.jpeg',
+      2015: '2015_Menu.jpeg',
+      2016: '2016_Menu.jpeg',
+      2017: '2017_Menu.jpeg',
+      2018: '2018_Menu.jpeg',
+      2020: '2020_Menu.jpeg',
+      2021: '2021_Menu.jpeg',
+      2022: '2022_Menu.jpeg',
+      2023: '2023_Menu.jpeg',
+      2024: '2024_Menu.jpeg'
+    };
+    
+    console.log(`🪣 S3 bucket: ${bucketName}`);
+    
+    // Get all events
+    const events = await prisma.event.findMany({
+      select: {
+        event_id: true,
+        event_name: true,
+        event_date: true,
+        menu_image_filename: true,
+        menu_image_s3_url: true
+      },
+      orderBy: {
+        event_date: 'asc'
+      }
+    });
+
+    console.log(`📋 Found ${events.length} events`);
+
+    const results: Array<{
+      success: boolean;
+      eventId: number;
+      eventName: string;
+      year: number;
+      oldFilename?: string | undefined;
+      newFilename: string;
+      oldS3Url?: string | undefined;
+      newS3Url: string;
+      error?: string;
+    }> = [];
+
+    // Process each event
+    for (const event of events) {
+      const { event_id, event_name, event_date, menu_image_filename, menu_image_s3_url } = event;
+      const year = event_date.getFullYear();
+      
+      console.log(`\n🔄 Processing: ${event_name} (ID: ${event_id}, Year: ${year})`);
+
+      // Check if we have a mapping for this year
+      const correctFilename = yearToFilename[year];
+      if (!correctFilename) {
+        console.log(`   ⚠️  No mapping found for year ${year}`);
+        results.push({
+          success: false,
+          eventId: event_id,
+          eventName: event_name,
+          year: year,
+          newFilename: '',
+          newS3Url: '',
+          error: `No mapping found for year ${year}`
+        });
+        continue;
+      }
+
+      const newS3Url = `https://${bucketName}.s3.${region}.amazonaws.com/menus/${correctFilename}`;
+      
+      console.log(`   📁 Current filename: ${menu_image_filename || 'null'}`);
+      console.log(`   📁 Correct filename: ${correctFilename}`);
+      console.log(`   🔗 Current S3 URL: ${menu_image_s3_url || 'null'}`);
+      console.log(`   🔗 Correct S3 URL: ${newS3Url}`);
+
+      try {
+        // Update database
+        await prisma.event.update({
+          where: { event_id: event_id },
+          data: { 
+            menu_image_filename: correctFilename,
+            menu_image_s3_url: newS3Url
+          }
+        });
+        
+        console.log(`   ✅ Database updated successfully`);
+
+        results.push({
+          success: true,
+          eventId: event_id,
+          eventName: event_name,
+          year: year,
+          oldFilename: menu_image_filename || undefined,
+          newFilename: correctFilename,
+          oldS3Url: menu_image_s3_url || undefined,
+          newS3Url: newS3Url
+        });
+
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.log(`   ❌ Update failed: ${errorMessage}`);
+        results.push({
+          success: false,
+          eventId: event_id,
+          eventName: event_name,
+          year: year,
+          newFilename: correctFilename,
+          newS3Url: newS3Url,
+          error: errorMessage
+        });
+      }
+    }
+
+    // Calculate summary
+    const successful = results.filter(r => r.success);
+    const failed = results.filter(r => !r.success);
+
+    console.log('\n📊 Fix Summary:');
+    console.log(`✅ Successful: ${successful.length}`);
+    console.log(`❌ Failed: ${failed.length}`);
+
+    // Return results
+    res.status(200).json({
+      success: true,
+      message: `S3 URL fix completed. ${successful.length} successful, ${failed.length} failed.`,
+      summary: {
+        total: results.length,
+        successful: successful.length,
+        failed: failed.length
+      },
+      results: results,
+      fixedUrls: successful.map(r => ({
+        eventId: r.eventId,
+        eventName: r.eventName,
+        year: r.year,
+        filename: r.newFilename,
+        s3Url: r.newS3Url
+      }))
+    });
+
+  } catch (error) {
+    console.error('❌ S3 URL fix endpoint failed:', error);
+    res.status(500).json({
+      success: false,
+      message: 'S3 URL fix endpoint failed',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
 // Helper functions
 function getContentType(filename: string): string {
   const ext = path.extname(filename).toLowerCase();

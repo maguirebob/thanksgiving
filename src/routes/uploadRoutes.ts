@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { uploadMenuImagesToS3, updateDatabaseWithS3Urls } from '../controllers/uploadController';
+import { uploadMenuImagesToS3, updateDatabaseWithS3Urls, fixS3Urls } from '../controllers/uploadController';
 
 const router = Router();
 
@@ -14,5 +14,11 @@ router.post('/menu-images-to-s3', uploadMenuImagesToS3);
  * POST /api/upload/update-database-s3-urls
  */
 router.post('/update-database-s3-urls', updateDatabaseWithS3Urls);
+
+/**
+ * Fix S3 URLs in database to match actual uploaded filenames
+ * POST /api/upload/fix-s3-urls
+ */
+router.post('/fix-s3-urls', fixS3Urls);
 
 export default router;
