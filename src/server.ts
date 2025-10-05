@@ -201,6 +201,54 @@ app.get('/api/v1/version/display', (_req, res) => {
   });
 });
 
+// Database migration endpoint
+app.get('/api/apply-migrations', async (_req, res) => {
+  try {
+    console.log('🚀 Applying database migrations...');
+    
+    // Check if database is available
+    if (!prisma) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database not available',
+        message: 'Prisma client is not initialized'
+      });
+    }
+
+    const { execSync } = require('child_process');
+    
+    try {
+      // Generate Prisma client
+      execSync('npx prisma generate', { stdio: 'inherit' });
+      console.log('✅ Prisma client generated');
+      
+      // Run database migrations
+      execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+      console.log('✅ Database migrations applied');
+      
+      return res.json({
+        success: true,
+        message: 'Database migrations applied successfully'
+      });
+    } catch (migrationError) {
+      console.error('❌ Migration failed:', migrationError);
+      return res.status(500).json({
+        success: false,
+        error: 'Migration failed',
+        message: migrationError instanceof Error ? migrationError.message : 'Unknown error'
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Error applying migrations:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Migration endpoint failed',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // Migration endpoint for S3 menu images
 app.get('/api/migrate-menu-images', async (_req, res) => {
   try {
