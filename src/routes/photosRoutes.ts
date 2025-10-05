@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import s3Service from '../services/s3Service';
 import path from 'path';
 import fs from 'fs';
 
@@ -129,29 +130,12 @@ router.get('/api/photos/:filename/preview', async (req: Request, res: Response):
       return;
     }
     
-    // Determine the photos path based on environment
-    const photosPath = process.env['NODE_ENV'] === 'development' 
-      ? path.join(process.cwd(), 'public/uploads/photos')
-      : '/app/uploads/photos';
+    // Generate signed URL for S3
+    const s3Key = `photos/${filename}`;
+    const signedUrl = await s3Service.getSignedUrl(s3Key, 3600); // 1 hour expiry
     
-    const filePath = path.join(photosPath, filename);
-    
-    // Check if file exists
-    if (!fs.existsSync(filePath)) {
-      res.status(404).json({
-        success: false,
-        message: 'Photo not found'
-      });
-      return;
-    }
-    
-    // Set appropriate headers
-    res.setHeader('Content-Type', 'image/jpeg');
-    res.setHeader('Cache-Control', 'public, max-age=3600');
-    
-    // Stream the file
-    const fileStream = fs.createReadStream(filePath);
-    fileStream.pipe(res);
+    // Redirect to S3 signed URL
+    res.redirect(signedUrl);
     
   } catch (error) {
     console.error('Error serving photo preview:', error);

@@ -111,15 +111,29 @@ app.get('/', requireAuth, async (_req, res) => {
     });
 
     // Transform data to include menu_image_url
-    const transformedEvents = events.map(event => ({
-      ...event,
-      id: event.event_id,
-      title: event.event_name,
-      description: event.event_description,
-      date: event.event_date,
-      location: event.event_location,
-      menu_image_url: `/images/${event.menu_image_filename}`
-    }));
+    const transformedEvents = events.map(event => {
+      const menuImageUrl = event.menu_image_s3_url 
+        ? `/api/v1/menu-images/${event.event_id}` 
+        : `/images/${event.menu_image_filename}`;
+      console.log('🏠 Home page event:', {
+        id: event.event_id,
+        name: event.event_name,
+        hasS3Url: !!event.menu_image_s3_url,
+        s3Url: event.menu_image_s3_url,
+        localUrl: `/images/${event.menu_image_filename}`,
+        finalUrl: menuImageUrl
+      });
+      
+      return {
+        ...event,
+        id: event.event_id,
+        title: event.event_name,
+        description: event.event_description,
+        date: event.event_date,
+        location: event.event_location,
+        menu_image_url: menuImageUrl
+      };
+    });
 
     res.render('index', {
       title: 'Thanksgiving Menu Collection',
@@ -149,7 +163,7 @@ app.get('/api/v1/version/display', (_req, res) => {
   res.json({
     success: true,
     data: {
-      version: '2.12.42',
+      version: '2.12.43',
       environment: config.getConfig().nodeEnv,
       buildDate: new Date().toISOString()
     }
@@ -317,7 +331,9 @@ app.get('/menu/:id', requireAuth, async (req, res) => {
       description: event.event_description,
       date: event.event_date,
       location: event.event_location,
-      menu_image_url: `/images/${event.menu_image_filename}`
+      menu_image_url: event.menu_image_s3_url 
+        ? `/api/v1/menu-images/${event.event_id}` 
+        : `/images/${event.menu_image_filename}`
     };
 
     res.render('detail', {
