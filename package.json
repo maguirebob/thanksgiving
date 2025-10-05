@@ -1,6 +1,6 @@
 {
   "name": "thanksgiving-website-ts",
-  "version": "2.12.42",
+  "version": "2.12.43",
   "description": "Thanksgiving Menu Website - TypeScript Version",
   "main": "dist/server.js",
   "scripts": {
@@ -45,6 +45,8 @@
     "db:seed:force": "ts-node scripts/load-all-menus.ts --force",
     "db:reset": "prisma migrate reset --force && npm run db:seed",
     "db:studio": "prisma studio",
+    "migrate:s3:menu-images": "ts-node scripts/migrate-menu-images-to-s3.ts",
+    "migrate:s3:menu-images:live": "ts-node scripts/migrate-menu-images-to-s3.ts --live",
     "clean": "rimraf dist",
     "postbuild": "npm run db:generate",
     "deploy:production": "ts-node scripts/deploy-production.ts",
@@ -62,6 +64,8 @@
   "author": "Bob Maguire",
   "license": "MIT",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.901.0",
+    "@aws-sdk/s3-request-presigner": "^3.901.0",
     "@prisma/client": "^5.7.1",
     "bcryptjs": "^2.4.3",
     "compression": "^1.7.4",
@@ -78,6 +82,8 @@
     "joi": "^17.11.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
+    "multer-s3": "^3.0.1",
+    "node-fetch": "^3.3.2",
     "winston": "^3.11.0"
   },
   "devDependencies": {
@@ -93,6 +99,7 @@
     "@types/jsdom": "^21.1.7",
     "@types/jsonwebtoken": "^9.0.5",
     "@types/multer": "^1.4.11",
+    "@types/multer-s3": "^3.0.3",
     "@types/node": "^20.10.5",
     "@types/supertest": "^2.0.16",
     "@typescript-eslint/eslint-plugin": "^6.13.1",

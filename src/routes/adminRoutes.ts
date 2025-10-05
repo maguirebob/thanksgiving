@@ -3,7 +3,7 @@ import prisma from '../lib/prisma';
 import { requireAuth } from '../middleware/auth';
 import fs from 'fs';
 import path from 'path';
-import { uploadMultiple } from '../middleware/upload';
+import { uploadMultiple, handleUploadError } from '../middleware/s3Upload';
 
 const router = Router();
 
@@ -367,7 +367,7 @@ router.get('/photos-volume-contents', async (_req: Request, res: Response) => {
  * Sync uploaded images to volume and create event records
  * POST /admin/sync-local-images
  */
-router.post('/sync-local-images', uploadMultiple.array('menu_images', 50), async (req: Request, res: Response) => {
+router.post('/sync-local-images', uploadMultiple, handleUploadError, async (req: Request, res: Response) => {
   try {
     const uploadedFiles = req.files as Express.Multer.File[];
     const results: string[] = [];
@@ -408,13 +408,21 @@ router.post('/sync-local-images', uploadMultiple.array('menu_images', 50), async
         where: { event_name: eventName }
       });
       
+      // Extract filename from S3 key or use original name
+      const s3Key = (file as any).key;
+      const s3Filename = s3Key ? s3Key.split('/').pop() : file.filename;
+      const s3Url = (file as any).location;
+
       if (existingEvent) {
-        // Update existing event with new filename
+        // Update existing event with new filename and S3 URL
         await prisma.event.update({
           where: { event_id: existingEvent.event_id },
-          data: { menu_image_filename: file.filename }
+          data: { 
+            menu_image_filename: s3Filename,
+            menu_image_s3_url: s3Url
+          }
         });
-        results.push(`🔄 Updated ${eventName}: ${filename} → ${file.filename}`);
+        results.push(`🔄 Updated ${eventName}: ${filename} → ${s3Filename} (S3)`);
         processedCount++;
       } else {
         // Create new event record
@@ -426,10 +434,11 @@ router.post('/sync-local-images', uploadMultiple.array('menu_images', 50), async
             event_date: new Date(year, 10, 22), // November 22nd of the year
             event_description: null,
             menu_title: eventName,
-            menu_image_filename: file.filename
+            menu_image_filename: s3Filename,
+            menu_image_s3_url: s3Url
           }
         });
-        results.push(`📝 Created ${eventName}: ${filename} → ${file.filename}`);
+        results.push(`📝 Created ${eventName}: ${filename} → ${s3Filename} (S3)`);
         createdCount++;
         processedCount++;
       }

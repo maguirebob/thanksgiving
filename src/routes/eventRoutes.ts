@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
 import prisma from '../lib/prisma';
-import upload from '../middleware/upload';
+import { uploadSingleMenu, handleUploadError } from '../middleware/s3Upload';
 import { validateMenuCreation, sanitizeMenuData } from '../middleware/menuValidation';
+import s3Service from '../services/s3Service';
 
 const router = Router();
 
@@ -9,7 +10,7 @@ const router = Router();
  * Create a new event
  * POST /api/v1/events
  */
-router.post('/events', upload.single('menu_image'), sanitizeMenuData, validateMenuCreation, async (req: Request, res: Response) => {
+router.post('/events', uploadSingleMenu, handleUploadError, sanitizeMenuData, validateMenuCreation, async (req: Request, res: Response) => {
   try {
     // At this point, validation has passed, so we can safely use the data
     const { event_name, event_date, event_location, event_description } = req.body;
@@ -24,6 +25,10 @@ router.post('/events', upload.single('menu_image'), sanitizeMenuData, validateMe
       });
     }
 
+    // Extract filename from S3 key or use original name
+    const s3Key = (req.file as any).key;
+    const filename = s3Key ? s3Key.split('/').pop() : req.file!.originalname;
+
     // Create the event
     const newEvent = await prisma.event.create({
       data: {
@@ -33,7 +38,8 @@ router.post('/events', upload.single('menu_image'), sanitizeMenuData, validateMe
         event_date: eventDate,
         event_description: event_description && event_description.trim() ? event_description.trim() : null,
         menu_title: event_name,
-        menu_image_filename: req.file!.filename
+        menu_image_filename: filename,
+        menu_image_s3_url: (req.file as any).location // S3 URL from multer-s3
       }
     });
 
@@ -45,7 +51,9 @@ router.post('/events', upload.single('menu_image'), sanitizeMenuData, validateMe
       event_type: newEvent.event_type,
       event_location: newEvent.event_location,
       event_date: newEvent.event_date,
-      menu_image_url: `/images/${newEvent.menu_image_filename}`,
+      menu_image_url: newEvent.menu_image_s3_url 
+        ? `/api/v1/menu-images/${newEvent.event_id}` 
+        : `/images/${newEvent.menu_image_filename}`,
       description: newEvent.event_description,
       year: newEvent.event_date.getFullYear(),
       created_at: newEvent.created_at,
@@ -94,7 +102,9 @@ router.get('/events', async (_req: Request, res: Response) => {
       event_type: event.event_type,
       event_location: event.event_location,
       event_date: event.event_date,
-      menu_image_url: `/images/${event.menu_image_filename}`,
+      menu_image_url: event.menu_image_s3_url 
+        ? `/api/v1/menu-images/${event.event_id}` 
+        : `/images/${event.menu_image_filename}`,
       description: event.event_description,
       year: event.event_date.getFullYear(),
       created_at: event.event_date,
@@ -150,7 +160,9 @@ router.get('/events/:id', async (req: Request, res: Response) => {
       event_type: event.event_type,
       event_location: event.event_location,
       event_date: event.event_date,
-      menu_image_url: `/images/${event.menu_image_filename}`,
+      menu_image_url: event.menu_image_s3_url 
+        ? `/api/v1/menu-images/${event.event_id}` 
+        : `/images/${event.menu_image_filename}`,
       description: event.event_description,
       year: event.event_date.getFullYear(),
       created_at: event.event_date,
@@ -323,6 +335,68 @@ router.delete('/events/:id', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error deleting event:', error);
     return res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+});
+
+/**
+ * Serve menu image file
+ * GET /api/v1/menu-images/:eventId
+ */
+router.get('/menu-images/:eventId', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { eventId } = req.params;
+    if (!eventId) {
+      res.status(400).json({
+        success: false,
+        message: 'Event ID is required'
+      });
+      return;
+    }
+
+    const event = await prisma.event.findUnique({
+      where: { event_id: parseInt(eventId, 10) },
+      select: {
+        menu_image_filename: true,
+        menu_image_s3_url: true
+      }
+    });
+
+    if (!event) {
+      res.status(404).json({
+        success: false,
+        message: 'Event not found'
+      });
+      return;
+    }
+
+    // If we have an S3 URL, generate a signed URL
+    if (event.menu_image_s3_url) {
+      try {
+        const s3Key = `menus/${event.menu_image_filename}`;
+        const signedUrl = await s3Service.getSignedUrl(s3Key, 3600); // 1 hour expiry
+        res.redirect(signedUrl);
+        return;
+      } catch (s3Error) {
+        console.error('Error generating S3 signed URL for menu image:', s3Error);
+        res.status(404).json({
+          success: false,
+          message: 'Menu image not available'
+        });
+        return;
+      }
+    }
+
+    // Fallback to local file serving
+    res.status(404).json({
+      success: false,
+      message: 'Menu image not found'
+    });
+  } catch (error) {
+    console.error('Error serving menu image file:', error);
+    res.status(500).json({
       success: false,
       message: 'Internal server error'
     });

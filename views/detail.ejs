@@ -889,11 +889,11 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="/js/components/blogComponent.js"></script>
 
 <script>
-// Set event ID for API calls
-window.eventId = <%= eventId %>;
-
 // Flag to prevent global error handler from closing modals during uploads
 let isUploading = false;
+
+// Set event ID for API calls
+window.eventId = <%= eventId %>;
 
 // Photo event listeners - Now handled by PhotoComponent
 
