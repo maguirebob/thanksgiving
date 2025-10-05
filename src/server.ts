@@ -17,7 +17,16 @@ import eventRoutes from './routes/eventRoutes';
 import { addUserToLocals, requireAuth } from './middleware/auth';
 
 const app = express();
-const prisma = new PrismaClient();
+let prisma: PrismaClient;
+
+try {
+  prisma = new PrismaClient();
+  console.log('✅ Prisma client initialized');
+} catch (error) {
+  console.error('❌ Failed to initialize Prisma client:', error);
+  // Create a dummy client that will fail gracefully
+  prisma = {} as PrismaClient;
+}
 
 // Security middleware
 app.use(helmet({
@@ -112,14 +121,16 @@ app.get('/', requireAuth, async (_req, res) => {
 
     // Transform data to include menu_image_url
     const transformedEvents = events.map(event => {
-      const menuImageUrl = event.menu_image_s3_url 
+      // Handle missing S3 URL field gracefully (for environments without migration)
+      const hasS3Url = (event as any).menu_image_s3_url;
+      const menuImageUrl = hasS3Url 
         ? `/api/v1/menu-images/${event.event_id}` 
         : `/images/${event.menu_image_filename}`;
       console.log('🏠 Home page event:', {
         id: event.event_id,
         name: event.event_name,
-        hasS3Url: !!event.menu_image_s3_url,
-        s3Url: event.menu_image_s3_url,
+        hasS3Url: !!hasS3Url,
+        s3Url: hasS3Url,
         localUrl: `/images/${event.menu_image_filename}`,
         finalUrl: menuImageUrl
       });
@@ -151,11 +162,21 @@ app.get('/', requireAuth, async (_req, res) => {
 });
 
 app.get('/health', (_req, res) => {
-  res.json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    environment: config.getConfig().nodeEnv
-  });
+  try {
+    res.json({ 
+      status: 'OK', 
+      timestamp: new Date().toISOString(),
+      environment: process.env['NODE_ENV'] || 'unknown',
+      version: '2.12.44'
+    });
+  } catch (error) {
+    console.error('Health check error:', error);
+    res.status(500).json({ 
+      status: 'ERROR', 
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 // Version API endpoint
@@ -331,7 +352,7 @@ app.get('/menu/:id', requireAuth, async (req, res) => {
       description: event.event_description,
       date: event.event_date,
       location: event.event_location,
-      menu_image_url: event.menu_image_s3_url 
+      menu_image_url: (event as any).menu_image_s3_url 
         ? `/api/v1/menu-images/${event.event_id}` 
         : `/images/${event.menu_image_filename}`
     };
