@@ -17,15 +17,16 @@ import eventRoutes from './routes/eventRoutes';
 import { addUserToLocals, requireAuth } from './middleware/auth';
 
 const app = express();
-let prisma: PrismaClient;
+let prisma: PrismaClient | null = null;
 
+// Initialize Prisma client with extensive error handling
 try {
   prisma = new PrismaClient();
   console.log('✅ Prisma client initialized');
 } catch (error) {
   console.error('❌ Failed to initialize Prisma client:', error);
-  // Create a dummy client that will fail gracefully
-  prisma = {} as PrismaClient;
+  console.log('⚠️ Server will start without database connection');
+  prisma = null;
 }
 
 // Security middleware
@@ -113,6 +114,15 @@ app.set('layout', 'layout');
 // Basic routes
 app.get('/', requireAuth, async (_req, res) => {
   try {
+    // Check if database is available
+    if (!prisma) {
+      return res.status(503).render('error', {
+        title: 'Service Unavailable',
+        message: 'Database connection is not available. Please try again later.',
+        error: 'Database not connected'
+      });
+    }
+
     // Fetch events from database using Prisma
     const events = await prisma.event.findMany({
       orderBy: { event_date: 'desc' }
@@ -195,6 +205,15 @@ app.get('/api/v1/version/display', (_req, res) => {
 app.get('/api/setup-database', async (_req, res) => {
   try {
     console.log('🚀 Setting up database...');
+    
+    // Check if database is available
+    if (!prisma) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database not available',
+        message: 'Prisma client is not initialized'
+      });
+    }
     
     // First, ensure the database schema exists
     console.log('📋 Creating database schema...');
