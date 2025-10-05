@@ -17,6 +17,12 @@ export interface AppConfig {
   logFile: string;
   rateLimitWindowMs: number;
   rateLimitMaxRequests: number;
+  // S3 Configuration
+  awsRegion: string;
+  awsAccessKeyId: string;
+  awsSecretAccessKey: string;
+  s3BucketName: string;
+  s3BaseUrl: string;
 }
 
 class Config {
@@ -36,7 +42,13 @@ class Config {
       logLevel: process.env['LOG_LEVEL'] || 'info',
       logFile: process.env['LOG_FILE'] || './logs/app.log',
       rateLimitWindowMs: parseInt(process.env['RATE_LIMIT_WINDOW_MS'] || '900000', 10), // 15 minutes
-      rateLimitMaxRequests: parseInt(process.env['RATE_LIMIT_MAX_REQUESTS'] || '100', 10)
+      rateLimitMaxRequests: parseInt(process.env['RATE_LIMIT_MAX_REQUESTS'] || '100', 10),
+      // S3 Configuration
+      awsRegion: process.env['AWS_REGION'] || 'us-east-1',
+      awsAccessKeyId: process.env['AWS_ACCESS_KEY_ID'] || '',
+      awsSecretAccessKey: process.env['AWS_SECRET_ACCESS_KEY'] || '',
+      s3BucketName: process.env['S3_BUCKET_NAME'] || 'thanksgiving-images-dev',
+      s3BaseUrl: process.env['S3_BASE_URL'] || `https://thanksgiving-images-dev.s3.us-east-1.amazonaws.com`
     };
   }
 
@@ -101,6 +113,31 @@ class Config {
 
   isTest(): boolean {
     return this.config.nodeEnv === 'test';
+  }
+
+  // S3 Configuration getters
+  getAwsRegion(): string {
+    return this.config.awsRegion;
+  }
+
+  getAwsAccessKeyId(): string {
+    return this.config.awsAccessKeyId;
+  }
+
+  getAwsSecretAccessKey(): string {
+    return this.config.awsSecretAccessKey;
+  }
+
+  getS3BucketName(): string {
+    return this.config.s3BucketName;
+  }
+
+  getS3BaseUrl(): string {
+    return this.config.s3BaseUrl;
+  }
+
+  isS3Configured(): boolean {
+    return !!(this.config.awsAccessKeyId && this.config.awsSecretAccessKey && this.config.s3BucketName);
   }
 }
 

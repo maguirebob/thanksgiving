@@ -12,7 +12,7 @@
     "volumes": [
       {
         "name": "images-storage-thanksgiving-test",
-        "mountPath": "/app/public"
+        "mountPath": "/app/uploads"
       }
     ]
   }

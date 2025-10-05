@@ -3,7 +3,7 @@ import prisma from '../lib/prisma';
 import { requireAuth } from '../middleware/auth';
 import fs from 'fs';
 import path from 'path';
-import { uploadMultiple } from '../middleware/upload';
+import { uploadMultiple, handleUploadError } from '../middleware/s3Upload';
 
 const router = Router();
 
@@ -256,10 +256,118 @@ router.get('/volume-contents', async (_req: Request, res: Response) => {
 });
 
 /**
+ * Get photos volume contents
+ * GET /admin/photos-volume-contents
+ */
+router.get('/photos-volume-contents', async (_req: Request, res: Response) => {
+  try {
+    // Determine the photos path based on environment
+    const photosPath = process.env['NODE_ENV'] === 'development' 
+      ? path.join(process.cwd(), 'public/uploads/photos')
+      : '/app/uploads/photos';
+    
+    // Check if directory exists
+    if (!fs.existsSync(photosPath)) {
+      return res.json({
+        success: false,
+        message: `Photos directory does not exist: ${photosPath}`,
+        environment: process.env['NODE_ENV'] || 'unknown',
+        mountPath: photosPath,
+        volumeName: 'images-storage-thanksgiving-test',
+        files: [],
+        stats: {
+          totalFiles: 0,
+          totalSize: '0 B',
+          imageFiles: 0,
+          otherFiles: 0
+        }
+      });
+    }
+    
+    // Read directory contents
+    const files = fs.readdirSync(photosPath);
+    const fileStats: any[] = [];
+    let totalSize = 0;
+    let imageFiles = 0;
+    let otherFiles = 0;
+    
+    files.forEach(filename => {
+      const filePath = path.join(photosPath, filename);
+      const stats = fs.statSync(filePath);
+      
+      const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(filename);
+      if (isImage) imageFiles++;
+      else otherFiles++;
+      
+      totalSize += stats.size;
+      
+      fileStats.push({
+        name: filename,
+        size: stats.size,
+        type: isImage ? 'image' : 'file',
+        modified: stats.mtime,
+        path: filePath
+      });
+    });
+    
+    // Get linked filenames from database
+    const linkedFilenames = await prisma.photo.findMany({
+      select: { filename: true }
+    }).then(photos => photos.map(p => p.filename).filter(Boolean));
+    
+    // Add file status to each file
+    fileStats.forEach(file => {
+      file.isLinked = linkedFilenames.includes(file.name);
+      file.status = file.isLinked ? 'linked' : 'orphaned';
+    });
+    
+    // Sort files by modification date (newest first)
+    fileStats.sort((a, b) => b.modified.getTime() - a.modified.getTime());
+    
+    // Format total size
+    const formatFileSize = (bytes: number): string => {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+    
+    // Calculate file status statistics
+    const linkedFiles = fileStats.filter(f => f.isLinked).length;
+    const orphanedFiles = fileStats.filter(f => !f.isLinked).length;
+    
+    return res.json({
+      success: true,
+      environment: process.env['NODE_ENV'] || 'unknown',
+      mountPath: photosPath,
+      volumeName: 'images-storage-thanksgiving-test',
+      files: fileStats,
+      stats: {
+        totalFiles: files.length,
+        totalSize: formatFileSize(totalSize),
+        imageFiles,
+        otherFiles,
+        linkedFiles,
+        orphanedFiles
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error reading photos volume contents:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to read photos volume contents',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
  * Sync uploaded images to volume and create event records
  * POST /admin/sync-local-images
  */
-router.post('/sync-local-images', uploadMultiple.array('menu_images', 50), async (req: Request, res: Response) => {
+router.post('/sync-local-images', uploadMultiple, handleUploadError, async (req: Request, res: Response) => {
   try {
     const uploadedFiles = req.files as Express.Multer.File[];
     const results: string[] = [];
@@ -300,13 +408,21 @@ router.post('/sync-local-images', uploadMultiple.array('menu_images', 50), async
         where: { event_name: eventName }
       });
       
+      // Extract filename from S3 key or use original name
+      const s3Key = (file as any).key;
+      const s3Filename = s3Key ? s3Key.split('/').pop() : file.filename;
+      const s3Url = (file as any).location;
+
       if (existingEvent) {
-        // Update existing event with new filename
+        // Update existing event with new filename and S3 URL
         await prisma.event.update({
           where: { event_id: existingEvent.event_id },
-          data: { menu_image_filename: file.filename }
+          data: { 
+            menu_image_filename: s3Filename,
+            menu_image_s3_url: s3Url
+          }
         });
-        results.push(`🔄 Updated ${eventName}: ${filename} → ${file.filename}`);
+        results.push(`🔄 Updated ${eventName}: ${filename} → ${s3Filename} (S3)`);
         processedCount++;
       } else {
         // Create new event record
@@ -318,10 +434,11 @@ router.post('/sync-local-images', uploadMultiple.array('menu_images', 50), async
             event_date: new Date(year, 10, 22), // November 22nd of the year
             event_description: null,
             menu_title: eventName,
-            menu_image_filename: file.filename
+            menu_image_filename: s3Filename,
+            menu_image_s3_url: s3Url
           }
         });
-        results.push(`📝 Created ${eventName}: ${filename} → ${file.filename}`);
+        results.push(`📝 Created ${eventName}: ${filename} → ${s3Filename} (S3)`);
         createdCount++;
         processedCount++;
       }

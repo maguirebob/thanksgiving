@@ -11,12 +11,23 @@ import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/authRoutes';
 import adminRoutes from './routes/adminRoutes';
 import photoRoutes from './routes/photoRoutes';
+import photosRoutes from './routes/photosRoutes';
 import blogRoutes from './routes/blogRoutes';
 import eventRoutes from './routes/eventRoutes';
 import { addUserToLocals, requireAuth } from './middleware/auth';
 
 const app = express();
-const prisma = new PrismaClient();
+let prisma: PrismaClient | null = null;
+
+// Initialize Prisma client with extensive error handling
+try {
+  prisma = new PrismaClient();
+  console.log('✅ Prisma client initialized');
+} catch (error) {
+  console.error('❌ Failed to initialize Prisma client:', error);
+  console.log('⚠️ Server will start without database connection');
+  prisma = null;
+}
 
 // Security middleware
 app.use(helmet({
@@ -85,6 +96,9 @@ app.use(session({
 // Authentication middleware
 app.use(addUserToLocals);
 
+// Photos page route (must be before static file serving to avoid conflict with /public/photos/)
+app.use('/photos', photosRoutes);
+
 // Static files - use absolute path for Railway environment
 const publicPath = process.env['NODE_ENV'] === 'development' 
   ? path.join(__dirname, '../public')
@@ -100,6 +114,15 @@ app.set('layout', 'layout');
 // Basic routes
 app.get('/', requireAuth, async (_req, res) => {
   try {
+    // Check if database is available
+    if (!prisma) {
+      return res.status(503).render('error', {
+        title: 'Service Unavailable',
+        message: 'Database connection is not available. Please try again later.',
+        error: 'Database not connected'
+      });
+    }
+
     // Fetch events from database using Prisma
     const events = await prisma.event.findMany({
       orderBy: { event_date: 'desc' }
@@ -107,15 +130,31 @@ app.get('/', requireAuth, async (_req, res) => {
     });
 
     // Transform data to include menu_image_url
-    const transformedEvents = events.map(event => ({
-      ...event,
-      id: event.event_id,
-      title: event.event_name,
-      description: event.event_description,
-      date: event.event_date,
-      location: event.event_location,
-      menu_image_url: `/images/${event.menu_image_filename}`
-    }));
+    const transformedEvents = events.map(event => {
+      // Handle missing S3 URL field gracefully (for environments without migration)
+      const hasS3Url = (event as any).menu_image_s3_url;
+      const menuImageUrl = hasS3Url 
+        ? `/api/v1/menu-images/${event.event_id}` 
+        : `/images/${event.menu_image_filename}`;
+      console.log('🏠 Home page event:', {
+        id: event.event_id,
+        name: event.event_name,
+        hasS3Url: !!hasS3Url,
+        s3Url: hasS3Url,
+        localUrl: `/images/${event.menu_image_filename}`,
+        finalUrl: menuImageUrl
+      });
+      
+      return {
+        ...event,
+        id: event.event_id,
+        title: event.event_name,
+        description: event.event_description,
+        date: event.event_date,
+        location: event.event_location,
+        menu_image_url: menuImageUrl
+      };
+    });
 
     res.render('index', {
       title: 'Thanksgiving Menu Collection',
@@ -133,11 +172,21 @@ app.get('/', requireAuth, async (_req, res) => {
 });
 
 app.get('/health', (_req, res) => {
-  res.json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    environment: config.getConfig().nodeEnv
-  });
+  try {
+    res.json({ 
+      status: 'OK', 
+      timestamp: new Date().toISOString(),
+      environment: process.env['NODE_ENV'] || 'unknown',
+      version: '2.12.48'
+    });
+  } catch (error) {
+    console.error('Health check error:', error);
+    res.status(500).json({ 
+      status: 'ERROR', 
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 // Version API endpoint
@@ -145,17 +194,73 @@ app.get('/api/v1/version/display', (_req, res) => {
   res.json({
     success: true,
     data: {
-      version: '2.12.33',
+      version: '2.12.48',
       environment: config.getConfig().nodeEnv,
       buildDate: new Date().toISOString()
     }
   });
 });
 
+// Migration endpoint for S3 menu images
+app.get('/api/migrate-menu-images', async (_req, res) => {
+  try {
+    console.log('🚀 Starting menu image migration to S3...');
+    
+    // Check if database is available
+    if (!prisma) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database not available',
+        message: 'Prisma client is not initialized'
+      });
+    }
+
+    // Import the migration script dynamically
+    const { execSync } = require('child_process');
+    
+    try {
+      // Run the migration script
+      execSync('npx ts-node scripts/migrate-menu-images-to-s3.ts --live', { 
+        stdio: 'inherit',
+        env: { ...process.env }
+      });
+      
+      return res.json({
+        success: true,
+        message: 'Menu image migration completed successfully'
+      });
+    } catch (migrationError) {
+      console.error('❌ Migration failed:', migrationError);
+      return res.status(500).json({
+        success: false,
+        error: 'Migration failed',
+        message: migrationError instanceof Error ? migrationError.message : 'Unknown error'
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Error running migration:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Migration endpoint failed',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // Database setup endpoint (for Railway initialization)
 app.get('/api/setup-database', async (_req, res) => {
   try {
     console.log('🚀 Setting up database...');
+    
+    // Check if database is available
+    if (!prisma) {
+      return res.status(503).json({
+        success: false,
+        error: 'Database not available',
+        message: 'Prisma client is not initialized'
+      });
+    }
     
     // First, ensure the database schema exists
     console.log('📋 Creating database schema...');
@@ -292,6 +397,15 @@ app.get('/menu/:id', requireAuth, async (req, res) => {
       });
     }
 
+    // Check if database is available
+    if (!prisma) {
+      return res.status(503).render('error', {
+        title: 'Service Unavailable',
+        message: 'Database connection is not available. Please try again later.',
+        error: 'Database not connected'
+      });
+    }
+
     // Fetch event from database using Prisma
     const event = await prisma.event.findUnique({
       where: { event_id: menuId }
@@ -313,7 +427,9 @@ app.get('/menu/:id', requireAuth, async (req, res) => {
       description: event.event_description,
       date: event.event_date,
       location: event.event_location,
-      menu_image_url: `/images/${event.menu_image_filename}`
+      menu_image_url: (event as any).menu_image_s3_url 
+        ? `/api/v1/menu-images/${event.event_id}` 
+        : `/images/${event.menu_image_filename}`
     };
 
     res.render('detail', {

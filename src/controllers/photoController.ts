@@ -1,53 +1,14 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
-import multer from 'multer';
+import s3Service from '../services/s3Service';
+import { uploadSinglePhoto, handleUploadError } from '../middleware/s3Upload';
 import path from 'path';
 import fs from 'fs';
-import { randomUUID } from 'crypto';
 
 const prisma = new PrismaClient();
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    const uploadDir = 'public/uploads/photos';
-    try {
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-        console.log(`Created upload directory: ${uploadDir}`);
-      }
-      cb(null, uploadDir);
-    } catch (error) {
-      console.error('Error creating upload directory:', error);
-      cb(error instanceof Error ? error : new Error('Unknown error'), '');
-    }
-  },
-  filename: (_req, file, cb) => {
-    const uniqueName = `${randomUUID()}${path.extname(file.originalname)}`;
-    cb(null, uniqueName);
-  }
-});
-
-const upload = multer({
-  storage,
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
-  },
-  fileFilter: (_req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|webp/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'));
-    }
-  }
-});
-
-// Middleware for single photo upload
-export const uploadSingle = upload.single('photo');
+// Export S3 upload middleware
+export { uploadSinglePhoto, handleUploadError };
 
 /**
  * Get all photos for a specific event
@@ -111,6 +72,7 @@ export const getEventPhotos = async (req: Request, res: Response): Promise<void>
           taken_date: true,
           file_size: true,
           mime_type: true,
+          s3_url: true,
           created_at: true,
           updated_at: true
         }
@@ -184,20 +146,27 @@ export const uploadEventPhoto = async (req: Request, res: Response): Promise<voi
       filename: req.file.filename,
       originalname: req.file.originalname,
       size: req.file.size,
-      mimetype: req.file.mimetype
+      mimetype: req.file.mimetype,
+      location: (req.file as any).location, // S3 URL from multer-s3
+      key: (req.file as any).key // S3 key from multer-s3
     });
 
-    // Create photo record
+    // Extract filename from S3 key or use original name
+    const s3Key = (req.file as any).key;
+    const filename = s3Key ? s3Key.split('/').pop() : req.file.originalname;
+
+    // Create photo record with S3 URL
     const photo = await prisma.photo.create({
       data: {
         event_id: parseInt(eventId, 10),
-        filename: req.file.filename,
+        filename: filename,
         original_filename: req.file.originalname,
         description: description || null,
         caption: caption || null,
         file_size: req.file.size,
         mime_type: req.file.mimetype,
-        file_data: null // We're storing files on disk, not in database
+        s3_url: (req.file as any).location, // S3 URL from multer-s3
+        file_data: null // We're storing files in S3, not in database
       },
       select: {
         photo_id: true,
@@ -208,6 +177,7 @@ export const uploadEventPhoto = async (req: Request, res: Response): Promise<voi
         taken_date: true,
         file_size: true,
         mime_type: true,
+        s3_url: true,
         created_at: true
       }
     });
@@ -505,7 +475,8 @@ export const servePhotoFile = async (req: Request, res: Response): Promise<void>
       select: {
         filename: true,
         mime_type: true,
-        original_filename: true
+        original_filename: true,
+        s3_url: true
       }
     });
 
@@ -517,23 +488,18 @@ export const servePhotoFile = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const filePath = path.join('public/uploads/photos', photo.filename);
-
-    if (!fs.existsSync(filePath)) {
+    // Always generate signed URL for S3 access (more secure)
+    try {
+      const s3Key = `photos/${photo.filename}`;
+      const signedUrl = await s3Service.getSignedUrl(s3Key, 3600); // 1 hour expiry
+      res.redirect(signedUrl);
+    } catch (s3Error) {
+      console.error('Error generating S3 signed URL:', s3Error);
       res.status(404).json({
         success: false,
-        message: 'Photo file not found'
+        message: 'Photo file not available'
       });
-      return;
     }
-
-    // Set appropriate headers
-    res.setHeader('Content-Type', photo.mime_type || 'image/jpeg');
-    res.setHeader('Content-Disposition', `inline; filename="${photo.original_filename || photo.filename}"`);
-
-    // Stream the file
-    const fileStream = fs.createReadStream(filePath);
-    fileStream.pipe(res);
   } catch (error) {
     console.error('Error serving photo file:', error);
     res.status(500).json({
