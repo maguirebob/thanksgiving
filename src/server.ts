@@ -8,11 +8,11 @@ import expressLayouts from 'express-ejs-layouts';
 import path from 'path';
 import { config } from './lib/config';
 import { logger } from './lib/logger';
+import s3Service from './services/s3Service';
 import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/authRoutes';
 import adminRoutes from './routes/adminRoutes';
 import photoRoutes from './routes/photoRoutes';
-import photosRoutes from './routes/photosRoutes';
 import blogRoutes from './routes/blogRoutes';
 import eventRoutes from './routes/eventRoutes';
 import { addUserToLocals, requireAuth } from './middleware/auth';
@@ -128,8 +128,6 @@ app.use(session({
 // Authentication middleware
 app.use(addUserToLocals);
 
-// Photos page route (must be before static file serving to avoid conflict with /public/photos/)
-app.use('/photos', photosRoutes);
 
 // Static files - use absolute path for Railway environment
 const publicPath = process.env['NODE_ENV'] === 'development' 
@@ -476,6 +474,202 @@ app.get('/about', requireAuth, (_req, res) => {
     buildDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
     dbStatus: 'Connected'
   });
+});
+
+// Photos page route
+app.get('/photos', requireAuth, async (_req, res) => {
+  try {
+    // Check if database is available
+    if (!prisma) {
+      return res.status(503).render('error', {
+        title: 'Service Unavailable',
+        message: 'Database connection is not available. Please try again later.',
+        error: 'Database not connected'
+      });
+    }
+
+    // Get all photos from database with event information
+    const photos = await prisma.photo.findMany({
+      select: {
+        photo_id: true,
+        filename: true,
+        original_filename: true,
+        description: true,
+        caption: true,
+        file_size: true,
+        mime_type: true,
+        s3_url: true,
+        taken_date: true,
+        created_at: true,
+        event: {
+          select: {
+            event_id: true,
+            event_name: true,
+            event_date: true
+          }
+        }
+      },
+      orderBy: {
+        created_at: 'desc'
+      }
+    });
+
+    // Format file size helper
+    const formatFileSize = (bytes: number): string => {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+
+    // Calculate statistics
+    const totalSize = photos.reduce((sum, photo) => sum + (photo.file_size || 0), 0);
+    const imageFiles = photos.length;
+    const otherFiles = 0; // All photos are images
+    const linkedFiles = photos.filter(photo => !!photo.s3_url).length;
+    const orphanedFiles = photos.filter(photo => !photo.s3_url).length;
+    
+    const stats = {
+      totalFiles: photos.length,
+      totalSize: formatFileSize(totalSize),
+      imageFiles,
+      otherFiles,
+      linkedFiles,
+      orphanedFiles
+    };
+
+    // Transform photos for template
+    const files = photos.map(photo => ({
+      name: photo.filename,
+      originalName: photo.original_filename,
+      size: photo.file_size || 0,
+      type: 'image',
+      modified: photo.created_at,
+      description: photo.description,
+      caption: photo.caption,
+      eventName: photo.event?.event_name,
+      eventDate: photo.event?.event_date,
+      s3Url: photo.s3_url,
+      previewUrl: `/api/photos/${photo.filename}/preview`,
+      isLinked: !!photo.s3_url, // Only linked if S3 URL exists
+      status: photo.s3_url ? 'linked' : 'orphaned'
+    }));
+    
+    res.render('photos', {
+      title: 'Photos',
+      environment: process.env['NODE_ENV'] || 'unknown',
+      mountPath: 'S3 Storage',
+      volumeName: process.env['S3_BUCKET_NAME'] || 'S3 Bucket',
+      files,
+      stats,
+      directoryExists: true, // Always true with S3
+      useS3: true // Flag for template to know we're using S3
+    });
+    
+  } catch (error) {
+    logger.error('Error loading photos page:', error);
+    res.status(500).render('error', {
+      title: 'Error',
+      message: 'Failed to load photos page',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Photo preview API route
+app.get('/api/photos/:filename/preview', async (req, res) => {
+  try {
+    const { filename } = req.params;
+    
+    if (!filename) {
+      res.status(400).json({
+        success: false,
+        message: 'Filename parameter is required'
+      });
+      return;
+    }
+    
+    // Generate signed URL for S3
+    const s3Key = `photos/${filename}`;
+    const signedUrl = await s3Service.getSignedUrl(s3Key, 3600); // 1 hour expiry
+    
+    // Redirect to S3 signed URL
+    res.redirect(signedUrl);
+    
+  } catch (error) {
+    logger.error('Error serving photo preview:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to serve photo'
+    });
+  }
+});
+
+// Delete photo API route
+app.delete('/api/photos/:filename', requireAuth, async (req, res) => {
+  try {
+    const { filename } = req.params;
+    
+    if (!filename) {
+      res.status(400).json({
+        success: false,
+        message: 'Filename parameter is required'
+      });
+      return;
+    }
+    
+    // Check if database is available
+    if (!prisma) {
+      res.status(503).json({
+        success: false,
+        message: 'Database connection is not available'
+      });
+      return;
+    }
+    
+    // Find the photo in the database
+    const photo = await prisma.photo.findFirst({
+      where: { filename: filename }
+    });
+    
+    if (!photo) {
+      res.status(404).json({
+        success: false,
+        message: 'Photo not found in database'
+      });
+      return;
+    }
+    
+    // Only allow deletion of orphaned photos (no S3 URL)
+    if (photo.s3_url) {
+      res.status(400).json({
+        success: false,
+        message: 'Cannot delete linked photos. Only orphaned photos can be deleted.'
+      });
+      return;
+    }
+    
+    // Delete from database
+    await prisma.photo.delete({
+      where: { photo_id: photo.photo_id }
+    });
+    
+    logger.info(`Deleted orphaned photo: ${filename}`);
+    
+    res.json({
+      success: true,
+      message: 'Photo deleted successfully'
+    });
+    
+  } catch (error) {
+    logger.error('Error deleting photo:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete photo',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 // Menu detail route

@@ -128,10 +128,10 @@ export const handleUploadError = (error: any, req: any, res: any, _next: any) =>
     } : null
   });
   console.error('S3 Environment:', {
-    S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
-    AWS_REGION: process.env.AWS_REGION,
-    AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID ? 'SET' : 'NOT SET',
-    AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY ? 'SET' : 'NOT SET'
+    S3_BUCKET_NAME: process.env["S3_BUCKET_NAME"],
+    AWS_REGION: process.env["AWS_REGION"],
+    AWS_ACCESS_KEY_ID: process.env["AWS_ACCESS_KEY_ID"] ? 'SET' : 'NOT SET',
+    AWS_SECRET_ACCESS_KEY: process.env["AWS_SECRET_ACCESS_KEY"] ? 'SET' : 'NOT SET'
   });
   console.error('=== END S3 UPLOAD ERROR ===');
 
