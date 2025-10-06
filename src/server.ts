@@ -23,9 +23,9 @@ let prisma: PrismaClient | null = null;
 // Initialize Prisma client with extensive error handling
 try {
   prisma = new PrismaClient({
-    log: process.env['NODE_ENV'] === 'development' && process.env['LOG_LEVEL'] === 'DEBUG' 
+    log: process.env['LOG_LEVEL'] === 'DEBUG' 
       ? ['query', 'info', 'warn', 'error']
-      : ['warn', 'error']
+      : [] // Disable all Prisma logging unless DEBUG mode
   });
   logger.success('Prisma client initialized');
 } catch (error) {
