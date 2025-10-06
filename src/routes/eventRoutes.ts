@@ -25,11 +25,11 @@ router.post('/events', uploadSingleMenu, handleUploadError, sanitizeMenuData, va
       key: (req.file as any).key
     } : 'NO FILE');
     console.log('Environment:', {
-      NODE_ENV: process.env['NODE_ENV'],
-      S3_BUCKET_NAME: process.env['S3_BUCKET_NAME'],
-      AWS_REGION: process.env['AWS_REGION'],
-      AWS_ACCESS_KEY_ID: process.env['AWS_ACCESS_KEY_ID'] ? 'SET' : 'NOT SET',
-      AWS_SECRET_ACCESS_KEY: process.env['AWS_SECRET_ACCESS_KEY'] ? 'SET' : 'NOT SET'
+      NODE_ENV: process.env["NODE_ENV"],
+      S3_BUCKET_NAME: process.env["S3_BUCKET_NAME"],
+      AWS_REGION: process.env["AWS_REGION"],
+      AWS_ACCESS_KEY_ID: process.env["AWS_ACCESS_KEY_ID"] ? 'SET' : 'NOT SET',
+      AWS_SECRET_ACCESS_KEY: process.env["AWS_SECRET_ACCESS_KEY"] ? 'SET' : 'NOT SET'
     });
 
     // At this point, validation has passed, so we can safely use the data
@@ -147,11 +147,11 @@ router.post('/events', uploadSingleMenu, handleUploadError, sanitizeMenuData, va
       } : null
     });
     console.error('Environment at error:', {
-      NODE_ENV: process.env['NODE_ENV'],
-      S3_BUCKET_NAME: process.env['S3_BUCKET_NAME'],
-      AWS_REGION: process.env['AWS_REGION'],
-      AWS_ACCESS_KEY_ID: process.env['AWS_ACCESS_KEY_ID'] ? 'SET' : 'NOT SET',
-      AWS_SECRET_ACCESS_KEY: process.env['AWS_SECRET_ACCESS_KEY'] ? 'SET' : 'NOT SET'
+      NODE_ENV: process.env["NODE_ENV"],
+      S3_BUCKET_NAME: process.env["S3_BUCKET_NAME"],
+      AWS_REGION: process.env["AWS_REGION"],
+      AWS_ACCESS_KEY_ID: process.env["AWS_ACCESS_KEY_ID"] ? 'SET' : 'NOT SET',
+      AWS_SECRET_ACCESS_KEY: process.env["AWS_SECRET_ACCESS_KEY"] ? 'SET' : 'NOT SET'
     });
     console.error('=== END MENU UPLOAD ERROR ===');
     return res.status(500).json({
