@@ -7,6 +7,7 @@ import session from 'express-session';
 import expressLayouts from 'express-ejs-layouts';
 import path from 'path';
 import { config } from './lib/config';
+import { logger } from './lib/logger';
 import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/authRoutes';
 import adminRoutes from './routes/adminRoutes';
@@ -21,11 +22,42 @@ let prisma: PrismaClient | null = null;
 
 // Initialize Prisma client with extensive error handling
 try {
-  prisma = new PrismaClient();
-  console.log('✅ Prisma client initialized');
+  // Temporarily suppress Prisma logging by redirecting stdout
+  const originalStdout = process.stdout.write;
+  const originalStderr = process.stderr.write;
+  
+  if (process.env['LOG_LEVEL'] !== 'DEBUG') {
+    process.stdout.write = function(chunk: any, encoding?: any, callback?: any) {
+      if (typeof chunk === 'string' && (chunk.includes('prisma:') || chunk.includes('Starting a postgresql pool'))) {
+        return true; // Suppress Prisma logs
+      }
+      return originalStdout.call(this, chunk, encoding, callback);
+    };
+    
+    process.stderr.write = function(chunk: any, encoding?: any, callback?: any) {
+      if (typeof chunk === 'string' && chunk.includes('prisma:')) {
+        return true; // Suppress Prisma logs
+      }
+      return originalStderr.call(this, chunk, encoding, callback);
+    };
+  }
+  
+  prisma = new PrismaClient({
+    log: process.env['LOG_LEVEL'] === 'DEBUG' 
+      ? ['query', 'info', 'warn', 'error']
+      : [] // Disable all Prisma logging unless DEBUG mode
+  });
+  
+  // Restore original stdout/stderr after Prisma initialization
+  if (process.env['LOG_LEVEL'] !== 'DEBUG') {
+    process.stdout.write = originalStdout;
+    process.stderr.write = originalStderr;
+  }
+  
+  logger.success('Prisma client initialized');
 } catch (error) {
-  console.error('❌ Failed to initialize Prisma client:', error);
-  console.log('⚠️ Server will start without database connection');
+  logger.error('Failed to initialize Prisma client:', error);
+  logger.warn('Server will start without database connection');
   prisma = null;
 }
 
@@ -129,14 +161,28 @@ app.get('/', requireAuth, async (_req, res) => {
       // Removed take: 6 limit to show all menus
     });
 
-    // Transform data to include menu_image_url
-    const transformedEvents = events.map(event => {
+    // Transform data to include actual menu image URLs (not API endpoints)
+    const transformedEvents = await Promise.all(events.map(async (event) => {
       // Handle missing S3 URL field gracefully (for environments without migration)
       const hasS3Url = (event as any).menu_image_s3_url;
-      const menuImageUrl = hasS3Url 
-        ? `/api/v1/menu-images/${event.event_id}` 
-        : `/images/${event.menu_image_filename}`;
-      console.log('🏠 Home page event:', {
+      
+      let menuImageUrl: string;
+      if (hasS3Url) {
+        // Generate signed URL directly instead of using API endpoint
+        try {
+          const s3Service = require('./services/s3Service').default;
+          const s3Key = `menus/${event.menu_image_filename}`;
+          menuImageUrl = await s3Service.getSignedUrl(s3Key, 3600); // 1 hour expiry
+        } catch (error) {
+          logger.warn(`Failed to generate signed URL for ${event.menu_image_filename}, falling back to API endpoint`);
+          menuImageUrl = `/api/v1/menu-images/${event.event_id}`;
+        }
+      } else {
+        menuImageUrl = `/images/${event.menu_image_filename}`;
+      }
+      
+      // Only log event details in debug mode
+      logger.debug('Home page event:', {
         id: event.event_id,
         name: event.event_name,
         hasS3Url: !!hasS3Url,
@@ -154,7 +200,7 @@ app.get('/', requireAuth, async (_req, res) => {
         location: event.event_location,
         menu_image_url: menuImageUrl
       };
-    });
+    }));
 
     res.render('index', {
       title: 'Thanksgiving Menu Collection',
@@ -162,7 +208,7 @@ app.get('/', requireAuth, async (_req, res) => {
       events: transformedEvents
     });
   } catch (error) {
-    console.error('Error fetching events for homepage:', error);
+    logger.error('Error fetching events for homepage:', error);
     res.status(500).render('error', {
       title: 'Error',
       message: 'Failed to load menus.',
@@ -180,7 +226,7 @@ app.get('/health', (_req, res) => {
       version: '2.12.52'
     });
   } catch (error) {
-    console.error('Health check error:', error);
+    logger.error('Health check error:', error);
     res.status(500).json({ 
       status: 'ERROR', 
       timestamp: new Date().toISOString(),
@@ -523,9 +569,9 @@ app.use((_req, res) => {
 const PORT = config.getPort();
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
-  console.log(`📊 Environment: ${config.getConfig().nodeEnv}`);
-  console.log(`🌐 Access URL: http://0.0.0.0:${PORT}`);
+  logger.server(`Server is running on port ${PORT}`);
+  logger.info(`Environment: ${config.getConfig().nodeEnv}`);
+  logger.info(`Access URL: http://0.0.0.0:${PORT}`);
 });
 
 // Handle uncaught exceptions
