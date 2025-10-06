@@ -7,6 +7,7 @@ import session from 'express-session';
 import expressLayouts from 'express-ejs-layouts';
 import path from 'path';
 import { config } from './lib/config';
+import { logger } from './lib/logger';
 import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/authRoutes';
 import adminRoutes from './routes/adminRoutes';
@@ -21,11 +22,15 @@ let prisma: PrismaClient | null = null;
 
 // Initialize Prisma client with extensive error handling
 try {
-  prisma = new PrismaClient();
-  console.log('✅ Prisma client initialized');
+  prisma = new PrismaClient({
+    log: process.env['NODE_ENV'] === 'development' && process.env['LOG_LEVEL'] === 'DEBUG' 
+      ? ['query', 'info', 'warn', 'error']
+      : ['warn', 'error']
+  });
+  logger.success('Prisma client initialized');
 } catch (error) {
-  console.error('❌ Failed to initialize Prisma client:', error);
-  console.log('⚠️ Server will start without database connection');
+  logger.error('Failed to initialize Prisma client:', error);
+  logger.warn('Server will start without database connection');
   prisma = null;
 }
 
@@ -136,7 +141,9 @@ app.get('/', requireAuth, async (_req, res) => {
       const menuImageUrl = hasS3Url 
         ? `/api/v1/menu-images/${event.event_id}` 
         : `/images/${event.menu_image_filename}`;
-      console.log('🏠 Home page event:', {
+      
+      // Only log event details in debug mode
+      logger.debug('Home page event:', {
         id: event.event_id,
         name: event.event_name,
         hasS3Url: !!hasS3Url,
@@ -162,7 +169,7 @@ app.get('/', requireAuth, async (_req, res) => {
       events: transformedEvents
     });
   } catch (error) {
-    console.error('Error fetching events for homepage:', error);
+    logger.error('Error fetching events for homepage:', error);
     res.status(500).render('error', {
       title: 'Error',
       message: 'Failed to load menus.',
@@ -180,7 +187,7 @@ app.get('/health', (_req, res) => {
       version: '2.12.52'
     });
   } catch (error) {
-    console.error('Health check error:', error);
+    logger.error('Health check error:', error);
     res.status(500).json({ 
       status: 'ERROR', 
       timestamp: new Date().toISOString(),
@@ -523,9 +530,9 @@ app.use((_req, res) => {
 const PORT = config.getPort();
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
-  console.log(`📊 Environment: ${config.getConfig().nodeEnv}`);
-  console.log(`🌐 Access URL: http://0.0.0.0:${PORT}`);
+  logger.server(`Server is running on port ${PORT}`);
+  logger.info(`Environment: ${config.getConfig().nodeEnv}`);
+  logger.info(`Access URL: http://0.0.0.0:${PORT}`);
 });
 
 // Handle uncaught exceptions
