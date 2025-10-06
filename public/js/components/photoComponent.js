@@ -323,24 +323,28 @@ class PhotoComponent {
         const caption = photo.caption || photo.original_filename || 'Photo';
         const description = photo.description || '';
         const takenDate = new Date(photo.taken_date || photo.created_at).toLocaleDateString();
+        
+        // Escape single quotes and double quotes for JavaScript onclick handlers
+        const escapedCaption = caption.replace(/'/g, "\\'").replace(/"/g, '\\"');
+        const escapedDescription = description.replace(/'/g, "\\'").replace(/"/g, '\\"');
 
         return `
             <div class="col-md-4 col-sm-6 mb-3">
                 <div class="card photo-card h-100">
                     <img src="/api/photos/${photo.photo_id}/file" 
                          class="card-img-top" 
-                         alt="${caption}"
+                         alt="${escapedCaption}"
                          style="height: 200px; object-fit: cover; cursor: pointer;"
-                         onclick="photoComponent.viewPhoto('${photo.photo_id}', '${caption}', '${description}')"
+                         onclick="photoComponent.viewPhoto('${photo.photo_id}', '${escapedCaption}', '${escapedDescription}')"
                          loading="lazy">
                     <div class="card-body d-flex flex-column">
-                        <h6 class="card-title">${caption}</h6>
-                        ${description ? `<p class="card-text text-muted small">${description}</p>` : ''}
+                        <h6 class="card-title">${escapedCaption}</h6>
+                        ${escapedDescription ? `<p class="card-text text-muted small">${escapedDescription}</p>` : ''}
                         <div class="mt-auto">
                             <small class="text-muted">${takenDate}</small>
                             <div class="btn-group btn-group-sm mt-2 w-100" role="group">
                                 <button type="button" class="btn btn-outline-primary" 
-                                        onclick="photoComponent.viewPhoto('${photo.photo_id}', '${caption}', '${description}')">
+                                        onclick="photoComponent.viewPhoto('${photo.photo_id}', '${escapedCaption}', '${escapedDescription}')">
                                     <i class="fas fa-eye"></i>
                                 </button>
                                 <button type="button" class="btn btn-outline-secondary" 
@@ -527,16 +531,20 @@ class PhotoComponent {
         const photo = this.photos.find(p => p.photo_id == photoId);
         if (!photo) return;
 
+        // Escape single quotes and double quotes for HTML content
+        const escapedCaption = caption.replace(/'/g, "\\'").replace(/"/g, '\\"');
+        const escapedDescription = description.replace(/'/g, "\\'").replace(/"/g, '\\"');
+
         const modalHTML = `
             <div id="photoViewerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center;">
                 <div style="background: white; padding: 2rem; border-radius: 8px; max-width: 90%; max-height: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.3); overflow: auto;">
                     <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 1rem;">
-                        <h3 style="margin: 0; color: var(--primary-black); font-family: 'Playfair Display', Georgia, serif;">${caption}</h3>
+                        <h3 style="margin: 0; color: var(--primary-black); font-family: 'Playfair Display', Georgia, serif;">${escapedCaption}</h3>
                         <button type="button" class="btn-close" onclick="photoComponent.closePhotoViewer()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
                     </div>
                     <div style="text-align: center;">
-                        <img src="/api/photos/${photoId}/file" style="max-width: 100%; max-height: 70vh; object-fit: contain;" alt="${caption}">
-                        ${description ? `<p style="margin-top: 1rem; color: var(--secondary-gray);">${description}</p>` : ''}
+                        <img src="/api/photos/${photoId}/file" style="max-width: 100%; max-height: 70vh; object-fit: contain;" alt="${escapedCaption}">
+                        ${escapedDescription ? `<p style="margin-top: 1rem; color: var(--secondary-gray);">${escapedDescription}</p>` : ''}
                     </div>
                     <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem;">
                         <button type="button" class="btn-view-details" style="background-color: var(--secondary-gray);" onclick="photoComponent.closePhotoViewer()">
@@ -626,6 +634,10 @@ class PhotoComponent {
             existingModal.remove();
         }
 
+        // Escape single quotes and double quotes for HTML content
+        const escapedDescription = (photo.description || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
+        const escapedCaption = (photo.caption || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
+
         // Create edit modal HTML
         const modalHTML = `
             <div id="photoEditModal" style="display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
@@ -640,12 +652,12 @@ class PhotoComponent {
                         
                         <div style="margin-bottom: 15px;">
                             <label for="editDescription" style="display: block; margin-bottom: 5px; font-weight: bold;">Description:</label>
-                            <textarea id="editDescription" name="description" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;">${photo.description || ''}</textarea>
+                            <textarea id="editDescription" name="description" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;">${escapedDescription}</textarea>
                         </div>
                         
                         <div style="margin-bottom: 15px;">
                             <label for="editCaption" style="display: block; margin-bottom: 5px; font-weight: bold;">Caption:</label>
-                            <textarea id="editCaption" name="caption" rows="2" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;">${photo.caption || ''}</textarea>
+                            <textarea id="editCaption" name="caption" rows="2" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;">${escapedCaption}</textarea>
                         </div>
                         
                         <div style="margin-bottom: 15px;">
