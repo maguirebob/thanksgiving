@@ -103,10 +103,15 @@ class MenuImageMigration {
     
     console.log(`🔄 Processing: ${event_name} (ID: ${event_id})`);
     console.log(`   📁 Filename: ${menu_image_filename}`);
+    console.log(`   🌍 Environment: ${process.env['NODE_ENV']}`);
 
     try {
-      // Check if local file exists
-      const localPath = path.join(process.cwd(), 'public', 'images', menu_image_filename);
+      // Check if local file exists - handle different environments
+      const publicPath = process.env['NODE_ENV'] === 'development' 
+        ? path.join(process.cwd(), 'public', 'images')
+        : '/app/public/images';
+      const localPath = path.join(publicPath, menu_image_filename);
+      console.log(`   🔍 Looking for file at: ${localPath}`);
       
       if (!fs.existsSync(localPath)) {
         const error = `Local file not found: ${localPath}`;
