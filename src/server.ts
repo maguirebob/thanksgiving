@@ -22,11 +22,38 @@ let prisma: PrismaClient | null = null;
 
 // Initialize Prisma client with extensive error handling
 try {
+  // Temporarily suppress Prisma logging by redirecting stdout
+  const originalStdout = process.stdout.write;
+  const originalStderr = process.stderr.write;
+  
+  if (process.env['LOG_LEVEL'] !== 'DEBUG') {
+    process.stdout.write = function(chunk: any, encoding?: any, callback?: any) {
+      if (typeof chunk === 'string' && (chunk.includes('prisma:') || chunk.includes('Starting a postgresql pool'))) {
+        return true; // Suppress Prisma logs
+      }
+      return originalStdout.call(this, chunk, encoding, callback);
+    };
+    
+    process.stderr.write = function(chunk: any, encoding?: any, callback?: any) {
+      if (typeof chunk === 'string' && chunk.includes('prisma:')) {
+        return true; // Suppress Prisma logs
+      }
+      return originalStderr.call(this, chunk, encoding, callback);
+    };
+  }
+  
   prisma = new PrismaClient({
     log: process.env['LOG_LEVEL'] === 'DEBUG' 
       ? ['query', 'info', 'warn', 'error']
       : [] // Disable all Prisma logging unless DEBUG mode
   });
+  
+  // Restore original stdout/stderr after Prisma initialization
+  if (process.env['LOG_LEVEL'] !== 'DEBUG') {
+    process.stdout.write = originalStdout;
+    process.stderr.write = originalStderr;
+  }
+  
   logger.success('Prisma client initialized');
 } catch (error) {
   logger.error('Failed to initialize Prisma client:', error);
