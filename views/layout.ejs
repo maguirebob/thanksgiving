@@ -998,6 +998,401 @@
                 display: none;
             }
         }
+
+        /* Photos Page Styles */
+        .photos-page {
+            background-color: var(--white);
+        }
+        
+        .photos-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .photos-title {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary-black);
+            margin-bottom: 1rem;
+        }
+        
+        .photos-subtitle {
+            color: var(--secondary-gray);
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .storage-info-card {
+            background: var(--white);
+            border: 1px solid var(--border-gray);
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .storage-info-title {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-black);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .storage-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .storage-info-item {
+            text-align: center;
+        }
+        
+        .storage-info-label {
+            font-weight: 600;
+            color: var(--primary-black);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .storage-info-value {
+            color: var(--secondary-gray);
+            font-size: 1rem;
+        }
+        
+        .storage-info-value code {
+            background-color: var(--light-gray);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .storage-status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .storage-status-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .storage-status-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .photos-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .photos-stat-card {
+            background: linear-gradient(135deg, var(--accent-orange), #ff8c42);
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease;
+        }
+        
+        .photos-stat-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .photos-stat-number {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        .photos-stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .photos-files-card {
+            background: var(--white);
+            border: 1px solid var(--border-gray);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .photos-files-header {
+            background: linear-gradient(135deg, var(--primary-black), var(--secondary-gray));
+            color: white;
+            padding: 1.5rem;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .photos-files-title {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .photos-refresh-btn {
+            background-color: var(--accent-orange);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .photos-refresh-btn:hover {
+            background-color: #ff8c42;
+            transform: translateY(-1px);
+        }
+        
+        .photos-files-content {
+            padding: 2rem;
+        }
+        
+        .photos-empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+        
+        .photos-empty-icon {
+            font-size: 4rem;
+            color: var(--secondary-gray);
+            margin-bottom: 1rem;
+        }
+        
+        .photos-empty-title {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 1.5rem;
+            color: var(--primary-black);
+            margin-bottom: 0.5rem;
+        }
+        
+        .photos-empty-message {
+            color: var(--secondary-gray);
+            margin-bottom: 1rem;
+        }
+        
+        .photos-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .photos-table th {
+            background-color: var(--light-gray);
+            color: var(--primary-black);
+            font-weight: 600;
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 2px solid var(--border-gray);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .photos-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-gray);
+            vertical-align: middle;
+        }
+        
+        .photos-table tbody tr {
+            transition: background-color 0.3s ease;
+        }
+        
+        .photos-table tbody tr:hover {
+            background-color: var(--light-gray);
+        }
+        
+        .photo-preview {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid var(--border-gray);
+        }
+        
+        .photo-preview-placeholder {
+            width: 60px;
+            height: 60px;
+            background-color: var(--light-gray);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--secondary-gray);
+            border: 2px solid var(--border-gray);
+        }
+        
+        .photo-filename {
+            font-family: 'Courier New', monospace;
+            background-color: var(--light-gray);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .photo-type-badge {
+            background-color: var(--accent-orange);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .photo-status-linked {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .photo-status-orphaned {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .photo-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .photo-action-btn {
+            padding: 0.375rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+        
+        .photo-action-btn-primary {
+            background-color: var(--primary-black);
+            color: white;
+            border-color: var(--primary-black);
+        }
+        
+        .photo-action-btn-primary:hover {
+            background-color: var(--accent-orange);
+            border-color: var(--accent-orange);
+            color: white;
+        }
+        
+        .photo-action-btn-danger {
+            background-color: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+        
+        .photo-action-btn-danger:hover {
+            background-color: #c82333;
+            border-color: #bd2130;
+        }
+        
+        /* Responsive Design for Photos Page */
+        @media (max-width: 768px) {
+            .photos-title {
+                font-size: 2.5rem;
+            }
+            
+            .storage-info-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .photos-stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+            
+            .photos-stat-card {
+                padding: 1rem;
+            }
+            
+            .photos-stat-number {
+                font-size: 2rem;
+            }
+            
+            .photos-files-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .photos-files-content {
+                padding: 1rem;
+            }
+            
+            .photos-table {
+                font-size: 0.875rem;
+            }
+            
+            .photos-table th,
+            .photos-table td {
+                padding: 0.75rem 0.5rem;
+            }
+            
+            .photo-preview,
+            .photo-preview-placeholder {
+                width: 40px;
+                height: 40px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .photos-stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .photos-table th:nth-child(3),
+            .photos-table td:nth-child(3),
+            .photos-table th:nth-child(4),
+            .photos-table td:nth-child(4) {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
