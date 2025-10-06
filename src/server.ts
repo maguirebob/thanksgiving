@@ -161,13 +161,25 @@ app.get('/', requireAuth, async (_req, res) => {
       // Removed take: 6 limit to show all menus
     });
 
-    // Transform data to include menu_image_url
-    const transformedEvents = events.map(event => {
+    // Transform data to include actual menu image URLs (not API endpoints)
+    const transformedEvents = await Promise.all(events.map(async (event) => {
       // Handle missing S3 URL field gracefully (for environments without migration)
       const hasS3Url = (event as any).menu_image_s3_url;
-      const menuImageUrl = hasS3Url 
-        ? `/api/v1/menu-images/${event.event_id}` 
-        : `/images/${event.menu_image_filename}`;
+      
+      let menuImageUrl: string;
+      if (hasS3Url) {
+        // Generate signed URL directly instead of using API endpoint
+        try {
+          const s3Service = require('./services/s3Service').default;
+          const s3Key = `menus/${event.menu_image_filename}`;
+          menuImageUrl = await s3Service.getSignedUrl(s3Key, 3600); // 1 hour expiry
+        } catch (error) {
+          logger.warn(`Failed to generate signed URL for ${event.menu_image_filename}, falling back to API endpoint`);
+          menuImageUrl = `/api/v1/menu-images/${event.event_id}`;
+        }
+      } else {
+        menuImageUrl = `/images/${event.menu_image_filename}`;
+      }
       
       // Only log event details in debug mode
       logger.debug('Home page event:', {
@@ -188,7 +200,7 @@ app.get('/', requireAuth, async (_req, res) => {
         location: event.event_location,
         menu_image_url: menuImageUrl
       };
-    });
+    }));
 
     res.render('index', {
       title: 'Thanksgiving Menu Collection',
