@@ -2,6 +2,7 @@ import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, List
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { randomUUID } from 'crypto';
 import path from 'path';
+import { logger } from '../lib/logger';
 
 /**
  * S3 Service for handling file operations
@@ -21,7 +22,7 @@ class S3Service {
     const secretAccessKey = process.env['AWS_SECRET_ACCESS_KEY'];
     
     if (!accessKeyId || !secretAccessKey) {
-      console.warn('⚠️ S3 credentials not configured. S3Service will operate in fallback mode.');
+      logger.warn('S3 credentials not configured. S3Service will operate in fallback mode.');
       // Create a dummy client that will fail gracefully
       this.s3Client = new S3Client({
         region: this.region,
@@ -40,7 +41,7 @@ class S3Service {
       });
     }
 
-    console.log(`S3Service initialized for bucket: ${this.bucketName} in region: ${this.region}`);
+    logger.info(`S3Service initialized for bucket: ${this.bucketName} in region: ${this.region}`);
   }
 
   /**
@@ -69,11 +70,11 @@ class S3Service {
       await this.s3Client.send(command);
       
       const s3Url = `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${key}`;
-      console.log(`File uploaded successfully: ${s3Url}`);
+      logger.debug(`File uploaded successfully: ${s3Url}`);
       
       return s3Url;
     } catch (error) {
-      console.error('Error uploading file to S3:', error);
+      logger.error('Error uploading file to S3:', error);
       throw new Error(`Failed to upload file to S3: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -92,11 +93,11 @@ class S3Service {
       });
       
       const signedUrl = await getSignedUrl(this.s3Client, command, { expiresIn });
-      console.log(`Generated signed URL for: ${key}`);
+      logger.debug(`Generated signed URL for: ${key}`);
       
       return signedUrl;
     } catch (error) {
-      console.error('Error generating signed URL:', error);
+      logger.error('Error generating signed URL:', error);
       throw new Error(`Failed to generate signed URL: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -114,9 +115,9 @@ class S3Service {
       });
       
       await this.s3Client.send(command);
-      console.log(`File deleted successfully: ${key}`);
+      logger.debug(`File deleted successfully: ${key}`);
     } catch (error) {
-      console.error('Error deleting file from S3:', error);
+      logger.error('Error deleting file from S3:', error);
       throw new Error(`Failed to delete file from S3: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -141,10 +142,10 @@ class S3Service {
         lastModified: obj.LastModified || new Date()
       }));
       
-      console.log(`Listed ${files.length} files from S3`);
+      logger.debug(`Listed ${files.length} files from S3`);
       return files;
     } catch (error) {
-      console.error('Error listing files from S3:', error);
+      logger.error('Error listing files from S3:', error);
       throw new Error(`Failed to list files from S3: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -179,7 +180,7 @@ class S3Service {
       await this.listFiles();
       return true;
     } catch (error) {
-      console.error('S3 service not properly configured:', error);
+      logger.error('S3 service not properly configured:', error);
       return false;
     }
   }
