@@ -983,17 +983,20 @@ function displayPhotos(photos) {
         noPhotosMessage.style.display = 'none';
     }
     
-    photosGrid.innerHTML = photos.map(photo => `
+    photosGrid.innerHTML = photos.map(photo => {
+        const escapedCaption = (photo.caption || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
+        const escapedDescription = (photo.description || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
+        return `
         <div class="col-md-4 col-sm-6 mb-3">
             <div class="card photo-card">
                 <img src="/api/photos/${photo.photo_id}/file" 
                      class="card-img-top" 
-                     alt="${photo.caption || photo.original_filename || 'Photo'}"
+                     alt="${escapedCaption || photo.original_filename || 'Photo'}"
                      style="height: 200px; object-fit: cover; cursor: pointer;"
-                     onclick="viewPhoto('${photo.photo_id}', '${photo.caption || ''}', '${photo.description || ''}')">
+                     onclick="viewPhoto('${photo.photo_id}', '${escapedCaption}', '${escapedDescription}')">
                 <div class="card-body">
-                    <h6 class="card-title">${photo.caption || 'Untitled'}</h6>
-                    <p class="card-text small text-muted">${photo.description || ''}</p>
+                    <h6 class="card-title">${escapedCaption || 'Untitled'}</h6>
+                    <p class="card-text small text-muted">${escapedDescription}</p>
                     <div class="d-flex gap-1">
                         <button class="btn btn-sm btn-outline-primary" onclick="editPhoto('${photo.photo_id}')">
                             <i class="fas fa-edit"></i>
@@ -1005,7 +1008,8 @@ function displayPhotos(photos) {
                 </div>
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
 }
 
 // Update photo count in stats and badges
@@ -1169,20 +1173,23 @@ async function loadFallbackPhotos() {
         
         if (result.success && result.data.photos.length > 0) {
             if (photosGrid) {
-                photosGrid.innerHTML = result.data.photos.map(photo => `
+                photosGrid.innerHTML = result.data.photos.map(photo => {
+                    const escapedCaption = (photo.caption || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
+                    const escapedDescription = (photo.description || '').replace(/'/g, "\\'").replace(/"/g, '\\"');
+                    return `
                     <div class="col-md-4 col-sm-6 mb-3">
                         <div class="card photo-card">
                             <img src="/api/photos/${photo.photo_id}/file" 
                                  class="card-img-top" 
-                                 alt="${photo.caption || photo.original_filename || 'Photo'}"
+                                 alt="${escapedCaption || photo.original_filename || 'Photo'}"
                                  style="height: 200px; object-fit: cover; cursor: pointer;"
-                                 onclick="viewFallbackPhoto('${photo.photo_id}', '${photo.caption || ''}', '${photo.description || ''}')">
+                                 onclick="viewFallbackPhoto('${photo.photo_id}', '${escapedCaption}', '${escapedDescription}')">
                             <div class="card-body">
-                                <h6 class="card-title">${photo.caption || 'Untitled'}</h6>
-                                <p class="card-text small text-muted">${photo.description || ''}</p>
+                                <h6 class="card-title">${escapedCaption || 'Untitled'}</h6>
+                                <p class="card-text small text-muted">${escapedDescription}</p>
                                 <div class="btn-group btn-group-sm w-100" role="group">
                                     <button type="button" class="btn btn-outline-primary" 
-                                            onclick="viewFallbackPhoto('${photo.photo_id}', '${photo.caption || ''}', '${photo.description || ''}')">
+                                            onclick="viewFallbackPhoto('${photo.photo_id}', '${escapedCaption}', '${escapedDescription}')">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                     <button type="button" class="btn btn-outline-danger" 
@@ -1193,7 +1200,8 @@ async function loadFallbackPhotos() {
                             </div>
                         </div>
                     </div>
-                `).join('');
+                `;
+                }).join('');
             }
             if (noPhotosMessage) {
                 noPhotosMessage.style.display = 'none';
