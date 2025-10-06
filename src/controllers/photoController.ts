@@ -120,11 +120,11 @@ export const uploadEventPhoto = async (req: Request, res: Response): Promise<voi
       key: (req.file as any).key
     } : 'NO FILE');
     console.log('Environment:', {
-      NODE_ENV: process.env['NODE_ENV'],
-      S3_BUCKET_NAME: process.env['S3_BUCKET_NAME'],
-      AWS_REGION: process.env['AWS_REGION'],
-      AWS_ACCESS_KEY_ID: process.env['AWS_ACCESS_KEY_ID'] ? 'SET' : 'NOT SET',
-      AWS_SECRET_ACCESS_KEY: process.env['AWS_SECRET_ACCESS_KEY'] ? 'SET' : 'NOT SET'
+      NODE_ENV: process.env["NODE_ENV"],
+      S3_BUCKET_NAME: process.env["S3_BUCKET_NAME"],
+      AWS_REGION: process.env["AWS_REGION"],
+      AWS_ACCESS_KEY_ID: process.env["AWS_ACCESS_KEY_ID"] ? 'SET' : 'NOT SET',
+      AWS_SECRET_ACCESS_KEY: process.env["AWS_SECRET_ACCESS_KEY"] ? 'SET' : 'NOT SET'
     });
 
     const { eventId } = req.params;
@@ -133,7 +133,7 @@ export const uploadEventPhoto = async (req: Request, res: Response): Promise<voi
       res.status(400).json({
         success: false,
         message: 'Event ID is required',
-        debug: { eventId: req.params['eventId'] }
+        debug: { eventId: req.params["eventId"] }
       });
       return;
     }
@@ -262,7 +262,7 @@ export const uploadEventPhoto = async (req: Request, res: Response): Promise<voi
         errorType: (error as Error).constructor.name,
         errorMessage: (error as Error).message,
         hasFile: !!req.file,
-        eventId: req.params['eventId']
+        eventId: req.params["eventId"]
       }
     });
   }
