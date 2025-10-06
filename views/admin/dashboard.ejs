@@ -404,6 +404,40 @@ document.addEventListener('DOMContentLoaded', function() {
   addMenuForm.addEventListener('submit', async function(e) {
     e.preventDefault();
     
+    // Validate form before submission
+    const eventName = document.getElementById('event_name').value.trim();
+    const eventDate = document.getElementById('event_date').value;
+    const menuImage = document.getElementById('menu_image').files[0];
+    
+    // Client-side validation
+    if (!eventName) {
+      showMessage('Event name is required', 'error');
+      return;
+    }
+    
+    if (!eventDate) {
+      showMessage('Event date is required', 'error');
+      return;
+    }
+    
+    if (!menuImage) {
+      showMessage('Menu image is required', 'error');
+      return;
+    }
+    
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(menuImage.type)) {
+      showMessage('Please select a valid image file (JPEG, PNG, GIF, or WebP)', 'error');
+      return;
+    }
+    
+    // Validate file size (5MB limit)
+    if (menuImage.size > 5 * 1024 * 1024) {
+      showMessage('File size must be less than 5MB', 'error');
+      return;
+    }
+    
     // Disable submit button to prevent double submission
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creating...';
@@ -411,12 +445,25 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
       const formData = new FormData(addMenuForm);
       
+      console.log('Submitting form with data:', {
+        event_name: formData.get('event_name'),
+        event_date: formData.get('event_date'),
+        event_location: formData.get('event_location'),
+        event_description: formData.get('event_description'),
+        hasFile: !!formData.get('menu_image'),
+        fileName: menuImage.name,
+        fileSize: menuImage.size,
+        fileType: menuImage.type
+      });
+      
       const response = await fetch('/api/v1/events', {
         method: 'POST',
         body: formData
       });
 
       const data = await response.json();
+      
+      console.log('Response from server:', data);
 
       if (data.success) {
         showMessage('Menu created successfully!', 'success');
@@ -434,7 +481,12 @@ document.addEventListener('DOMContentLoaded', function() {
           window.location.reload();
         }, 1500);
       } else {
+        console.error('Server error:', data);
         showMessage(data.message || 'Failed to create menu', 'error');
+        if (data.errors) {
+          console.error('Validation errors:', data.errors);
+          showMessage('Validation errors: ' + data.errors.join(', '), 'error');
+        }
       }
 
     } catch (error) {

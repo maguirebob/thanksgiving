@@ -31,9 +31,10 @@ export const validateMenuCreation = (req: Request, res: Response, next: NextFunc
       }
       
       // Check if date is too far in the past (optional validation)
-      const tenYearsAgo = new Date(now.getFullYear() - 10, now.getMonth(), now.getDate());
-      if (date < tenYearsAgo) {
-        errors.push('Event date cannot be more than 10 years in the past');
+      // Allow dates back to 1900 for historical Thanksgiving menus
+      const minDate = new Date(1900, 0, 1); // January 1, 1900
+      if (date < minDate) {
+        errors.push('Event date cannot be before 1900');
       }
     }
   }
