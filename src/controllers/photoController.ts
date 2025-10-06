@@ -420,10 +420,23 @@ export const deletePhoto = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    // Delete photo file from disk
-    const filePath = path.join('public/uploads/photos', existingPhoto.filename);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    // If photo has S3 URL, delete from S3
+    if (existingPhoto.s3_url) {
+      try {
+        const s3Key = `photos/${existingPhoto.filename}`;
+        await s3Service.deleteFile(s3Key);
+        console.log(`Deleted photo from S3: ${s3Key}`);
+      } catch (s3Error) {
+        console.error('Error deleting photo from S3:', s3Error);
+        // Continue with database deletion even if S3 deletion fails
+      }
+    } else {
+      // Fallback: try to delete from local filesystem (for backward compatibility)
+      const filePath = path.join('public/uploads/photos', existingPhoto.filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log(`Deleted photo from local filesystem: ${filePath}`);
+      }
     }
 
     // Delete photo record from database
