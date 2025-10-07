@@ -1,0 +1,114 @@
+<!-- Photo Carousel Page Content -->
+
+<div class="carousel-page">
+    <!-- Header -->
+    <div class="carousel-header">
+        <h1 class="carousel-title">
+            <i class="fas fa-play-circle"></i> Photo Carousel
+        </h1>
+        <p class="carousel-subtitle">Enjoy a slideshow of all Thanksgiving photos</p>
+    </div>
+
+    <!-- Carousel Container -->
+    <div id="photo-carousel" class="carousel-main-container">
+        <!-- Carousel will be initialized here by JavaScript -->
+    </div>
+
+    <!-- Instructions -->
+    <div class="carousel-instructions">
+        <h3><i class="fas fa-info-circle"></i> How to Use the Carousel</h3>
+        <div class="carousel-instructions-grid">
+            <div class="carousel-instruction-item">
+                <div class="carousel-instruction-icon">
+                    <i class="fas fa-play"></i>
+                </div>
+                <div class="carousel-instruction-content">
+                    <h4>Play/Pause</h4>
+                    <p>Click the play button to start automatic rotation, or use the spacebar</p>
+                </div>
+            </div>
+            <div class="carousel-instruction-item">
+                <div class="carousel-instruction-icon">
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+                <div class="carousel-instruction-content">
+                    <h4>Navigate</h4>
+                    <p>Use arrow keys or click the navigation buttons to move between photos</p>
+                </div>
+            </div>
+            <div class="carousel-instruction-item">
+                <div class="carousel-instruction-icon">
+                    <i class="fas fa-expand"></i>
+                </div>
+                <div class="carousel-instruction-content">
+                    <h4>Fullscreen</h4>
+                    <p>Click the fullscreen button for an immersive viewing experience</p>
+                </div>
+            </div>
+            <div class="carousel-instruction-item">
+                <div class="carousel-instruction-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <div class="carousel-instruction-content">
+                    <h4>Mobile</h4>
+                    <p>Swipe left or right on mobile devices to navigate between photos</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Photo Statistics -->
+    <div class="carousel-stats" id="carousel-stats" style="display: none;">
+        <h3><i class="fas fa-chart-bar"></i> Photo Statistics</h3>
+        <div class="carousel-stats-grid" id="carousel-stats-grid">
+            <!-- Statistics will be populated by JavaScript -->
+        </div>
+    </div>
+</div>
+
+<!-- Load Carousel Component -->
+<script src="/js/components/carouselComponent.js"></script>
+
+<script>
+// Initialize carousel statistics when page loads
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        const response = await fetch('/api/carousel/stats');
+        const data = await response.json();
+        
+        if (data.success) {
+            displayCarouselStats(data.data);
+        }
+    } catch (error) {
+        console.error('Error loading carousel statistics:', error);
+    }
+});
+
+function displayCarouselStats(stats) {
+    const statsContainer = document.getElementById('carousel-stats');
+    const statsGrid = document.getElementById('carousel-stats-grid');
+    
+    if (!statsContainer || !statsGrid) return;
+    
+    statsGrid.innerHTML = `
+        <div class="carousel-stat-card">
+            <div class="carousel-stat-number">${stats.totalPhotos}</div>
+            <div class="carousel-stat-label">Total Photos</div>
+        </div>
+        <div class="carousel-stat-card">
+            <div class="carousel-stat-number">${stats.totalEvents}</div>
+            <div class="carousel-stat-label">Events</div>
+        </div>
+        <div class="carousel-stat-card">
+            <div class="carousel-stat-number">${stats.s3CoveragePercentage}%</div>
+            <div class="carousel-stat-label">S3 Coverage</div>
+        </div>
+        <div class="carousel-stat-card">
+            <div class="carousel-stat-number">${stats.photosWithS3}</div>
+            <div class="carousel-stat-label">Linked Photos</div>
+        </div>
+    `;
+    
+    statsContainer.style.display = 'block';
+}
+</script>
