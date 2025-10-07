@@ -16,6 +16,11 @@ class PhotoCarousel {
     this.hasMorePhotos = true;
     this.photosPerPage = 50;
     this.kenBurnsEnabled = true; // Ken Burns effect enabled by default
+    
+    // Auto-hide controls
+    this.controlsVisible = true;
+    this.hideControlsTimer = null;
+    this.hideControlsDelay = 3000; // 3 seconds
 
     // DOM elements
     this.photoDisplay = null;
@@ -151,6 +156,13 @@ class PhotoCarousel {
     // Touch/swipe support
     this.photoDisplay.addEventListener('touchstart', (e) => this.handleTouchStart(e));
     this.photoDisplay.addEventListener('touchend', (e) => this.handleTouchEnd(e));
+    
+    // Auto-hide controls on mouse movement
+    this.photoDisplay.addEventListener('mousemove', () => this.showControls());
+    this.photoDisplay.addEventListener('mouseleave', () => this.startHideControlsTimer());
+    
+    // Start the auto-hide timer
+    this.startHideControlsTimer();
   }
 
   /**
@@ -423,10 +435,52 @@ class PhotoCarousel {
   }
 
   /**
+   * Show controls and reset hide timer
+   */
+  showControls() {
+    if (!this.controlsVisible) {
+      this.controls.style.opacity = '1';
+      this.controls.style.transform = 'translateY(0)';
+      this.controlsVisible = true;
+    }
+    this.startHideControlsTimer();
+  }
+
+  /**
+   * Hide controls
+   */
+  hideControls() {
+    if (this.controlsVisible) {
+      this.controls.style.opacity = '0';
+      this.controls.style.transform = 'translateY(20px)';
+      this.controlsVisible = false;
+    }
+  }
+
+  /**
+   * Start the timer to hide controls
+   */
+  startHideControlsTimer() {
+    // Clear existing timer
+    if (this.hideControlsTimer) {
+      clearTimeout(this.hideControlsTimer);
+    }
+    
+    // Set new timer
+    this.hideControlsTimer = setTimeout(() => {
+      this.hideControls();
+    }, this.hideControlsDelay);
+  }
+
+  /**
    * Destroy carousel and clean up
    */
   destroy() {
     this.stopRotation();
+    // Clear auto-hide timer
+    if (this.hideControlsTimer) {
+      clearTimeout(this.hideControlsTimer);
+    }
     // Remove event listeners
     document.removeEventListener('keydown', this.handleKeyboard);
   }
