@@ -22,6 +22,7 @@ export interface CarouselPhoto {
     location: string | null;
   } | null;
   previewUrl: string | null;
+  type: 'photo' | 'menu'; // Add type to distinguish between photos and menus
 }
 
 export interface CarouselMetadata {
@@ -119,8 +120,65 @@ export const getCarouselPhotos = async (req: Request, res: Response): Promise<vo
         date: photo.event.event_date,
         location: photo.event.event_location
       } : null,
-      previewUrl: photo.s3_url ? `/api/photos/${photo.filename}/preview` : null
+      previewUrl: `/api/photos/${photo.filename}/preview`,
+      type: 'photo' as const
     }));
+
+    // Get random menu images to intersperse every 5 photos
+    const menuEvents = await prisma.event.findMany({
+      where: {
+        menu_image_s3_url: { not: null }
+      },
+      select: {
+        event_id: true,
+        event_name: true,
+        event_date: true,
+        event_location: true,
+        menu_image_filename: true,
+        menu_image_s3_url: true
+      },
+      orderBy: {
+        event_date: 'desc'
+      }
+    });
+
+    // Intersperse menu images every 5 photos
+    const mixedItems: CarouselPhoto[] = [];
+    
+    for (let i = 0; i < transformedPhotos.length; i++) {
+      // Add the photo
+      const photo = transformedPhotos[i];
+      if (photo) {
+        mixedItems.push(photo);
+      }
+      
+      // Every 5 photos, add a random menu (if available)
+      if ((i + 1) % 5 === 0 && menuEvents.length > 0) {
+        const randomMenu = menuEvents[Math.floor(Math.random() * menuEvents.length)];
+        if (randomMenu) {
+          mixedItems.push({
+            id: randomMenu.event_id + 100000, // Offset to avoid ID conflicts
+            filename: randomMenu.menu_image_filename || '',
+            originalFilename: randomMenu.menu_image_filename,
+            description: null,
+            caption: `${randomMenu.event_name} Menu`,
+            fileSize: null,
+            mimeType: 'image/jpeg', // Assume JPEG for menu images
+            s3Url: randomMenu.menu_image_s3_url,
+            takenDate: randomMenu.event_date,
+            createdAt: randomMenu.event_date,
+            event: {
+              id: randomMenu.event_id,
+              name: randomMenu.event_name,
+              date: randomMenu.event_date,
+              location: randomMenu.event_location
+            },
+            previewUrl: `/api/v1/menu-images/${randomMenu.event_id}`,
+            type: 'menu' as const
+          });
+        }
+      }
+    }
 
     // Calculate pagination metadata
     const totalPages = Math.ceil(totalCount / limit);
@@ -136,7 +194,7 @@ export const getCarouselPhotos = async (req: Request, res: Response): Promise<vo
     const response: CarouselResponse = {
       success: true,
       data: {
-        photos: transformedPhotos,
+        photos: mixedItems,
         pagination: {
           currentPage: page,
           totalPages,

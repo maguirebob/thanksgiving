@@ -216,11 +216,19 @@ class PhotoCarousel {
       this.currentPhoto.classList.remove('ken-burns', 'ken-burns-alt', 'ken-burns-diag');
       
       // Update photo image
-      this.currentPhoto.src = photo.previewUrl || photo.s3Url || '';
+      const imageUrl = photo.previewUrl || photo.s3Url || '';
+      this.currentPhoto.src = imageUrl;
       this.currentPhoto.alt = photo.caption || photo.originalFilename || 'Photo';
 
-      // Update photo information - only show title
-      this.photoTitle.textContent = photo.caption || photo.originalFilename || 'Untitled Photo';
+      // Update photo information - show different titles for photos vs menus
+      if (photo.type === 'menu') {
+        this.photoTitle.textContent = photo.caption || 'Menu';
+        // Add a special class for menu images
+        this.currentPhoto.classList.add('menu-image');
+      } else {
+        this.photoTitle.textContent = photo.caption || photo.originalFilename || 'Untitled Photo';
+        this.currentPhoto.classList.remove('menu-image');
+      }
 
       // Apply Ken Burns effect after image loads
       this.currentPhoto.onload = () => {
@@ -230,6 +238,12 @@ class PhotoCarousel {
           // Fade in the new image
           this.currentPhoto.style.opacity = '1';
         }, 100);
+      };
+
+      this.currentPhoto.onerror = () => {
+        console.error('Failed to load image:', imageUrl);
+        // Try fallback or show error
+        this.currentPhoto.style.opacity = '1'; // Show anyway
       };
 
       // Show photo container

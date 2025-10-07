@@ -1581,6 +1581,18 @@
             transform-origin: center center;
         }
 
+        .carousel-photo.menu-image {
+            /* Special styling for menu images */
+            border: 3px solid var(--accent-orange);
+            box-shadow: 0 0 20px rgba(255, 140, 0, 0.3);
+        }
+
+        .carousel-photo.menu-image.ken-burns {
+            /* Disable Ken Burns for menu images to keep them readable */
+            animation: none;
+            transform: scale(1) translate(0, 0);
+        }
+
         /* Ken Burns Effect */
         .carousel-photo.ken-burns {
             animation: kenBurns 8s ease-in-out infinite alternate;
