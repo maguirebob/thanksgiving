@@ -15,8 +15,7 @@ import adminRoutes from './routes/adminRoutes';
 import photoRoutes from './routes/photoRoutes';
 import blogRoutes from './routes/blogRoutes';
 import eventRoutes from './routes/eventRoutes';
-import uploadRoutes from './routes/uploadRoutes';
-import { addUserToLocals, requireAuth } from './middleware/auth';
+import { addUserToLocals, requireAuth, requireAdmin } from './middleware/auth';
 
 const app = express();
 let prisma: PrismaClient | null = null;
@@ -478,7 +477,7 @@ app.get('/about', requireAuth, (_req, res) => {
 });
 
 // Photos page route
-app.get('/photos', requireAuth, async (_req, res) => {
+app.get('/photos', requireAuth, requireAdmin, async (_req, res) => {
   try {
     // Check if database is available
     if (!prisma) {
@@ -680,7 +679,6 @@ app.use('/admin', adminRoutes);
 app.use('/api', photoRoutes);
 app.use('/api', blogRoutes);
 app.use('/api/v1', eventRoutes);
-app.use('/api/upload', uploadRoutes);
 
 // Error handling middleware
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
