@@ -15,6 +15,7 @@ import adminRoutes from './routes/adminRoutes';
 import photoRoutes from './routes/photoRoutes';
 import blogRoutes from './routes/blogRoutes';
 import eventRoutes from './routes/eventRoutes';
+import carouselRoutes from './routes/carouselRoutes';
 import { addUserToLocals, requireAuth, requireAdmin } from './middleware/auth';
 
 const app = express();
@@ -221,7 +222,7 @@ app.get('/health', (_req, res) => {
       status: 'OK', 
       timestamp: new Date().toISOString(),
       environment: process.env['NODE_ENV'] || 'unknown',
-      version: '2.12.52'
+      version: '2.12.63'
     });
   } catch (error) {
     logger.error('Health check error:', error);
@@ -238,7 +239,7 @@ app.get('/api/v1/version/display', (_req, res) => {
   res.json({
     success: true,
     data: {
-      version: '2.12.52',
+      version: '2.12.63',
       environment: config.getConfig().nodeEnv,
       buildDate: new Date().toISOString()
     }
@@ -476,6 +477,22 @@ app.get('/about', requireAuth, (_req, res) => {
   });
 });
 
+// Carousel page route (accessible to all authenticated users)
+app.get('/carousel', requireAuth, async (_req, res) => {
+  try {
+    res.render('carousel', {
+      title: 'Photo Carousel - Thanksgiving Memories'
+    });
+  } catch (error) {
+    logger.error('Error loading carousel page:', error);
+    res.status(500).render('error', {
+      title: 'Error',
+      message: 'Failed to load photo carousel',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // Photos page route
 app.get('/photos', requireAuth, requireAdmin, async (_req, res) => {
   try {
@@ -679,6 +696,7 @@ app.use('/admin', adminRoutes);
 app.use('/api', photoRoutes);
 app.use('/api', blogRoutes);
 app.use('/api/v1', eventRoutes);
+app.use('/api/carousel', carouselRoutes);
 
 // Error handling middleware
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

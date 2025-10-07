@@ -284,6 +284,41 @@ class SmokeTestRunner {
       }
     });
 
+    // Carousel API Tests
+    await this.runTest('Carousel Photos API', async () => {
+      const response = await this.makeRequest('GET', '/api/carousel/photos');
+      
+      if (!response.success || !response.data || !Array.isArray(response.data.photos)) {
+        throw new Error('Carousel photos API returned invalid response structure');
+      }
+      
+      console.log(`   Found ${response.data.photos.length} photos in carousel`);
+    });
+
+    await this.runTest('Carousel Statistics API', async () => {
+      const response = await this.makeRequest('GET', '/api/carousel/stats');
+      
+      if (!response.success || !response.data) {
+        throw new Error('Carousel statistics API returned invalid response structure');
+      }
+      
+      const stats = response.data;
+      if (typeof stats.totalPhotos !== 'number' || typeof stats.totalEvents !== 'number') {
+        throw new Error('Carousel statistics API returned invalid data types');
+      }
+      
+      console.log(`   Total photos: ${stats.totalPhotos}, Total events: ${stats.totalEvents}`);
+    });
+
+    await this.runTest('Carousel Page Loads', async () => {
+      const response = await this.makeRequest('GET', '/carousel');
+      
+      // Should redirect to login or show carousel page
+      if (!response.includes('Login') && !response.includes('carousel')) {
+        throw new Error('Carousel page does not contain expected content');
+      }
+    });
+
     // Error Handling Tests
     await this.runTest('Error Handling', async () => {
       // Test 404 handling
