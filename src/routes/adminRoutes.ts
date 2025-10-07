@@ -46,7 +46,7 @@ router.get('/dashboard', async (_req: Request, res: Response) => {
     }));
 
     res.render('admin/dashboard', {
-      title: 'Admin Dashboard',
+      title: 'Menu Admin',
       stats: {
         totalUsers,
         totalEvents,
