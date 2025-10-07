@@ -128,6 +128,68 @@
             color: var(--primary-black);
         }
 
+        /* Dropdown Menu Styles */
+        .site-nav .dropdown {
+            position: relative;
+        }
+
+        .site-nav .dropdown-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .site-nav .dropdown-toggle::after {
+            display: none;
+        }
+
+        .site-nav .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 1000;
+            min-width: 160px;
+            padding: 0.5rem 0;
+            margin: 0;
+            background-color: var(--white);
+            border: 1px solid var(--border-gray);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .site-nav .dropdown:hover .dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .site-nav .dropdown-item {
+            display: block;
+            padding: 0.5rem 1rem;
+            color: var(--primary-black);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .site-nav .dropdown-item:hover {
+            background-color: var(--light-gray);
+            color: var(--accent-orange);
+        }
+
+        .site-nav .dropdown-item i {
+            margin-right: 0.5rem;
+            width: 16px;
+            text-align: center;
+        }
+
         /* Grid Layout */
         .menu-grid {
             display: grid;
@@ -1406,12 +1468,19 @@
                 <ul class="site-nav">
                     <li><a href="/">Home</a></li>
                     <li><a href="/about">About</a></li>
-                    <li><a href="/photos">Photos</a></li>
-                    <li><a href="/auth/profile">Profile</a></li>
                     <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
-                        <li><a href="/admin">Admin</a></li>
-                        <li><a href="/admin/users">Users</a></li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                Admin <i class="fas fa-chevron-down"></i>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/admin/dashboard"><i class="fas fa-utensils"></i>Menu</a></li>
+                                <li><a class="dropdown-item" href="/photos"><i class="fas fa-images"></i>Photo</a></li>
+                                <li><a class="dropdown-item" href="/admin/users"><i class="fas fa-users"></i>User</a></li>
+                            </ul>
+                        </li>
                     <% } %>
+                    <li><a href="/auth/profile">Profile</a></li>
                     <li><a href="#" id="logoutBtn">Logout</a></li>
                 </ul>
             </nav>
