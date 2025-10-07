@@ -15,6 +15,7 @@ class PhotoCarousel {
     this.currentPage = 1;
     this.hasMorePhotos = true;
     this.photosPerPage = 50;
+    this.kenBurnsEnabled = true; // Ken Burns effect enabled by default
 
     // DOM elements
     this.photoDisplay = null;
@@ -58,8 +59,6 @@ class PhotoCarousel {
             <div class="carousel-photo-overlay">
               <div class="carousel-photo-info" id="carousel-photo-info">
                 <h3 id="carousel-photo-title"></h3>
-                <p id="carousel-photo-caption"></p>
-                <p id="carousel-photo-event"></p>
               </div>
             </div>
           </div>
@@ -82,6 +81,9 @@ class PhotoCarousel {
           <div class="carousel-control-group">
             <button id="carousel-fullscreen" class="carousel-btn" title="Fullscreen">
               <i class="fas fa-expand"></i>
+            </button>
+            <button id="carousel-ken-burns" class="carousel-btn carousel-btn-active" title="Toggle Ken Burns Effect">
+              <i class="fas fa-film"></i>
             </button>
             <div class="carousel-speed-control">
               <label for="carousel-speed">Speed:</label>
@@ -116,8 +118,6 @@ class PhotoCarousel {
     this.currentPhoto = document.getElementById('carousel-current-photo');
     this.photoInfo = document.getElementById('carousel-photo-info');
     this.photoTitle = document.getElementById('carousel-photo-title');
-    this.photoCaption = document.getElementById('carousel-photo-caption');
-    this.photoEvent = document.getElementById('carousel-photo-event');
     this.controls = document.getElementById('carousel-controls');
     this.progressBar = document.getElementById('carousel-progress-bar');
     this.progressText = document.getElementById('carousel-progress-text');
@@ -134,6 +134,7 @@ class PhotoCarousel {
     document.getElementById('carousel-next').addEventListener('click', () => this.nextPhoto());
     document.getElementById('carousel-play-pause').addEventListener('click', () => this.togglePlayPause());
     document.getElementById('carousel-fullscreen').addEventListener('click', () => this.toggleFullscreen());
+    document.getElementById('carousel-ken-burns').addEventListener('click', () => this.toggleKenBurns());
     
     // Speed control
     document.getElementById('carousel-speed').addEventListener('change', (e) => {
@@ -187,28 +188,79 @@ class PhotoCarousel {
   }
 
   /**
-   * Display the current photo
+   * Display the current photo with fade transition
    */
   displayCurrentPhoto() {
     if (this.photos.length === 0) return;
 
     const photo = this.photos[this.currentIndex];
     
-    // Update photo image
-    this.currentPhoto.src = photo.previewUrl || photo.s3Url || '';
-    this.currentPhoto.alt = photo.caption || photo.originalFilename || 'Photo';
+    // Start fade out
+    this.currentPhoto.style.opacity = '0';
+    
+    // After fade out completes, change the image
+    setTimeout(() => {
+      // Remove any existing Ken Burns classes
+      this.currentPhoto.classList.remove('ken-burns', 'ken-burns-alt', 'ken-burns-diag');
+      
+      // Update photo image
+      this.currentPhoto.src = photo.previewUrl || photo.s3Url || '';
+      this.currentPhoto.alt = photo.caption || photo.originalFilename || 'Photo';
 
-    // Update photo information
-    this.photoTitle.textContent = photo.caption || photo.originalFilename || 'Untitled Photo';
-    this.photoCaption.textContent = photo.description || '';
-    this.photoEvent.textContent = photo.event ? `${photo.event.name} - ${new Date(photo.event.date).getFullYear()}` : '';
+      // Update photo information - only show title
+      this.photoTitle.textContent = photo.caption || photo.originalFilename || 'Untitled Photo';
 
-    // Show photo container
-    this.photoContainer.style.display = 'block';
+      // Apply Ken Burns effect after image loads
+      this.currentPhoto.onload = () => {
+        // Add a small delay to ensure smooth transition
+        setTimeout(() => {
+          this.applyKenBurnsEffect();
+          // Fade in the new image
+          this.currentPhoto.style.opacity = '1';
+        }, 100);
+      };
+
+      // Show photo container
+      this.photoContainer.style.display = 'block';
+    }, 300); // Wait for fade out to complete
 
     // Load more photos if we're near the end
     if (this.currentIndex >= this.photos.length - 5 && this.hasMorePhotos) {
       this.loadPhotos();
+    }
+  }
+
+  /**
+   * Apply Ken Burns effect to current photo
+   */
+  applyKenBurnsEffect() {
+    if (!this.currentPhoto || !this.kenBurnsEnabled) return;
+
+    // Randomly choose one of three Ken Burns effects
+    const effects = ['ken-burns', 'ken-burns-alt', 'ken-burns-diag'];
+    const randomEffect = effects[Math.floor(Math.random() * effects.length)];
+    
+    // Apply the effect
+    this.currentPhoto.classList.add(randomEffect);
+  }
+
+  /**
+   * Toggle Ken Burns effect on/off
+   */
+  toggleKenBurns() {
+    this.kenBurnsEnabled = !this.kenBurnsEnabled;
+    const kenBurnsBtn = document.getElementById('carousel-ken-burns');
+    
+    if (this.kenBurnsEnabled) {
+      kenBurnsBtn.classList.add('carousel-btn-active');
+      kenBurnsBtn.title = 'Disable Ken Burns Effect';
+      // Apply effect to current photo
+      this.applyKenBurnsEffect();
+    } else {
+      kenBurnsBtn.classList.remove('carousel-btn-active');
+      kenBurnsBtn.title = 'Enable Ken Burns Effect';
+      // Remove effect from current photo
+      this.currentPhoto.classList.remove('ken-burns', 'ken-burns-alt', 'ken-burns-diag');
     }
   }
 
