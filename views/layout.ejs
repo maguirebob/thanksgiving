@@ -1469,7 +1469,7 @@
             height: 70vh;
             min-height: 500px;
             max-height: 800px;
-            background-color: var(--light-gray);
+            background-color: #000000; /* Black background for professional look */
             border-radius: 12px;
             overflow: hidden;
             margin-bottom: 2rem;
@@ -1499,6 +1499,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            opacity: 1;
+            transform: translateY(0);
         }
 
         #photo-carousel:fullscreen .carousel-progress {
@@ -1561,7 +1564,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: var(--light-gray);
+            background-color: #000000; /* Black background for professional look */
             overflow: hidden;
         }
 
@@ -1651,6 +1654,9 @@
             background-color: var(--white);
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .carousel-control-group {
