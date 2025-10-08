@@ -34,6 +34,8 @@ const s3Storage = multerS3({
       uploadPath = 'photos';
     } else if (file.fieldname === 'recipe_image') {
       uploadPath = 'recipes';
+    } else if (file.fieldname === 'blog_image' || file.fieldname === 'blog_images') {
+      uploadPath = 'blogs';
     }
     
     const s3Key = `${uploadPath}/${uniqueName}`;
@@ -94,6 +96,16 @@ export const uploadSingleMenu = s3Upload.single('menu_image');
 export const uploadSingleRecipe = s3Upload.single('recipe_image');
 
 /**
+ * Middleware for single blog image upload
+ */
+export const uploadSingleBlog = s3Upload.single('blog_image');
+
+/**
+ * Middleware for multiple blog images upload
+ */
+export const uploadMultipleBlogImages = s3Upload.array('blog_images', 10);
+
+/**
  * Middleware for multiple file uploads
  */
 export const uploadMultiple = s3Upload.array('files', 10);
@@ -104,7 +116,9 @@ export const uploadMultiple = s3Upload.array('files', 10);
 export const uploadMixed = s3Upload.fields([
   { name: 'photo', maxCount: 1 },
   { name: 'menu_image', maxCount: 1 },
-  { name: 'recipe_image', maxCount: 1 }
+  { name: 'recipe_image', maxCount: 1 },
+  { name: 'blog_image', maxCount: 1 },
+  { name: 'blog_images', maxCount: 10 }
 ]);
 
 /**

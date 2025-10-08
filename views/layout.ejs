@@ -846,6 +846,90 @@
             margin-top: 1rem;
         }
 
+        /* Featured Year Container */
+        .featured-year-container {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 2px solid var(--accent-orange);
+        }
+
+        /* Summary Blog Section */
+        .summary-blog-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-gray);
+        }
+
+        .summary-blog-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border-gray);
+            border-left: 4px solid var(--accent-orange);
+        }
+
+        .summary-blog-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--light-gray);
+        }
+
+        .summary-blog-title {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--primary-black);
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .summary-blog-title i {
+            color: var(--accent-orange);
+        }
+
+        .summary-blog-content {
+            color: var(--secondary-gray);
+            line-height: 1.7;
+            font-size: 1.1rem;
+        }
+
+        .summary-blog-content h4 {
+            font-family: 'Playfair Display', Georgia, serif;
+            color: var(--primary-black);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .summary-blog-content p {
+            margin-bottom: 1rem;
+        }
+
+                .summary-blog-content {
+                    display: block;
+                }
+
+        /* Responsive Design for Summary Blog */
+        @media (max-width: 768px) {
+            .summary-blog-card {
+                padding: 1.5rem;
+                margin: 0 0.5rem;
+            }
+            
+            .summary-blog-title {
+                font-size: 1.5rem;
+            }
+            
+            .summary-blog-content {
+                font-size: 1rem;
+            }
+
+        }
+
         /* Quick Stats Section */
         .quick-stats-section {
             margin-bottom: 2rem;
