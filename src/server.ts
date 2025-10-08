@@ -250,7 +250,7 @@ app.get('/health', (_req, res) => {
       status: 'OK', 
       timestamp: new Date().toISOString(),
       environment: process.env['NODE_ENV'] || 'unknown',
-      version: '2.12.70'
+      version: '2.12.71'
     });
   } catch (error) {
     logger.error('Health check error:', error);
@@ -267,7 +267,7 @@ app.get('/api/v1/version/display', (_req, res) => {
   res.json({
     success: true,
     data: {
-      version: '2.12.70',
+      version: '2.12.71',
       environment: config.getConfig().nodeEnv,
       buildDate: new Date().toISOString()
     }

@@ -334,7 +334,7 @@ class PhotoComponent {
                     <img src="/api/photos/${photo.photo_id}/file" 
                          class="card-img-top" 
                          alt="${escapedCaption}"
-                         style="height: 200px; object-fit: cover; cursor: pointer;"
+                         style="height: 200px; object-fit: contain; cursor: pointer;"
                          onclick="photoComponent.viewPhoto('${photo.photo_id}', '${escapedCaption}', '${escapedDescription}')"
                          loading="lazy">
                     <div class="card-body d-flex flex-column">
