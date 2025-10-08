@@ -2,6 +2,9 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.12.70] - 2025-10-08
+
+- Add migration for BlogPosts images field
 ## [2.7.0] - 2025-09-28
 
 - feat: Implement camera access functionality with rate limiting handling
