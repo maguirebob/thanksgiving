@@ -69,6 +69,7 @@ export const getEventBlogPosts = async (req: Request, res: Response): Promise<vo
           content: true,
           excerpt: true,
           featured_image: true,
+          images: true,
           tags: true,
           status: true,
           published_at: true,
@@ -120,7 +121,7 @@ export const createEventBlogPost = async (req: Request, res: Response): Promise<
       return;
     }
 
-    const { title, content, excerpt, featured_image, tags, status = 'draft' } = req.body;
+    const { title, content, tags, status = 'draft' } = req.body;
 
     // Validate required fields
     if (!title || !content) {
@@ -170,14 +171,45 @@ export const createEventBlogPost = async (req: Request, res: Response): Promise<
       }
     }
 
+    // Handle featured image - either from file upload or URL
+    let featuredImageUrl = null;
+    let additionalImages: string[] = [];
+    
+    if (req.file) {
+      // Single file was uploaded to S3, store the filename for preview endpoint
+      const filename = (req.file as any).key.split('/').pop(); // Extract filename from S3 key
+      featuredImageUrl = `/api/blog-images/${filename}/preview`;
+      console.log(`Blog image uploaded to S3: ${(req.file as any).location}`);
+      console.log(`Blog image preview URL: ${featuredImageUrl}`);
+    } else if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+      // Multiple files were uploaded
+      const files = req.files as Express.Multer.File[];
+      const imageUrls = files.map(file => {
+        const filename = (file as any).key.split('/').pop();
+        return `/api/blog-images/${filename}/preview`;
+      });
+      
+      // First image becomes featured image, rest go to additional images
+      featuredImageUrl = imageUrls[0] || null;
+      additionalImages = imageUrls.slice(1);
+      
+      console.log(`Multiple blog images uploaded: ${files.length} files`);
+      console.log(`Featured image: ${featuredImageUrl}`);
+      console.log(`Additional images: ${additionalImages.length}`);
+    } else if (req.body.featured_image) {
+      // URL was provided directly
+      featuredImageUrl = req.body.featured_image;
+    }
+
     const newBlogPost = await prisma.blogPost.create({
       data: {
         event_id: parseInt(eventId, 10),
         user_id: defaultUserId,
         title,
         content,
-        excerpt: excerpt || null,
-        featured_image: featured_image || null,
+        excerpt: null, // Remove excerpt field as requested
+        featured_image: featuredImageUrl,
+        images: additionalImages,
         tags: parsedTags,
         status,
         published_at: status === 'published' ? new Date() : null,
@@ -188,6 +220,7 @@ export const createEventBlogPost = async (req: Request, res: Response): Promise<
         content: true,
         excerpt: true,
         featured_image: true,
+        images: true,
         tags: true,
         status: true,
         published_at: true,
@@ -238,6 +271,7 @@ export const getBlogPost = async (req: Request, res: Response): Promise<void> =>
         content: true,
         excerpt: true,
         featured_image: true,
+        images: true,
         tags: true,
         status: true,
         published_at: true,
@@ -274,10 +308,10 @@ export const getBlogPost = async (req: Request, res: Response): Promise<void> =>
 };
 
 /**
- * Update a blog post by ID
- * PUT /api/blog-posts/:blogPostId
+ * Update blog post text fields only (no images)
+ * PUT /api/blog-posts/:blogPostId/text
  */
-export const updateBlogPost = async (req: Request, res: Response): Promise<void> => {
+export const updateBlogPostText = async (req: Request, res: Response): Promise<void> => {
   try {
     const { blogPostId } = req.params;
     if (!blogPostId) {
@@ -285,7 +319,11 @@ export const updateBlogPost = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const { title, content, excerpt, featured_image, tags, status } = req.body;
+    // Debug: Log received data
+    console.log('Blog update request body:', req.body);
+    console.log('Blog update files:', req.file ? 'Single file' : req.files ? `${req.files.length} files` : 'No files');
+
+    const { title, content, tags, status } = req.body;
 
     const existingBlogPost = await prisma.blogPost.findUnique({
       where: { blog_post_id: parseInt(blogPostId, 10) }
@@ -308,6 +346,27 @@ export const updateBlogPost = async (req: Request, res: Response): Promise<void>
       }
     }
 
+    // Handle file uploads for images
+    let featuredImageUrl = existingBlogPost.featured_image;
+    let additionalImages: string[] = existingBlogPost.images || [];
+    
+    if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+      // Multiple files were uploaded
+      const files = req.files as Express.Multer.File[];
+      const imageUrls = files.map(file => {
+        const filename = (file as any).key.split('/').pop();
+        return `/api/blog-images/${filename}/preview`;
+      });
+      
+      // First image becomes featured image, rest go to additional images
+      featuredImageUrl = imageUrls[0] || null;
+      additionalImages = imageUrls.slice(1);
+      
+      console.log(`Multiple blog images uploaded: ${files.length} files`);
+      console.log(`Featured image: ${featuredImageUrl}`);
+      console.log(`Additional images: ${additionalImages.length}`);
+    }
+
     // Handle status change to published
     let publishedAt = existingBlogPost.published_at;
     if (status === 'published' && existingBlogPost.status !== 'published') {
@@ -316,13 +375,25 @@ export const updateBlogPost = async (req: Request, res: Response): Promise<void>
       publishedAt = null;
     }
 
+    // Debug: Log what we're about to update
+    console.log('About to update blog post with data:', {
+      title: title ?? existingBlogPost.title,
+      content: content ?? existingBlogPost.content,
+      featured_image: featuredImageUrl,
+      images: additionalImages,
+      tags: parsedTags ?? existingBlogPost.tags,
+      status: status ?? existingBlogPost.status,
+      published_at: publishedAt,
+      updated_at: new Date(),
+    });
+
     const updatedBlogPost = await prisma.blogPost.update({
       where: { blog_post_id: parseInt(blogPostId, 10) },
       data: {
         title: title ?? existingBlogPost.title,
         content: content ?? existingBlogPost.content,
-        excerpt: excerpt ?? existingBlogPost.excerpt,
-        featured_image: featured_image ?? existingBlogPost.featured_image,
+        featured_image: featuredImageUrl,
+        images: additionalImages,
         tags: parsedTags ?? existingBlogPost.tags,
         status: status ?? existingBlogPost.status,
         published_at: publishedAt,
@@ -334,6 +405,7 @@ export const updateBlogPost = async (req: Request, res: Response): Promise<void>
         content: true,
         excerpt: true,
         featured_image: true,
+        images: true,
         tags: true,
         status: true,
         published_at: true,
@@ -349,6 +421,127 @@ export const updateBlogPost = async (req: Request, res: Response): Promise<void>
         }
       }
     });
+
+    res.status(200).json({
+      success: true,
+      message: 'Blog post updated successfully',
+      data: updatedBlogPost
+    });
+  } catch (error) {
+    console.error('Error updating blog post:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+/**
+ * Update blog post with images (text + images)
+ * PUT /api/blog-posts/:blogPostId
+ */
+export const updateBlogPostWithImages = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { blogPostId } = req.params;
+    if (!blogPostId) {
+      res.status(400).json({ success: false, message: 'Blog post ID is required' });
+      return;
+    }
+
+    const { title, content, tags, status } = req.body;
+
+    // Debug logging
+    console.log('=== updateBlogPostWithImages called ===');
+    console.log('Blog post ID:', blogPostId);
+    console.log('Request body:', req.body);
+    console.log('Request files:', req.files);
+
+    // Check if blog post exists
+    const existingBlogPost = await prisma.blogPost.findUnique({
+      where: { blog_post_id: parseInt(blogPostId, 10) }
+    });
+
+    if (!existingBlogPost) {
+      res.status(404).json({ success: false, message: 'Blog post not found' });
+      return;
+    }
+
+    // Parse tags if provided
+    let parsedTags: string[] | undefined;
+    if (tags !== undefined) {
+      if (typeof tags === 'string') {
+        parsedTags = tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+      } else if (Array.isArray(tags)) {
+        parsedTags = tags.filter(tag => typeof tag === 'string' && tag.trim().length > 0);
+      } else {
+        parsedTags = existingBlogPost.tags;
+      }
+    }
+
+    // Handle image uploads
+    let featuredImageUrl = existingBlogPost.featured_image;
+    let additionalImages: string[] = existingBlogPost.images || [];
+    
+    if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+      // Multiple files were uploaded
+      const files = req.files as Express.Multer.File[];
+      const imageUrls = files.map(file => {
+        const filename = (file as any).key.split('/').pop();
+        return `/api/blog-images/${filename}/preview`;
+      });
+      
+      // First image becomes featured image, rest go to additional images
+      featuredImageUrl = imageUrls[0] || null;
+      additionalImages = imageUrls.slice(1);
+      
+      console.log(`Multiple blog images uploaded: ${files.length} files`);
+      console.log(`Featured image: ${featuredImageUrl}`);
+      console.log(`Additional images: ${additionalImages.length}`);
+    }
+
+    // Handle status change to published
+    let publishedAt = existingBlogPost.published_at;
+    if (status === 'published' && existingBlogPost.status !== 'published') {
+      publishedAt = new Date();
+    } else if (status !== 'published' && existingBlogPost.status === 'published') {
+      publishedAt = null;
+    }
+
+    // Update blog post with both text and images
+    const updatedBlogPost = await prisma.blogPost.update({
+      where: { blog_post_id: parseInt(blogPostId, 10) },
+      data: {
+        title: title ?? existingBlogPost.title,
+        content: content ?? existingBlogPost.content,
+        excerpt: existingBlogPost.excerpt, // Keep existing excerpt for now
+        featured_image: featuredImageUrl,
+        images: additionalImages,
+        tags: parsedTags ?? existingBlogPost.tags,
+        status: status ?? existingBlogPost.status,
+        published_at: publishedAt,
+        updated_at: new Date(),
+      },
+      select: {
+        blog_post_id: true,
+        title: true,
+        content: true,
+        excerpt: true,
+        featured_image: true,
+        images: true,
+        tags: true,
+        status: true,
+        published_at: true,
+        created_at: true,
+        updated_at: true,
+        user_id: true,
+        user: {
+          select: {
+            username: true,
+            first_name: true,
+            last_name: true
+          }
+        }
+      }
+    });
+
+    console.log('Blog post updated successfully:', updatedBlogPost.title);
 
     res.status(200).json({
       success: true,

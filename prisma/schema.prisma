@@ -123,6 +123,7 @@ model BlogPost {
   content        String   @db.Text
   excerpt        String?  @db.Text
   featured_image String?  @db.VarChar(255)
+  images         String[] // Array of image URLs for multiple images
   tags           String[] // Array of tags
   status         String   @default("draft") @db.VarChar(20) // draft, published, archived
   published_at   DateTime?

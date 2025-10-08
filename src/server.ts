@@ -160,6 +160,33 @@ app.get('/', requireAuth, async (_req, res) => {
       // Removed take: 6 limit to show all menus
     });
 
+    // Get summary blog for the latest event (if any)
+    let summaryBlog = null;
+    if (events.length > 0) {
+      const latestEvent = events[0];
+      if (latestEvent) {
+        summaryBlog = await prisma.blogPost.findFirst({
+          where: {
+            event_id: latestEvent.event_id,
+            tags: { has: 'Summary' },
+            status: 'published'
+          },
+          select: {
+            blog_post_id: true,
+            title: true,
+            content: true,
+            created_at: true,
+            user: {
+              select: {
+                first_name: true,
+                last_name: true
+              }
+            }
+          }
+        });
+      }
+    }
+
     // Transform data to include actual menu image URLs (not API endpoints)
     const transformedEvents = await Promise.all(events.map(async (event) => {
       // Handle missing S3 URL field gracefully (for environments without migration)
@@ -204,7 +231,8 @@ app.get('/', requireAuth, async (_req, res) => {
     res.render('index', {
       title: 'Thanksgiving Menu Collection',
       message: 'Welcome to the Thanksgiving Menu Collection!',
-      events: transformedEvents
+      events: transformedEvents,
+      summaryBlog: summaryBlog
     });
   } catch (error) {
     logger.error('Error fetching events for homepage:', error);

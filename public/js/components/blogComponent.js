@@ -146,12 +146,6 @@ class BlogComponent {
                                     
                                     <div class="col-md-4">
                                         <div class="mb-3">
-                                            <label for="blogExcerpt" class="form-label">Excerpt</label>
-                                            <textarea class="form-control" id="blogExcerpt" rows="3"
-                                                      placeholder="Brief summary of your post..."></textarea>
-                                        </div>
-                                        
-                                        <div class="mb-3">
                                             <label for="blogTags" class="form-label">Tags</label>
                                             <input type="text" class="form-control" id="blogTags"
                                                    placeholder="tag1, tag2, tag3">
@@ -167,9 +161,9 @@ class BlogComponent {
                                         </div>
                                         
                                         <div class="mb-3">
-                                            <label for="blogFeaturedImage" class="form-label">Featured Image URL</label>
-                                            <input type="url" class="form-control" id="blogFeaturedImage"
-                                                   placeholder="https://example.com/image.jpg">
+                                            <label for="blogFeaturedImage" class="form-label">Blog Images</label>
+                                            <input type="file" class="form-control" id="blogFeaturedImage" accept="image/*" multiple>
+                                            <div class="form-text">Upload one or more images for your blog post (JPEG, PNG, GIF, WEBP). First image will be the featured image.</div>
                                         </div>
                                     </div>
                                 </div>
@@ -272,7 +266,7 @@ class BlogComponent {
     }
 
     createBlogPostCard(post) {
-        const excerpt = post.excerpt || this.truncateText(post.content, 150);
+        const contentPreview = this.truncateText(post.content, 150);
         const publishedDate = post.published_at ? new Date(post.published_at).toLocaleDateString() : 'Draft';
         const author = post.user ? `${post.user.first_name} ${post.user.last_name}` : 'Unknown Author';
         const statusBadge = this.getStatusBadge(post.status);
@@ -280,16 +274,31 @@ class BlogComponent {
         return `
             <div class="col-md-6 mb-4">
                 <div class="card blog-post-card h-100">
-                    ${post.featured_image ? `
-                        <img src="${post.featured_image}" class="card-img-top" 
-                             style="height: 200px; object-fit: cover;" alt="${post.title}">
+                    ${post.featured_image || (post.images && post.images.length > 0) ? `
+                        <div class="blog-thumbnails-container" style="padding: 0.75rem; background: #f8f9fa; border-top: 1px solid #dee2e6;">
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                                <small class="text-muted me-2"><i class="fas fa-images"></i> Images:</small>
+                                ${post.featured_image ? `
+                                    <img src="${post.featured_image}" class="blog-thumbnail" 
+                                         style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer;" 
+                                         alt="Featured image" title="Click to view full size"
+                                         onclick="blogComponent.viewImageModal('${post.featured_image}', '${post.title} - Featured Image')">
+                                ` : ''}
+                                ${post.images && Array.isArray(post.images) && post.images.length > 0 ? post.images.map((img, index) => `
+                                    <img src="${img}" class="blog-thumbnail" 
+                                         style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: pointer;" 
+                                         alt="Additional image" title="Click to view full size"
+                                         onclick="blogComponent.viewImageModal('${img}', '${post.title} - Image ${index + 1}')">
+                                `).join('') : ''}
+                            </div>
+                        </div>
                     ` : ''}
                     <div class="card-body d-flex flex-column">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h5 class="card-title">${post.title}</h5>
                             ${statusBadge}
                         </div>
-                        <p class="card-text text-muted">${excerpt}</p>
+                        <p class="card-text text-muted">${contentPreview}</p>
                         <div class="mt-auto">
                             <div class="d-flex justify-content-between align-items-center">
                                 <small class="text-muted">
@@ -397,10 +406,9 @@ class BlogComponent {
     async handleSave() {
         const title = document.getElementById('blogTitle').value.trim();
         const content = document.getElementById('blogContent').value.trim();
-        const excerpt = document.getElementById('blogExcerpt').value.trim();
         const tags = document.getElementById('blogTags').value.trim();
         const status = document.getElementById('blogStatus').value;
-        const featuredImage = document.getElementById('blogFeaturedImage').value.trim();
+        const imageFiles = document.getElementById('blogFeaturedImage').files;
         const saveBtn = document.getElementById('saveBlogPostBtn');
 
         if (!title || !content) {
@@ -415,22 +423,32 @@ class BlogComponent {
         }
 
         try {
-            const postData = {
-                title,
-                content,
-                status
-            };
-
-            if (excerpt) postData.excerpt = excerpt;
-            if (tags) postData.tags = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
-            if (featuredImage) postData.featured_image = featuredImage;
+            // Create FormData for file upload
+            const formData = new FormData();
+            formData.append('title', title);
+            formData.append('content', content);
+            formData.append('status', status);
+            
+            if (tags) {
+                formData.append('tags', tags);
+            }
+            
+            // Handle multiple files
+            if (imageFiles.length > 0) {
+                if (imageFiles.length === 1) {
+                    // Single file - use existing field name
+                    formData.append('blog_image', imageFiles[0]);
+                } else {
+                    // Multiple files - use array field name
+                    for (let i = 0; i < imageFiles.length; i++) {
+                        formData.append('blog_images', imageFiles[i]);
+                    }
+                }
+            }
 
             const response = await fetch(`/api/events/${this.eventId}/blog-posts`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(postData)
+                body: formData
             });
 
             const result = await response.json();
@@ -573,11 +591,6 @@ class BlogComponent {
                         </div>
                         
                         <div style="margin-bottom: 15px;">
-                            <label for="editExcerpt" style="display: block; margin-bottom: 5px; font-weight: bold;">Excerpt:</label>
-                            <textarea id="editExcerpt" name="excerpt" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;">${blogPost.excerpt || ''}</textarea>
-                        </div>
-                        
-                        <div style="margin-bottom: 15px;">
                             <label for="editContent" style="display: block; margin-bottom: 5px; font-weight: bold;">Content:</label>
                             <textarea id="editContent" name="content" rows="10" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; resize: vertical;" required>${blogPost.content || ''}</textarea>
                         </div>
@@ -597,8 +610,31 @@ class BlogComponent {
                         </div>
                         
                         <div style="margin-bottom: 15px;">
-                            <label for="editFeaturedImage" style="display: block; margin-bottom: 5px; font-weight: bold;">Featured Image URL:</label>
-                            <input type="url" id="editFeaturedImage" name="featured_image" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" value="${blogPost.featured_image || ''}" placeholder="https://example.com/image.jpg">
+                            <label for="editFeaturedImage" style="display: block; margin-bottom: 5px; font-weight: bold;">Featured Image:</label>
+                            <input type="file" id="editFeaturedImage" name="blog_image" accept="image/*" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <small style="color: #666; font-size: 12px;">Select a new image to replace the current featured image. Leave empty to keep current image.</small>
+                            ${blogPost.featured_image ? `
+                                <div style="margin-top: 10px;">
+                                    <strong>Current Featured Image:</strong><br>
+                                    <img src="${blogPost.featured_image}" style="max-width: 200px; max-height: 150px; border-radius: 4px; margin-top: 5px;" alt="Current featured image">
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label for="editAdditionalImages" style="display: block; margin-bottom: 5px; font-weight: bold;">Additional Images:</label>
+                            <input type="file" id="editAdditionalImages" name="blog_images" accept="image/*" multiple style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <small style="color: #666; font-size: 12px;">Select multiple images to add to the blog post. Leave empty to keep current images.</small>
+                            ${blogPost.images && blogPost.images.length > 0 ? `
+                                <div style="margin-top: 10px;">
+                                    <strong>Current Additional Images:</strong><br>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
+                                        ${blogPost.images.map(img => `
+                                            <img src="${img}" style="width: 80px; height: 60px; object-fit: cover; border-radius: 4px;" alt="Additional image">
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
                         </div>
                         
                         <div style="display: flex; gap: 10px; justify-content: flex-end;">
@@ -640,26 +676,47 @@ class BlogComponent {
 
         // Form submission
         form.addEventListener('submit', async (e) => {
+            console.log('=== Form submit event triggered ===');
             e.preventDefault();
             await this.saveBlogEdit(form);
         });
     }
 
     async saveBlogEdit(form) {
+        console.log('=== saveBlogEdit called ===');
         const blogPostId = document.getElementById('editBlogPostId').value;
-        const formData = new FormData(form);
         
+        // Check if any files are selected
+        const featuredImageFile = document.getElementById('editFeaturedImage').files[0];
+        const additionalImageFiles = document.getElementById('editAdditionalImages').files;
+        
+        const hasFiles = (featuredImageFile && featuredImageFile.size > 0) || 
+                       (additionalImageFiles && additionalImageFiles.length > 0);
+        
+        if (hasFiles) {
+            // Use FormData and the mixed content endpoint
+            await this.saveBlogEditWithImages(blogPostId);
+        } else {
+            // Use JSON and the text-only endpoint
+            await this.saveBlogEditTextOnly(blogPostId);
+        }
+    }
+
+    async saveBlogEditTextOnly(blogPostId) {
+        // Create JSON payload for text-only update
         const updateData = {
-            title: formData.get('title'),
-            content: formData.get('content'),
-            excerpt: formData.get('excerpt'),
-            tags: formData.get('tags'),
-            status: formData.get('status'),
-            featured_image: formData.get('featured_image')
+            title: document.getElementById('editTitle').value,
+            content: document.getElementById('editContent').value,
+            tags: document.getElementById('editTags').value,
+            status: document.getElementById('editStatus').value
         };
+        
+        // Debug: Log update data
+        console.log('Text-only update data:', updateData);
 
         try {
-            const response = await fetch(`/api/blog-posts/${blogPostId}`, {
+            console.log('Sending PUT request to:', `/api/blog-posts/${blogPostId}/text`);
+            const response = await fetch(`/api/blog-posts/${blogPostId}/text`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -668,6 +725,7 @@ class BlogComponent {
             });
 
             const result = await response.json();
+            console.log('Response received:', result);
 
             if (result.success) {
                 this.showSuccess('Blog post updated successfully!');
@@ -681,6 +739,108 @@ class BlogComponent {
             console.error('Error updating blog post:', error);
             this.showError('Failed to update blog post');
         }
+    }
+
+    async saveBlogEditWithImages(blogPostId) {
+        // Create FormData for mixed content update
+        const formData = new FormData();
+        
+        // Add text fields
+        formData.append('title', document.getElementById('editTitle').value);
+        formData.append('content', document.getElementById('editContent').value);
+        formData.append('tags', document.getElementById('editTags').value);
+        formData.append('status', document.getElementById('editStatus').value);
+        
+        // Get file inputs
+        const featuredImageFile = document.getElementById('editFeaturedImage').files[0];
+        const additionalImageFiles = document.getElementById('editAdditionalImages').files;
+        
+        // Add files to FormData if they exist and have content
+        const allFiles = [];
+        
+        if (featuredImageFile && featuredImageFile.size > 0) {
+            allFiles.push(featuredImageFile);
+            console.log('Added featured image file:', featuredImageFile.name);
+        }
+        
+        if (additionalImageFiles && additionalImageFiles.length > 0) {
+            for (let i = 0; i < additionalImageFiles.length; i++) {
+                if (additionalImageFiles[i].size > 0) {
+                    allFiles.push(additionalImageFiles[i]);
+                    console.log('Added additional image file:', additionalImageFiles[i].name);
+                }
+            }
+        }
+        
+        // Add all files as blog_images
+        allFiles.forEach(file => {
+            formData.append('blog_images', file);
+        });
+
+        // Debug: Log form data
+        console.log('Mixed content update - files:', allFiles.length);
+
+        try {
+            console.log('Sending PUT request to:', `/api/blog-posts/${blogPostId}`);
+            const response = await fetch(`/api/blog-posts/${blogPostId}`, {
+                method: 'PUT',
+                body: formData
+            });
+
+            const result = await response.json();
+            console.log('Response received:', result);
+
+            if (result.success) {
+                this.showSuccess('Blog post updated successfully!');
+                document.getElementById('blogEditModal').remove();
+                // Reload blog posts to show updated data
+                await this.loadBlogPosts();
+            } else {
+                this.showError(result.message || 'Failed to update blog post');
+            }
+        } catch (error) {
+            console.error('Error updating blog post:', error);
+            this.showError('Failed to update blog post');
+        }
+    }
+
+    /**
+     * View image in modal
+     */
+    viewImageModal(imageUrl, title) {
+        const modalHTML = `
+            <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="imageModalLabel">${title}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <img src="${imageUrl}" class="img-fluid" alt="${title}" style="max-height: 70vh; border-radius: 8px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing modal if it exists
+        const existingModal = document.getElementById('imageModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Add new modal to DOM
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+        modal.show();
+        
+        // Clean up modal when hidden
+        document.getElementById('imageModal').addEventListener('hidden.bs.modal', function() {
+            this.remove();
+        });
     }
 
     async deleteBlogPost(blogPostId) {

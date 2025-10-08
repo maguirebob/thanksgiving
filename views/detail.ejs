@@ -60,6 +60,22 @@
             </div>
         </div>
 
+    <!-- Summary Blog Section -->
+    <div id="summaryBlogSection" class="summary-blog-section mb-4" style="display: none;">
+        <div class="container">
+            <div class="summary-blog-card">
+                            <div class="summary-blog-header">
+                                <h3 class="summary-blog-title" id="summary-blog-title">
+                                    <i class="fas fa-newspaper me-2"></i>Event Summary
+                                </h3>
+                            </div>
+                <div class="summary-blog-content" id="summaryBlogContent">
+                    <!-- Summary blog content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Quick Stats Section -->
     <div class="quick-stats-section mb-4">
         <div class="row g-3">
@@ -1081,6 +1097,50 @@ async function deletePhoto(photoId) {
     }
 }
 
+// Load summary blog (blogs tagged with "Summary")
+async function loadSummaryBlog() {
+    try {
+        const response = await fetch(`/api/events/${window.eventId}/blog-posts?status=published`);
+        const result = await response.json();
+        
+        if (result.success && result.data.blogPosts.length > 0) {
+            // Find blogs tagged with "Summary"
+            const summaryBlogs = result.data.blogPosts.filter(blog => 
+                blog.tags && blog.tags.includes('Summary')
+            );
+            
+            if (summaryBlogs.length > 0) {
+                const summaryBlog = summaryBlogs[0]; // Get the first summary blog
+                displaySummaryBlog(summaryBlog);
+            }
+        }
+    } catch (error) {
+        console.error('Error loading summary blog:', error);
+    }
+}
+
+    // Display summary blog content
+    function displaySummaryBlog(blog) {
+        const summarySection = document.getElementById('summaryBlogSection');
+        const summaryContent = document.getElementById('summaryBlogContent');
+        const summaryTitle = document.getElementById('summary-blog-title');
+        
+        if (!summarySection || !summaryContent) return;
+        
+        // Update the title to show the blog post title
+        if (summaryTitle) {
+            summaryTitle.innerHTML = `<i class="fas fa-newspaper me-2"></i>${blog.title}`;
+        }
+        
+        // Create HTML content for the summary blog - just text content
+        let content = '';
+        
+        content += `<div class="summary-blog-text">${blog.content}</div>`;
+        
+        summaryContent.innerHTML = content;
+        summarySection.style.display = 'block';
+    }
+
 // Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initializeTabbedNavigation();
@@ -1104,6 +1164,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof BlogComponent !== 'undefined') {
         window.blogComponent = new BlogComponent(window.eventId, 'blogComponentContainer');
     }
+    
+    // Load summary blog
+    loadSummaryBlog();
 });
 
 // Show fallback photo controls when PhotoComponent fails

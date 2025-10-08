@@ -37,29 +37,41 @@
     </div>
 </div>
 
-<!-- Featured Menu (Latest) -->
+<!-- Featured Menu and Summary Blog Container -->
 <% if (events && events.length > 0) { %>
-    <div class="featured-menu">
-        <div class="menu-image-container">
-            <img src="<%= events[0].menu_image_url %>" 
-                 alt="<%= events[0].event_name %>" 
-                 class="menu-image"
-                 onerror="this.src='/images/placeholder-menu.jpg'">
+    <div class="featured-year-container">
+        <!-- Featured Menu -->
+        <div class="featured-menu">
+            <div class="menu-image-container">
+                <img src="<%= events[0].menu_image_url %>" 
+                     alt="<%= events[0].event_name %>" 
+                     class="menu-image"
+                     onerror="this.src='/images/placeholder-menu.jpg'">
+            </div>
+            <div class="menu-content">
+                <div class="menu-date"><%= new Date(events[0].event_date).toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric',
+                    timeZone: 'UTC'
+                }) %></div>
+                <h2 class="menu-title"><%= events[0].event_name %></h2>
+                <p class="menu-description"><%= events[0].description || 'A wonderful Thanksgiving celebration with family and friends.' %></p>
+                <a href="/menu/<%= events[0].id %>" class="btn-view-details">
+                    View Full Menu
+                </a>
+            </div>
         </div>
-        <div class="menu-content">
-            <div class="menu-date"><%= new Date(events[0].event_date).toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric',
-                timeZone: 'UTC'
-            }) %></div>
-            <h2 class="menu-title"><%= events[0].event_name %></h2>
-            <p class="menu-description"><%= events[0].description || 'A wonderful Thanksgiving celebration with family and friends.' %></p>
-            <a href="/menu/<%= events[0].id %>" class="btn-view-details">
-                View Full Menu
-            </a>
-        </div>
+
+        <!-- Summary Blog Section -->
+        <% if (summaryBlog) { %>
+            <div class="summary-blog-section">
+                <div class="summary-blog-content">
+                    <div class="summary-blog-text"><%= summaryBlog.content %></div>
+                </div>
+            </div>
+        <% } %>
     </div>
 <% } %>
 
