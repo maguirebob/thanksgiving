@@ -76,45 +76,6 @@
         </div>
     </div>
 
-    <!-- Quick Stats Section -->
-    <div class="quick-stats-section mb-4">
-        <div class="row g-3">
-            <div class="col-md-4 col-sm-6">
-                <div class="stats-card">
-                    <div class="stats-icon">
-                        <i class="fas fa-images"></i>
-                    </div>
-                    <div class="stats-content">
-                        <div class="stats-number" id="photoCount">0</div>
-                        <div class="stats-label">Photos</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 col-sm-6">
-                <div class="stats-card">
-                    <div class="stats-icon">
-                        <i class="fas fa-book-open"></i>
-                    </div>
-                    <div class="stats-content">
-                        <div class="stats-number" id="recipeCount">0</div>
-                        <div class="stats-label">Recipes</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4 col-sm-6">
-                <div class="stats-card">
-                    <div class="stats-icon">
-                        <i class="fas fa-blog"></i>
-                    </div>
-                    <div class="stats-content">
-                        <div class="stats-number" id="blogCount">0</div>
-                        <div class="stats-label">Blog Posts</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Tabbed Navigation -->
     <div class="tabbed-navigation">
         <!-- Tab Navigation -->
@@ -868,35 +829,10 @@ window.addEventListener('unhandledrejection', function(event) {
     }
 });
 
-// Quick Stats Management
-function updateStats() {
-    try {
-        // For now, we'll set placeholder values
-        // In later phases, these will be populated from actual data
-        const stats = {
-            photos: 0,      // Will be updated when photos are loaded
-            recipes: 0,     // Will be updated when recipes are implemented
-            blog: 0,        // Will be updated when blog posts are implemented
-            comments: 0     // Will be updated when comments are implemented
-        };
-
-        // Update the display
-        Object.keys(stats).forEach(key => {
-            const countElement = document.getElementById(`${key}Count`);
-            if (countElement) {
-                countElement.textContent = stats[key];
-            }
-        });
-
-        console.log('Stats updated:', stats);
-    } catch (error) {
-        console.error('Error updating stats:', error);
-    }
-}
-
 // Initialize stats when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    updateStats();
+    // Stats initialization no longer needed since we removed the quick stats section
+    console.log('Page loaded - quick stats section removed');
 });
 
 // Import JavaScript modules
@@ -954,13 +890,22 @@ function addBlogPost() {
 
 // Update tab badges with current counts
 function updateTabBadges() {
-    const photoCount = document.getElementById('photoCount')?.textContent || '0';
-    const recipeCount = document.getElementById('recipeCount')?.textContent || '0';
-    const blogCount = document.getElementById('blogCount')?.textContent || '0';
+    // This function is no longer needed since we removed the quick stats section
+    // Tab badges are now updated directly by their respective components
+    console.log('updateTabBadges called - no longer needed');
+}
+
+// Global function to update blog count (called by BlogComponent)
+function updateBlogCount(count) {
+    console.log('Updating blog count to:', count);
     
-    document.getElementById('photosBadge').textContent = photoCount;
-    document.getElementById('recipesBadge').textContent = recipeCount;
-    document.getElementById('blogBadge').textContent = blogCount;
+    // Update the tab badge
+    const blogBadgeElement = document.getElementById('blogBadge');
+    if (blogBadgeElement) {
+        blogBadgeElement.textContent = count;
+    }
+    
+    console.log('Blog count updated successfully');
 }
 
 // Load photos from API
@@ -1008,7 +953,7 @@ function displayPhotos(photos) {
                 <img src="/api/photos/${photo.photo_id}/file" 
                      class="card-img-top" 
                      alt="${escapedCaption || photo.original_filename || 'Photo'}"
-                     style="height: 200px; object-fit: cover; cursor: pointer;"
+                     style="height: 200px; object-fit: contain; cursor: pointer;"
                      onclick="viewPhoto('${photo.photo_id}', '${escapedCaption}', '${escapedDescription}')">
                 <div class="card-body">
                     <h6 class="card-title">${escapedCaption || 'Untitled'}</h6>
@@ -1245,7 +1190,7 @@ async function loadFallbackPhotos() {
                             <img src="/api/photos/${photo.photo_id}/file" 
                                  class="card-img-top" 
                                  alt="${escapedCaption || photo.original_filename || 'Photo'}"
-                                 style="height: 200px; object-fit: cover; cursor: pointer;"
+                                 style="height: 200px; object-fit: contain; cursor: pointer;"
                                  onclick="viewFallbackPhoto('${photo.photo_id}', '${escapedCaption}', '${escapedDescription}')">
                             <div class="card-body">
                                 <h6 class="card-title">${escapedCaption || 'Untitled'}</h6>

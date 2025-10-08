@@ -249,9 +249,38 @@ railway service logs             # View service logs
    ```bash
    npm run dev
    ```
+   
+   **Important:** Use `npm run dev` (not `npm start dev`) for development. This uses `ts-node-dev` which automatically recompiles TypeScript and restarts the server when files change.
 
 5. **Access the application:**
    Open http://localhost:3000
+
+### TypeScript Development Workflow
+
+**Important:** This project uses TypeScript, so follow these development practices:
+
+#### Development Mode (Recommended)
+```bash
+npm run dev
+```
+- ✅ **Auto-recompiles** TypeScript when files change
+- ✅ **Auto-restarts** server when files change  
+- ✅ **No manual build step** needed
+- ✅ **Faster development** workflow
+
+#### Manual Build Mode (Not Recommended for Development)
+```bash
+npm run build    # Compile TypeScript
+npm start dev    # Start compiled JavaScript
+```
+- ❌ **Manual build required** after each change
+- ❌ **Manual restart required** after each change
+- ❌ **Slower development** workflow
+
+#### When to Use Manual Build
+- **Production deployment** - Always build before deploying
+- **Testing compiled output** - When you need to test the actual JavaScript
+- **Debugging build issues** - When investigating compilation problems
 
 ### Version Management
 
