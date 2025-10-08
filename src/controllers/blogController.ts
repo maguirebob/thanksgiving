@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import s3Service from '../services/s3Service';
 
 // Create prisma instance - can be mocked in tests
 const prisma = new PrismaClient();
@@ -559,6 +560,11 @@ export const updateBlogPostWithImages = async (req: Request, res: Response): Pro
  * DELETE /api/blog-posts/:blogPostId
  */
 export const deleteBlogPost = async (req: Request, res: Response): Promise<void> => {
+  console.log('=== DELETE BLOG POST ENDPOINT HIT ===');
+  console.log('Request params:', req.params);
+  console.log('Request method:', req.method);
+  console.log('Request URL:', req.url);
+  
   try {
     const { blogPostId } = req.params;
     if (!blogPostId) {
@@ -575,9 +581,68 @@ export const deleteBlogPost = async (req: Request, res: Response): Promise<void>
       return;
     }
 
+    console.log('=== BLOG DELETE DEBUG START ===');
+    console.log('Blog post to delete:', {
+      id: existingBlogPost.blog_post_id,
+      title: existingBlogPost.title,
+      featured_image: existingBlogPost.featured_image,
+      images: existingBlogPost.images
+    });
+
+    // Delete featured image from S3 if it exists
+    if (existingBlogPost.featured_image) {
+      try {
+        console.log('Processing featured image:', existingBlogPost.featured_image);
+        // Extract filename from the preview URL
+        const featuredImageMatch = existingBlogPost.featured_image.match(/\/api\/blog-images\/(.+)\/preview/);
+        console.log('Featured image regex match:', featuredImageMatch);
+        if (featuredImageMatch) {
+          const filename = featuredImageMatch[1];
+          const s3Key = `blogs/${filename}`;
+          console.log(`Attempting to delete featured image from S3: ${s3Key}`);
+          await s3Service.deleteFile(s3Key);
+          console.log(`Successfully deleted featured image from S3: ${s3Key}`);
+        } else {
+          console.log('No regex match found for featured image URL');
+        }
+      } catch (s3Error) {
+        console.error('Error deleting featured image from S3:', s3Error);
+        // Continue with deletion even if S3 cleanup fails
+      }
+    }
+
+    // Delete additional images from S3 if they exist
+    if (existingBlogPost.images && existingBlogPost.images.length > 0) {
+      console.log('Processing additional images:', existingBlogPost.images);
+      for (const imageUrl of existingBlogPost.images) {
+        try {
+          console.log('Processing additional image:', imageUrl);
+          // Extract filename from the preview URL
+          const imageMatch = imageUrl.match(/\/api\/blog-images\/(.+)\/preview/);
+          console.log('Additional image regex match:', imageMatch);
+          if (imageMatch) {
+            const filename = imageMatch[1];
+            const s3Key = `blogs/${filename}`;
+            console.log(`Attempting to delete additional image from S3: ${s3Key}`);
+            await s3Service.deleteFile(s3Key);
+            console.log(`Successfully deleted additional image from S3: ${s3Key}`);
+          } else {
+            console.log('No regex match found for additional image URL');
+          }
+        } catch (s3Error) {
+          console.error('Error deleting additional image from S3:', s3Error);
+          // Continue with deletion even if S3 cleanup fails
+        }
+      }
+    }
+
+    // Delete blog post record from database
     await prisma.blogPost.delete({
       where: { blog_post_id: parseInt(blogPostId, 10) }
     });
+
+    console.log('Blog post deleted successfully from database');
+    console.log('=== BLOG DELETE DEBUG END ===');
 
     res.status(200).json({ success: true, message: 'Blog post deleted successfully' });
   } catch (error) {
