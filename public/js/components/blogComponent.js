@@ -235,7 +235,7 @@ class BlogComponent {
                 this.currentPage = page;
                 this.displayBlogPosts();
                 this.updatePagination(result.data.pagination);
-                this.updateBlogCount(result.data.blogPosts.length);
+                this.updateBlogCount(result.data.pagination.total);
             } else {
                 this.showError('Failed to load blog posts: ' + result.message);
             }
@@ -307,15 +307,15 @@ class BlogComponent {
                                 </small>
                                 <div class="btn-group btn-group-sm" role="group">
                                     <button type="button" class="btn btn-outline-primary" 
-                                            onclick="blogComponent.viewBlogPost('${post.blog_post_id}')">
+                                            onclick="window.blogComponent.viewBlogPost('${post.blog_post_id}')">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                     <button type="button" class="btn btn-outline-secondary" 
-                                            onclick="blogComponent.editBlogPost('${post.blog_post_id}')">
+                                            onclick="window.blogComponent.editBlogPost('${post.blog_post_id}')">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <button type="button" class="btn btn-outline-danger" 
-                                            onclick="blogComponent.deleteBlogPost('${post.blog_post_id}')">
+                                            onclick="window.blogComponent.deleteBlogPost('${post.blog_post_id}')">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -509,10 +509,10 @@ class BlogComponent {
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary" onclick="blogComponent.editBlogPost('${blogPostId}')">
+                            <button type="button" class="btn btn-primary" onclick="window.blogComponent.editBlogPost('${blogPostId}')">
                                 <i class="fas fa-edit me-2"></i>Edit
                             </button>
-                            <button type="button" class="btn btn-danger" onclick="blogComponent.deleteBlogPost('${blogPostId}')">
+                            <button type="button" class="btn btn-danger" onclick="window.blogComponent.deleteBlogPost('${blogPostId}')">
                                 <i class="fas fa-trash me-2"></i>Delete
                             </button>
                         </div>
@@ -844,14 +844,22 @@ class BlogComponent {
     }
 
     async deleteBlogPost(blogPostId) {
+        console.log('=== FRONTEND DELETE BLOG POST CALLED ===');
+        console.log('Blog post ID:', blogPostId);
+        console.log('window.blogComponent exists:', !!window.blogComponent);
+        console.log('this:', this);
+        
         if (!confirm('Are you sure you want to delete this blog post?')) return;
 
         try {
+            console.log('Making DELETE request to:', `/api/blog-posts/${blogPostId}`);
             const response = await fetch(`/api/blog-posts/${blogPostId}`, {
                 method: 'DELETE'
             });
 
+            console.log('Response status:', response.status);
             const result = await response.json();
+            console.log('Response result:', result);
 
             if (result.success) {
                 this.showSuccess('Blog post deleted successfully!');
