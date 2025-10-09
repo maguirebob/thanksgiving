@@ -1,0 +1,346 @@
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Journal Editor</h1>
+        <div>
+          <button type="button" class="btn btn-outline-secondary me-2" id="previewBtn">
+            <i class="fas fa-eye me-1"></i>Preview
+          </button>
+          <button type="button" class="btn btn-success me-2" id="saveBtn">
+            <i class="fas fa-save me-1"></i>Save Draft
+          </button>
+          <button type="button" class="btn btn-primary" id="publishBtn">
+            <i class="fas fa-globe me-1"></i>Publish
+          </button>
+        </div>
+      </div>
+
+      <!-- Year and Page Selection -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <label for="yearSelect" class="form-label">Year</label>
+              <select class="form-select" id="yearSelect">
+                <option value="">Select Year</option>
+                <% for (let year = 2025; year >= 1990; year--) { %>
+                  <option value="<%= year %>"><%= year %></option>
+                <% } %>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="pageSelect" class="form-label">Page</label>
+              <select class="form-select" id="pageSelect" disabled>
+                <option value="">Select Page</option>
+              </select>
+            </div>
+          </div>
+          <div class="row mt-3">
+            <div class="col-md-6">
+              <button type="button" class="btn btn-outline-primary" id="createPageBtn" disabled>
+                <i class="fas fa-plus me-1"></i>Create New Page
+              </button>
+            </div>
+            <div class="col-md-6">
+              <button type="button" class="btn btn-outline-danger" id="deletePageBtn" disabled>
+                <i class="fas fa-trash me-1"></i>Delete Page
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Editor Layout -->
+      <div class="row">
+        <!-- Available Content Panel -->
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="mb-0">Available Content</h5>
+            </div>
+            <div class="card-body">
+              <!-- Content Tabs -->
+              <ul class="nav nav-tabs" id="contentTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active" id="menus-tab" data-bs-toggle="tab" data-bs-target="#menus" type="button" role="tab">
+                    Menus
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="photos-tab" data-bs-toggle="tab" data-bs-target="#photos" type="button" role="tab">
+                    Photos
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="page-photos-tab" data-bs-toggle="tab" data-bs-target="#page-photos" type="button" role="tab">
+                    Page Photos
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="blogs-tab" data-bs-toggle="tab" data-bs-target="#blogs" type="button" role="tab">
+                    Blogs
+                  </button>
+                </li>
+              </ul>
+
+              <!-- Content Panels -->
+              <div class="tab-content mt-3" id="contentTabContent">
+                <!-- Menus Panel -->
+                <div class="tab-pane fade show active" id="menus" role="tabpanel">
+                  <div id="menusList" class="content-list">
+                    <div class="text-muted text-center py-3">Select a year to load content</div>
+                  </div>
+                </div>
+
+                <!-- Photos Panel -->
+                <div class="tab-pane fade" id="photos" role="tabpanel">
+                  <div id="photosList" class="content-list">
+                    <div class="text-muted text-center py-3">Select a year to load content</div>
+                  </div>
+                </div>
+
+                <!-- Page Photos Panel -->
+                <div class="tab-pane fade" id="page-photos" role="tabpanel">
+                  <div id="pagePhotosList" class="content-list">
+                    <div class="text-muted text-center py-3">Select a year to load content</div>
+                  </div>
+                </div>
+
+                <!-- Blogs Panel -->
+                <div class="tab-pane fade" id="blogs" role="tabpanel">
+                  <div id="blogsList" class="content-list">
+                    <div class="text-muted text-center py-3">Select a year to load content</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Add Content Buttons -->
+              <div class="mt-3">
+                <button type="button" class="btn btn-outline-secondary btn-sm w-100 mb-2" id="addTextBlockBtn">
+                  <i class="fas fa-font me-1"></i>Add Text Block
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm w-100 mb-2" id="addHeadingBtn">
+                  <i class="fas fa-heading me-1"></i>Add Heading
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Journal Layout Panel -->
+        <div class="col-md-8">
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">Journal Layout</h5>
+              <div>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="clearPageBtn" disabled>
+                  <i class="fas fa-trash me-1"></i>Clear Page
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <!-- Page Title and Description -->
+              <div class="mb-3">
+                <label for="pageTitle" class="form-label">Page Title</label>
+                <input type="text" class="form-control" id="pageTitle" placeholder="Enter page title">
+              </div>
+              <div class="mb-3">
+                <label for="pageDescription" class="form-label">Page Description</label>
+                <textarea class="form-control" id="pageDescription" rows="2" placeholder="Enter page description"></textarea>
+              </div>
+
+              <!-- Content Items Container -->
+              <div id="journalContentContainer" class="journal-content-container">
+                <div class="text-muted text-center py-5">
+                  <i class="fas fa-plus-circle fa-3x mb-3"></i>
+                  <p>Drag content from the left panel to build your journal page</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Text Block Modal -->
+<div class="modal fade" id="addTextBlockModal" tabindex="-1" aria-labelledby="addTextBlockModalLabel">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addTextBlockModalLabel">Add Text Block</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="textBlockContent" class="form-label">Text Content</label>
+          <textarea class="form-control" id="textBlockContent" rows="4" placeholder="Enter your text content"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="saveTextBlockBtn">Add Text Block</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Heading Modal -->
+<div class="modal fade" id="addHeadingModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Heading</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="headingText" class="form-label">Heading Text</label>
+          <input type="text" class="form-control" id="headingText" placeholder="Enter heading text">
+        </div>
+        <div class="mb-3">
+          <label for="headingLevel" class="form-label">Heading Level</label>
+          <select class="form-select" id="headingLevel">
+            <option value="1">H1 - Main Title</option>
+            <option value="2">H2 - Section Title</option>
+            <option value="3">H3 - Subsection</option>
+            <option value="4">H4 - Minor Heading</option>
+            <option value="5">H5 - Small Heading</option>
+            <option value="6">H6 - Smallest Heading</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="saveHeadingBtn">Add Heading</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Journal Page Preview</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="previewContent">
+          <!-- Preview content will be rendered here -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.journal-content-container {
+  min-height: 400px;
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  padding: 1rem;
+  transition: all 0.3s ease;
+}
+
+.journal-content-container.drag-over {
+  border-color: var(--accent-orange);
+  background-color: rgba(210, 105, 30, 0.1);
+}
+
+.content-item {
+  background: var(--white);
+  border: 1px solid var(--border-gray);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  cursor: move;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.content-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  border-color: var(--accent-orange);
+}
+
+.content-item.dragging {
+  opacity: 0.5;
+  transform: rotate(5deg);
+}
+
+.content-item-controls {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.content-item:hover .content-item-controls {
+  opacity: 1;
+}
+
+.content-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.content-item-preview {
+  background: var(--light-gray);
+  border: 1px solid var(--border-gray);
+  border-radius: 6px;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.content-item-preview:hover {
+  background: var(--accent-orange);
+  color: var(--white);
+  border-color: var(--accent-orange);
+}
+
+.content-item-preview img {
+  width: 100%;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.drag-handle {
+  cursor: move;
+  color: var(--secondary-gray);
+}
+
+.drag-handle:hover {
+  color: var(--accent-orange);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: var(--secondary-gray);
+}
+
+.empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+    }
+</style>
+
+<script>
+  // Make event ID available to JavaScript
+  window.currentEventId = <%= currentEventId %>;
+  console.log('Journal Editor - Current Event ID:', window.currentEventId);
+</script>
+<script src="/js/components/journalEditor.js"></script>

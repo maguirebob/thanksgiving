@@ -433,18 +433,45 @@ class BlogComponent {
                 formData.append('tags', tags);
             }
             
-            // Handle multiple files
+            // Handle multiple files - always use 'blog_images' field name
             if (imageFiles.length > 0) {
-                if (imageFiles.length === 1) {
-                    // Single file - use existing field name
-                    formData.append('blog_image', imageFiles[0]);
-                } else {
-                    // Multiple files - use array field name
-                    for (let i = 0; i < imageFiles.length; i++) {
-                        formData.append('blog_images', imageFiles[i]);
+                console.log('=== BLOG IMAGE UPLOAD DEBUG ===');
+                console.log('Number of files:', imageFiles.length);
+                for (let i = 0; i < imageFiles.length; i++) {
+                    const file = imageFiles[i];
+                    console.log(`File ${i}:`, {
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                        lastModified: file.lastModified
+                    });
+                    
+                    // Validate file type before sending
+                    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                    if (!allowedTypes.includes(file.type)) {
+                        this.showError(`Invalid file type: ${file.type}. Please select an image file (JPEG, PNG, GIF, WEBP).`);
+                        return;
                     }
+                    
+                    formData.append('blog_images', file);
+                }
+                console.log('=== END BLOG IMAGE UPLOAD DEBUG ===');
+            }
+
+            // Debug FormData contents
+            console.log('=== FORM DATA DEBUG ===');
+            for (let [key, value] of formData.entries()) {
+                if (value instanceof File) {
+                    console.log(`${key}:`, {
+                        name: value.name,
+                        size: value.size,
+                        type: value.type
+                    });
+                } else {
+                    console.log(`${key}:`, value);
                 }
             }
+            console.log('=== END FORM DATA DEBUG ===');
 
             const response = await fetch(`/api/events/${this.eventId}/blog-posts`, {
                 method: 'POST',
@@ -452,6 +479,11 @@ class BlogComponent {
             });
 
             const result = await response.json();
+
+            console.log('=== BLOG POST RESPONSE ===');
+            console.log('Status:', response.status);
+            console.log('Response:', result);
+            console.log('=== END BLOG POST RESPONSE ===');
 
             if (result.success) {
                 this.showSuccess('Blog post created successfully!');
