@@ -244,7 +244,7 @@ app.get('/health', (_req, res) => {
       status: 'OK', 
       timestamp: new Date().toISOString(),
       environment: process.env['NODE_ENV'] || 'unknown',
-      version: '2.12.72'
+      version: '2.12.73'
     });
   } catch (error) {
     logger.error('Health check error:', error);
@@ -261,7 +261,7 @@ app.get('/api/v1/version/display', (_req, res) => {
   res.json({
     success: true,
     data: {
-      version: '2.12.72',
+      version: '2.12.73',
       environment: config.getConfig().nodeEnv,
       buildDate: new Date().toISOString()
     }
@@ -703,6 +703,23 @@ app.get('/menu/:id', requireAuth, async (req, res) => {
     res.status(500).render('error', {
       title: 'Error',
       message: 'Failed to load menu details.',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Public Journal Viewer route
+app.get('/journal', async (req, res) => {
+  try {
+    res.render('journal-viewer', {
+      title: 'Thanksgiving Journal',
+      layout: 'layout'
+    });
+  } catch (error) {
+    console.error('Error rendering journal viewer:', error);
+    res.status(500).render('error', {
+      title: 'Error',
+      message: 'Failed to load journal viewer.',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
