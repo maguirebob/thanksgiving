@@ -9,7 +9,9 @@ import {
   updateContentItem,
   deleteContentItem,
   reorderContentItems,
-  getAvailableContent
+  getAvailableContent,
+  getJournalViewerData,
+  getJournalYears
 } from '../controllers/journalController';
 
 const router = Router();
@@ -29,5 +31,9 @@ router.put('/:journalPageId/reorder', reorderContentItems);
 
 // Available Content Route
 router.get('/available-content/:eventId', getAvailableContent);
+
+// Public Journal Viewer Routes
+router.get('/viewer/years', getJournalYears);
+router.get('/viewer/data', getJournalViewerData);
 
 export default router;

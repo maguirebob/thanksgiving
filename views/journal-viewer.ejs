@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        .journal-viewer {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+        
+        .journal-header {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .journal-nav {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .journal-page {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            min-height: 400px;
+        }
+        
+        .journal-content {
+            margin-top: 1rem;
+        }
+        
+        .content-item {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            border-radius: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+        
+        .content-item.heading {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-left: none;
+        }
+        
+        .content-item.text {
+            background: #f8f9fa;
+            border-left-color: #28a745;
+        }
+        
+        .content-item.menu {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+        }
+        
+        .content-item.photo {
+            background: #d1ecf1;
+            border-left-color: #17a2b8;
+        }
+        
+        .content-item.page_photo {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+        
+        .content-item.blog {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+        }
+        
+        .year-selector {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .year-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid #007bff;
+            background: white;
+            color: #007bff;
+            border-radius: 25px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .year-btn:hover, .year-btn.active {
+            background: #007bff;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+        }
+        
+        .page-nav {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .page-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid #6c757d;
+            background: white;
+            color: #6c757d;
+            border-radius: 25px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .page-btn:hover, .page-btn.active {
+            background: #6c757d;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108,117,125,0.3);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+        
+        .no-content {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+        
+        .journal-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: block;
+        }
+        
+        .menu-image {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+        
+        .photo-image {
+            width: 33.33%;
+            height: auto;
+            object-fit: contain;
+        }
+        
+        .page-photo-image {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+        
+        .blog-image {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+        
+        @media (max-width: 768px) {
+            .journal-viewer {
+                padding: 1rem 0;
+            }
+            
+            .journal-header, .journal-nav, .journal-page {
+                margin-bottom: 1rem;
+                padding: 1rem;
+            }
+            
+            .year-selector {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .photo-image {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="journal-viewer">
+        <div class="container">
+            <!-- Header -->
+            <div class="journal-header">
+                <h1 class="display-4 text-primary mb-3">
+                    <i class="fas fa-book-open me-3"></i>
+                    Thanksgiving Journal
+                </h1>
+                <p class="lead text-muted">Browse through our Thanksgiving memories year by year</p>
+            </div>
+            
+            <!-- Year Navigation -->
+            <div class="journal-nav">
+                <h5 class="text-center mb-3">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    Select a Year
+                </h5>
+                <div class="year-selector" id="yearSelector">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin me-2"></i>
+                        Loading years...
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Journal Content -->
+            <div id="journalContent">
+                <div class="no-content">
+                    <i class="fas fa-book-open fa-3x mb-3 text-muted"></i>
+                    <h4>Select a year to view journal pages</h4>
+                    <p class="text-muted">Choose a year from the navigation above to see our Thanksgiving memories</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Journal Viewer JavaScript -->
+    <script src="/js/components/journalViewer.js"></script>
+</body>
+</html>

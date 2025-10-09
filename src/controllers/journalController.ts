@@ -160,12 +160,55 @@ export const getJournalPage = async (req: Request, res: Response): Promise<void>
         blogIds.length > 0 ? prisma.blogPost.findMany({ where: { blog_post_id: { in: blogIds } } }) : []
       ]);
 
+      // Generate signed URLs for menus
+      const s3Service = require('../services/s3Service').default;
+      console.log('🔍 JOURNAL EDITOR: Generating signed URLs for menus...');
+      
+      const menusWithSignedUrls = await Promise.all(menus.map(async (menu) => {
+        if (menu.menu_image_s3_url) {
+          try {
+            // Extract the S3 key from the stored URL
+            const s3Key = `menus/${menu.menu_image_s3_url.split('/').pop()}`;
+            const signedUrl = await s3Service.getSignedUrl(s3Key, 3600); // 1 hour expiry
+            return {
+              ...menu,
+              menu_image_s3_url: signedUrl
+            };
+          } catch (error) {
+            console.error(`❌ Failed to generate signed URL for menu ${menu.event_id}:`, error);
+            return menu;
+          }
+        }
+        return menu;
+      }));
+
+      // Generate signed URLs for photos
+      console.log('🔍 JOURNAL EDITOR: Generating signed URLs for photos...');
+      
+      const photosWithSignedUrls = await Promise.all(photos.map(async (photo) => {
+        if (photo.s3_url) {
+          try {
+            // Extract the S3 key from the stored URL
+            const s3Key = `photos/${photo.filename}`;
+            const signedUrl = await s3Service.getSignedUrl(s3Key, 3600); // 1 hour expiry
+            return {
+              ...photo,
+              s3_url: signedUrl
+            };
+          } catch (error) {
+            console.error(`❌ Failed to generate signed URL for photo ${photo.photo_id}:`, error);
+            return photo;
+          }
+        }
+        return photo;
+      }));
+
       // Attach related data to content items
       journalPage.content_items.forEach(item => {
         if (item.content_type === 'menu' && item.content_id) {
-          (item as any).menu = menus.find(menu => menu.event_id === item.content_id);
+          (item as any).menu = menusWithSignedUrls.find(menu => menu.event_id === item.content_id);
         } else if ((item.content_type === 'photo' || item.content_type === 'page_photo') && item.content_id) {
-          (item as any).photo = photos.find(photo => photo.photo_id === item.content_id);
+          (item as any).photo = photosWithSignedUrls.find(photo => photo.photo_id === item.content_id);
         } else if (item.content_type === 'blog' && item.content_id) {
           (item as any).blog_post = blogs.find(blog => blog.blog_post_id === item.content_id);
         }
@@ -547,6 +590,173 @@ export const getAvailableContent = async (req: Request, res: Response): Promise<
     } as AvailableContentResponse);
   } catch (error) {
     console.error('Error fetching available content:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    } as ErrorResponse);
+  }
+};
+
+// Public Journal Viewer Functions
+
+export const getJournalViewerData = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { year } = req.query;
+
+    if (!year) {
+      res.status(400).json({
+        success: false,
+        message: 'Year parameter is required'
+      } as ErrorResponse);
+      return;
+    }
+
+    // Get all journal pages for the specified year, ordered by page number
+    const journalPages = await prisma.journalPage.findMany({
+      where: {
+        year: parseInt(year as string)
+      },
+      include: {
+        content_items: {
+          orderBy: {
+            display_order: 'asc'
+          }
+        },
+        event: {
+          select: {
+            event_id: true,
+            event_name: true,
+            event_date: true
+          }
+        }
+      },
+      orderBy: {
+        page_number: 'asc'
+      }
+    });
+
+    if (journalPages.length === 0) {
+      res.status(404).json({
+        success: false,
+        message: 'No journal pages found for this year'
+      } as ErrorResponse);
+      return;
+    }
+
+    // Manually fetch related data for content items (same logic as getJournalPage)
+    for (const page of journalPages) {
+      if (page.content_items.length > 0) {
+        const menuIds = page.content_items
+          .filter(item => item.content_type === 'menu' && item.content_id)
+          .map(item => item.content_id!);
+        
+        const photoIds = page.content_items
+          .filter(item => (item.content_type === 'photo' || item.content_type === 'page_photo') && item.content_id)
+          .map(item => item.content_id!);
+        
+        const blogIds = page.content_items
+          .filter(item => item.content_type === 'blog' && item.content_id)
+          .map(item => item.content_id!);
+
+        const [menus, photos, blogs] = await Promise.all([
+          menuIds.length > 0 ? prisma.event.findMany({ where: { event_id: { in: menuIds } } }) : [],
+          photoIds.length > 0 ? prisma.photo.findMany({ where: { photo_id: { in: photoIds } } }) : [],
+          blogIds.length > 0 ? prisma.blogPost.findMany({ where: { blog_post_id: { in: blogIds } } }) : []
+        ]);
+
+        // Generate signed URLs for menus
+        const s3Service = require('../services/s3Service').default;
+        console.log('🔍 JOURNAL VIEWER: Generating signed URLs for menus...');
+        
+        const menusWithSignedUrls = await Promise.all(menus.map(async (menu) => {
+          if (menu.menu_image_s3_url) {
+            try {
+              // Extract the S3 key from the stored URL
+              const s3Key = `menus/${menu.menu_image_s3_url.split('/').pop()}`;
+              const signedUrl = await s3Service.getSignedUrl(s3Key, 3600); // 1 hour expiry
+              return {
+                ...menu,
+                menu_image_s3_url: signedUrl
+              };
+            } catch (error) {
+              console.error(`❌ Failed to generate signed URL for menu ${menu.event_id}:`, error);
+              return menu;
+            }
+          }
+          return menu;
+        }));
+
+        // Generate signed URLs for photos
+        console.log('🔍 JOURNAL VIEWER: Generating signed URLs for photos...');
+        
+        const photosWithSignedUrls = await Promise.all(photos.map(async (photo) => {
+          if (photo.s3_url) {
+            try {
+              // Extract the S3 key from the stored URL
+              const s3Key = `photos/${photo.filename}`;
+              const signedUrl = await s3Service.getSignedUrl(s3Key, 3600); // 1 hour expiry
+              return {
+                ...photo,
+                s3_url: signedUrl
+              };
+            } catch (error) {
+              console.error(`❌ Failed to generate signed URL for photo ${photo.photo_id}:`, error);
+              return photo;
+            }
+          }
+          return photo;
+        }));
+
+        // Attach related data to content items
+        page.content_items.forEach(item => {
+          if (item.content_type === 'menu' && item.content_id) {
+            (item as any).menu = menusWithSignedUrls.find(menu => menu.event_id === item.content_id);
+          } else if ((item.content_type === 'photo' || item.content_type === 'page_photo') && item.content_id) {
+            (item as any).photo = photosWithSignedUrls.find(photo => photo.photo_id === item.content_id);
+          } else if (item.content_type === 'blog' && item.content_id) {
+            (item as any).blog_post = blogs.find(blog => blog.blog_post_id === item.content_id);
+          }
+        });
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        year: parseInt(year as string),
+        pages: journalPages
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching journal viewer data:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    } as ErrorResponse);
+  }
+};
+
+export const getJournalYears = async (req: Request, res: Response): Promise<void> => {
+  try {
+    // Get all unique years from journal pages, ordered from oldest to newest
+    const years = await prisma.journalPage.findMany({
+      select: {
+        year: true
+      },
+      distinct: ['year'],
+      orderBy: {
+        year: 'asc'
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        years: years.map(y => y.year)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching journal years:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'

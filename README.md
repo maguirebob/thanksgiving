@@ -514,7 +514,7 @@ npm run railway:safe-migrate   # Railway-safe migration
 npm run railway:status         # Railway deployment status
 ```
 
-### Production Deployment
+   ### Production Deployment
 
 The application is configured for Railway deployment:
 
