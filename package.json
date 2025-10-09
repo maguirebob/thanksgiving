@@ -1,6 +1,6 @@
 {
   "name": "thanksgiving-website-ts",
-  "version": "2.12.71",
+  "version": "2.12.72",
   "description": "Thanksgiving Menu Website - TypeScript Version",
   "main": "dist/server.js",
   "scripts": {
