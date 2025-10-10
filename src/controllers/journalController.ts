@@ -736,7 +736,7 @@ export const getJournalViewerData = async (req: Request, res: Response): Promise
   }
 };
 
-export const getJournalYears = async (req: Request, res: Response): Promise<void> => {
+export const getJournalYears = async (_req: Request, res: Response): Promise<void> => {
   try {
     // Get all unique years from journal pages, ordered from oldest to newest
     const years = await prisma.journalPage.findMany({
