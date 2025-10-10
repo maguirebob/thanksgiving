@@ -1,24 +1,26 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import {
-  CreateJournalPageRequest,
-  UpdateJournalPageRequest,
+  CreateJournalSectionRequest,
+  UpdateJournalSectionRequest,
   CreateContentItemRequest,
   UpdateContentItemRequest,
   ReorderContentItemsRequest,
-  JournalPageResponse,
-  JournalPagesResponse,
+  AddPageBreakRequest,
+  JournalSectionResponse,
+  JournalSectionsResponse,
   AvailableContentResponse,
+  PageBreakResponse,
   ErrorResponse
 } from '../types/journal';
 
 const prisma = new PrismaClient();
 
-// Journal Pages CRUD Operations
+// Journal Sections CRUD Operations
 
-export const createJournalPage = async (req: Request, res: Response): Promise<void> => {
+export const createJournalSection = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { event_id, year, page_number, title, description, layout_config }: CreateJournalPageRequest = req.body;
+    const { event_id, year, section_order, title, description, layout_config }: CreateJournalSectionRequest = req.body;
 
     // Validate required fields
     if (!event_id || !year) {
@@ -42,12 +44,12 @@ export const createJournalPage = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    // Create journal page
-    const journalPage = await prisma.journalPage.create({
+    // Create journal section
+    const journalSection = await prisma.journalSection.create({
       data: {
         event_id,
         year,
-        page_number: page_number || 1,
+        section_order: section_order || 1,
         title: title || null,
         description: description || null,
         layout_config: layout_config || null
@@ -61,10 +63,10 @@ export const createJournalPage = async (req: Request, res: Response): Promise<vo
 
     res.status(201).json({
       success: true,
-      data: { journal_page: journalPage }
-    } as JournalPageResponse);
+      data: { journal_section: journalSection }
+    } as JournalSectionResponse);
   } catch (error) {
-    console.error('Error creating journal page:', error);
+    console.error('Error creating journal section:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -72,7 +74,7 @@ export const createJournalPage = async (req: Request, res: Response): Promise<vo
   }
 };
 
-export const getJournalPages = async (req: Request, res: Response): Promise<void> => {
+export const getJournalSections = async (req: Request, res: Response): Promise<void> => {
   try {
     const { event_id, year } = req.query;
     const page = parseInt((req.query['page'] as string) || '1');
@@ -82,8 +84,8 @@ export const getJournalPages = async (req: Request, res: Response): Promise<void
     if (event_id) where.event_id = parseInt(event_id as string);
     if (year) where.year = parseInt(year as string);
 
-    const [journalPages, total] = await Promise.all([
-      prisma.journalPage.findMany({
+    const [journalSections, total] = await Promise.all([
+      prisma.journalSection.findMany({
         where,
         include: {
           content_items: {
@@ -92,27 +94,27 @@ export const getJournalPages = async (req: Request, res: Response): Promise<void
         },
         orderBy: [
           { year: 'desc' },
-          { page_number: 'asc' }
+          { section_order: 'asc' }
         ],
         skip: (page - 1) * limit,
         take: limit
       }),
-      prisma.journalPage.count({ where })
+      prisma.journalSection.count({ where })
     ]);
 
     res.status(200).json({
       success: true,
       data: {
-        journal_pages: journalPages,
+        journal_sections: journalSections,
         pagination: {
           total,
           page,
           limit
         }
       }
-    } as JournalPagesResponse);
+    } as JournalSectionsResponse);
   } catch (error) {
-    console.error('Error fetching journal pages:', error);
+    console.error('Error fetching journal sections:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -120,19 +122,20 @@ export const getJournalPages = async (req: Request, res: Response): Promise<void
   }
 };
 
-export const getJournalPage = async (req: Request, res: Response): Promise<void> => {
+export const getJournalSection = async (req: Request, res: Response): Promise<void> => {
   try {
-    const journalPageId = req.params['journalPageId'];
-    if (!journalPageId) {
+    const { sectionId } = req.params;
+    
+    if (!sectionId) {
       res.status(400).json({
         success: false,
-        message: 'Journal page ID is required'
+        message: 'Section ID is required'
       } as ErrorResponse);
       return;
     }
 
-    const journalPage = await prisma.journalPage.findUnique({
-      where: { journal_page_id: parseInt(journalPageId) },
+    const journalSection = await prisma.journalSection.findUnique({
+      where: { section_id: parseInt(sectionId) },
       include: {
         content_items: {
           orderBy: { display_order: 'asc' }
@@ -140,95 +143,112 @@ export const getJournalPage = async (req: Request, res: Response): Promise<void>
       }
     });
 
-    // Manually fetch related data for content items
-    if (journalPage && journalPage.content_items.length > 0) {
-      const menuIds = journalPage.content_items
-        .filter(item => item.content_type === 'menu' && item.content_id)
-        .map(item => item.content_id!);
-      
-      const photoIds = journalPage.content_items
-        .filter(item => (item.content_type === 'photo' || item.content_type === 'page_photo') && item.content_id)
-        .map(item => item.content_id!);
-      
-      const blogIds = journalPage.content_items
-        .filter(item => item.content_type === 'blog' && item.content_id)
-        .map(item => item.content_id!);
-
-      const [menus, photos, blogs] = await Promise.all([
-        menuIds.length > 0 ? prisma.event.findMany({ where: { event_id: { in: menuIds } } }) : [],
-        photoIds.length > 0 ? prisma.photo.findMany({ where: { photo_id: { in: photoIds } } }) : [],
-        blogIds.length > 0 ? prisma.blogPost.findMany({ where: { blog_post_id: { in: blogIds } } }) : []
-      ]);
-
-      // Generate signed URLs for menus
-      const s3Service = require('../services/s3Service').default;
-      console.log('🔍 JOURNAL EDITOR: Generating signed URLs for menus...');
-      
-      const menusWithSignedUrls = await Promise.all(menus.map(async (menu) => {
-        if (menu.menu_image_s3_url) {
-          try {
-            // Extract the S3 key from the stored URL
-            const s3Key = `menus/${menu.menu_image_s3_url.split('/').pop()}`;
-            const signedUrl = await s3Service.getSignedUrl(s3Key, 3600); // 1 hour expiry
-            return {
-              ...menu,
-              menu_image_s3_url: signedUrl
-            };
-          } catch (error) {
-            console.error(`❌ Failed to generate signed URL for menu ${menu.event_id}:`, error);
-            return menu;
-          }
-        }
-        return menu;
-      }));
-
-      // Generate signed URLs for photos
-      console.log('🔍 JOURNAL EDITOR: Generating signed URLs for photos...');
-      
-      const photosWithSignedUrls = await Promise.all(photos.map(async (photo) => {
-        if (photo.s3_url) {
-          try {
-            // Extract the S3 key from the stored URL
-            const s3Key = `photos/${photo.filename}`;
-            const signedUrl = await s3Service.getSignedUrl(s3Key, 3600); // 1 hour expiry
-            return {
-              ...photo,
-              s3_url: signedUrl
-            };
-          } catch (error) {
-            console.error(`❌ Failed to generate signed URL for photo ${photo.photo_id}:`, error);
-            return photo;
-          }
-        }
-        return photo;
-      }));
-
-      // Attach related data to content items
-      journalPage.content_items.forEach(item => {
-        if (item.content_type === 'menu' && item.content_id) {
-          (item as any).menu = menusWithSignedUrls.find(menu => menu.event_id === item.content_id);
-        } else if ((item.content_type === 'photo' || item.content_type === 'page_photo') && item.content_id) {
-          (item as any).photo = photosWithSignedUrls.find(photo => photo.photo_id === item.content_id);
-        } else if (item.content_type === 'blog' && item.content_id) {
-          (item as any).blog_post = blogs.find(blog => blog.blog_post_id === item.content_id);
-        }
-      });
-    }
-
-    if (!journalPage) {
+    if (!journalSection) {
       res.status(404).json({
         success: false,
-        message: 'Journal page not found'
+        message: 'Journal section not found'
       } as ErrorResponse);
       return;
     }
 
+    // Manually fetch related data for content items
+    const contentItemsWithData = await Promise.all(
+      journalSection.content_items.map(async (item) => {
+        let relatedData = {};
+
+        if (item.content_type === 'menu' && item.content_id) {
+          const menu = await prisma.event.findUnique({
+            where: { event_id: item.content_id },
+            select: {
+              event_id: true,
+              menu_title: true,
+              menu_image_s3_url: true,
+              event_date: true,
+              event_name: true
+            }
+          });
+          if (menu) relatedData = { menu };
+        } else if ((item.content_type === 'photo' || item.content_type === 'page_photo') && item.content_id) {
+          const photo = await prisma.photo.findUnique({
+            where: { photo_id: item.content_id }
+          });
+          if (photo) relatedData = { photo };
+        } else if (item.content_type === 'blog' && item.content_id) {
+          const blogPost = await prisma.blogPost.findUnique({
+            where: { blog_post_id: item.content_id }
+          });
+          if (blogPost) relatedData = { blog_post: blogPost };
+        }
+
+        return { ...item, ...relatedData };
+      })
+    );
+
+    // Generate signed URLs for content items
+    const s3Service = await import('../services/s3Service');
+    
+    // Helper function to extract S3 key from URL
+    const extractS3Key = (s3Url: string): string => {
+      if (!s3Url) return '';
+      // If it's already a key (no https://), return as is
+      if (!s3Url.startsWith('https://')) return s3Url;
+      
+      // Fix double slashes in blog image paths for both signed and unsigned URLs
+      let fixedUrl = s3Url.replace('//api/blog-images/', '/api/blog-images/');
+      
+      // If it's already a signed URL (has query parameters), return the fixed URL
+      if (fixedUrl.includes('?X-Amz-')) return fixedUrl;
+      
+      // Extract key from full S3 URL for unsigned URLs
+      const url = new URL(fixedUrl);
+      let pathname = url.pathname.substring(1); // Remove leading slash
+      // Remove /preview from blog image paths
+      pathname = pathname.replace('/preview', '');
+      return pathname;
+    };
+
+    const contentItemsWithSignedUrls = await Promise.all(
+      contentItemsWithData.map(async (item: any) => {
+        // Generate signed URLs for menu images
+        if (item.menu && item.menu.menu_image_s3_url) {
+          item.menu.menu_image_s3_url = await s3Service.default.getSignedUrl(extractS3Key(item.menu.menu_image_s3_url));
+        }
+        
+        // Generate signed URLs for photos
+        if (item.photo && item.photo.s3_url) {
+          item.photo.s3_url = await s3Service.default.getSignedUrl(extractS3Key(item.photo.s3_url));
+        }
+        
+        // Generate signed URLs for blog images
+        if (item.blog_post) {
+          if (item.blog_post.featured_image) {
+            item.blog_post.featured_image = await s3Service.default.getSignedUrl(extractS3Key(item.blog_post.featured_image));
+          }
+          if (item.blog_post.images && Array.isArray(item.blog_post.images)) {
+            const signedImages = await Promise.all(
+              item.blog_post.images.map(async (imageUrl: string) => 
+                imageUrl ? await s3Service.default.getSignedUrl(extractS3Key(imageUrl)) : null
+              )
+            );
+            item.blog_post.images = signedImages.filter((url): url is string => url !== null);
+          }
+        }
+        
+        return item;
+      })
+    );
+
+    const sectionWithData = {
+      ...journalSection,
+      content_items: contentItemsWithSignedUrls
+    };
+
     res.status(200).json({
       success: true,
-      data: { journal_page: journalPage }
-    } as JournalPageResponse);
+      data: { journal_section: sectionWithData }
+    } as JournalSectionResponse);
   } catch (error) {
-    console.error('Error fetching journal page:', error);
+    console.error('Error fetching journal section:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -236,27 +256,28 @@ export const getJournalPage = async (req: Request, res: Response): Promise<void>
   }
 };
 
-export const updateJournalPage = async (req: Request, res: Response): Promise<void> => {
+export const updateJournalSection = async (req: Request, res: Response): Promise<void> => {
   try {
-    const journalPageId = req.params['journalPageId'];
-    if (!journalPageId) {
+    const { sectionId } = req.params;
+    const { title, description, layout_config, is_published }: UpdateJournalSectionRequest = req.body;
+
+    if (!sectionId) {
       res.status(400).json({
         success: false,
-        message: 'Journal page ID is required'
+        message: 'Section ID is required'
       } as ErrorResponse);
       return;
     }
 
-    const { title, description, layout_config, is_published }: UpdateJournalPageRequest = req.body;
+    const updateData: any = {};
+    if (title !== undefined) updateData.title = title;
+    if (description !== undefined) updateData.description = description;
+    if (layout_config !== undefined) updateData.layout_config = layout_config;
+    if (is_published !== undefined) updateData.is_published = is_published;
 
-    const journalPage = await prisma.journalPage.update({
-      where: { journal_page_id: parseInt(journalPageId) },
-      data: {
-        title: title || null,
-        description: description || null,
-        layout_config: layout_config || null,
-        is_published: is_published || false
-      },
+    const journalSection = await prisma.journalSection.update({
+      where: { section_id: parseInt(sectionId) },
+      data: updateData,
       include: {
         content_items: {
           orderBy: { display_order: 'asc' }
@@ -266,10 +287,10 @@ export const updateJournalPage = async (req: Request, res: Response): Promise<vo
 
     res.status(200).json({
       success: true,
-      data: { journal_page: journalPage }
-    } as JournalPageResponse);
+      data: { journal_section: journalSection }
+    } as JournalSectionResponse);
   } catch (error) {
-    console.error('Error updating journal page:', error);
+    console.error('Error updating journal section:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -277,27 +298,28 @@ export const updateJournalPage = async (req: Request, res: Response): Promise<vo
   }
 };
 
-export const deleteJournalPage = async (req: Request, res: Response): Promise<void> => {
+export const deleteJournalSection = async (req: Request, res: Response): Promise<void> => {
   try {
-    const journalPageId = req.params['journalPageId'];
-    if (!journalPageId) {
+    const { sectionId } = req.params;
+
+    if (!sectionId) {
       res.status(400).json({
         success: false,
-        message: 'Journal page ID is required'
+        message: 'Section ID is required'
       } as ErrorResponse);
       return;
     }
 
-    await prisma.journalPage.delete({
-      where: { journal_page_id: parseInt(journalPageId) }
+    await prisma.journalSection.delete({
+      where: { section_id: parseInt(sectionId) }
     });
 
     res.status(200).json({
       success: true,
-      message: 'Journal page deleted successfully'
+      message: 'Journal section deleted successfully'
     });
   } catch (error) {
-    console.error('Error deleting journal page:', error);
+    console.error('Error deleting journal section:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
@@ -309,16 +331,25 @@ export const deleteJournalPage = async (req: Request, res: Response): Promise<vo
 
 export const createContentItem = async (req: Request, res: Response): Promise<void> => {
   try {
-    const journalPageId = req.params['journalPageId'];
-    if (!journalPageId) {
+    const { sectionId } = req.params;
+    const {
+      content_type,
+      content_id,
+      custom_text,
+      heading_level,
+      display_order,
+      is_visible,
+      manual_page_break,
+      page_break_position
+    }: CreateContentItemRequest = req.body;
+
+    if (!sectionId) {
       res.status(400).json({
         success: false,
-        message: 'Journal page ID is required'
+        message: 'Section ID is required'
       } as ErrorResponse);
       return;
     }
-
-    const { content_type, content_id, custom_text, heading_level, display_order, is_visible }: CreateContentItemRequest = req.body;
 
     // Validate required fields
     if (!content_type || display_order === undefined) {
@@ -329,15 +360,31 @@ export const createContentItem = async (req: Request, res: Response): Promise<vo
       return;
     }
 
+    // Check if section exists
+    const section = await prisma.journalSection.findUnique({
+      where: { section_id: parseInt(sectionId) }
+    });
+
+    if (!section) {
+      res.status(404).json({
+        success: false,
+        message: 'Journal section not found'
+      } as ErrorResponse);
+      return;
+    }
+
+    // Create content item
     const contentItem = await prisma.journalContentItem.create({
       data: {
-        journal_page_id: parseInt(journalPageId),
+        journal_section_id: parseInt(sectionId),
         content_type,
         content_id: content_id || null,
         custom_text: custom_text || null,
-        heading_level: heading_level || null,
+        heading_level: heading_level || 1,
         display_order,
-        is_visible: is_visible !== undefined ? is_visible : true
+        is_visible: is_visible !== undefined ? is_visible : true,
+        manual_page_break: manual_page_break || false,
+        page_break_position: page_break_position || 1
       }
     });
 
@@ -356,27 +403,38 @@ export const createContentItem = async (req: Request, res: Response): Promise<vo
 
 export const updateContentItem = async (req: Request, res: Response): Promise<void> => {
   try {
-    const contentItemId = req.params['contentItemId'];
-    if (!contentItemId) {
+    const { itemId } = req.params;
+    const {
+      content_type,
+      content_id,
+      custom_text,
+      heading_level,
+      display_order,
+      is_visible,
+      manual_page_break,
+      page_break_position
+    }: UpdateContentItemRequest = req.body;
+
+    if (!itemId) {
       res.status(400).json({
         success: false,
-        message: 'Content item ID is required'
+        message: 'Item ID is required'
       } as ErrorResponse);
       return;
     }
 
-    const { content_type, content_id, custom_text, heading_level, display_order, is_visible }: UpdateContentItemRequest = req.body;
-
     const updateData: any = {};
     if (content_type !== undefined) updateData.content_type = content_type;
-    if (content_id !== undefined) updateData.content_id = content_id || null;
-    if (custom_text !== undefined) updateData.custom_text = custom_text || null;
-    if (heading_level !== undefined) updateData.heading_level = heading_level || null;
+    if (content_id !== undefined) updateData.content_id = content_id;
+    if (custom_text !== undefined) updateData.custom_text = custom_text;
+    if (heading_level !== undefined) updateData.heading_level = heading_level;
     if (display_order !== undefined) updateData.display_order = display_order;
     if (is_visible !== undefined) updateData.is_visible = is_visible;
+    if (manual_page_break !== undefined) updateData.manual_page_break = manual_page_break;
+    if (page_break_position !== undefined) updateData.page_break_position = page_break_position;
 
     const contentItem = await prisma.journalContentItem.update({
-      where: { content_item_id: parseInt(contentItemId) },
+      where: { content_item_id: parseInt(itemId) },
       data: updateData
     });
 
@@ -395,17 +453,18 @@ export const updateContentItem = async (req: Request, res: Response): Promise<vo
 
 export const deleteContentItem = async (req: Request, res: Response): Promise<void> => {
   try {
-    const contentItemId = req.params['contentItemId'];
-    if (!contentItemId) {
+    const { itemId } = req.params;
+
+    if (!itemId) {
       res.status(400).json({
         success: false,
-        message: 'Content item ID is required'
+        message: 'Item ID is required'
       } as ErrorResponse);
       return;
     }
 
     await prisma.journalContentItem.delete({
-      where: { content_item_id: parseInt(contentItemId) }
+      where: { content_item_id: parseInt(itemId) }
     });
 
     res.status(200).json({
@@ -425,15 +484,15 @@ export const reorderContentItems = async (req: Request, res: Response): Promise<
   try {
     const { content_items }: ReorderContentItemsRequest = req.body;
 
-    // Update display order for each content item
-    const updatePromises = content_items.map(item =>
-      prisma.journalContentItem.update({
-        where: { content_item_id: item.content_item_id },
-        data: { display_order: item.display_order }
-      })
+    // Update display orders in a transaction
+    await prisma.$transaction(
+      content_items.map(({ content_item_id, display_order }) =>
+        prisma.journalContentItem.update({
+          where: { content_item_id },
+          data: { display_order }
+        })
+      )
     );
-
-    await Promise.all(updatePromises);
 
     res.status(200).json({
       success: true,
@@ -448,144 +507,208 @@ export const reorderContentItems = async (req: Request, res: Response): Promise<
   }
 };
 
-// Available Content for Editor
+// Page Break Management
 
-export const getAvailableContent = async (req: Request, res: Response): Promise<void> => {
+export const addPageBreak = async (req: Request, res: Response): Promise<void> => {
   try {
-    const eventId = req.params['eventId'];
-    const { year } = req.query;
+    const { contentItemId } = req.params;
+    const { page_break_position }: AddPageBreakRequest = req.body;
 
-    if (!eventId || !year) {
+    if (!contentItemId) {
       res.status(400).json({
         success: false,
-        message: 'Event ID and year are required'
+        message: 'Content Item ID is required'
       } as ErrorResponse);
       return;
     }
 
-    const [menus, photos, blogs] = await Promise.all([
-      // Get menus (events) for the year
-      prisma.event.findMany({
-        where: {
-          event_id: parseInt(eventId),
-          event_date: {
-            gte: new Date(parseInt(year as string), 0, 1),
-            lt: new Date(parseInt(year as string) + 1, 0, 1)
-          }
-        },
-        select: {
-          event_id: true,
-          menu_title: true,
-          menu_image_s3_url: true,
-          event_date: true,
-          event_name: true
-        }
-      }),
-      // Get photos for the event
+    const contentItem = await prisma.journalContentItem.update({
+      where: { content_item_id: parseInt(contentItemId) },
+      data: {
+        manual_page_break: true,
+        page_break_position: page_break_position || 1
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        content_item: contentItem,
+        page_break_added: true
+      }
+    } as PageBreakResponse);
+  } catch (error) {
+    console.error('Error adding page break:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    } as ErrorResponse);
+  }
+};
+
+export const removePageBreak = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { contentItemId } = req.params;
+
+    if (!contentItemId) {
+      res.status(400).json({
+        success: false,
+        message: 'Content Item ID is required'
+      } as ErrorResponse);
+      return;
+    }
+
+    const contentItem = await prisma.journalContentItem.update({
+      where: { content_item_id: parseInt(contentItemId) },
+      data: {
+        manual_page_break: false,
+        page_break_position: null
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        content_item: contentItem,
+        page_break_added: false
+      }
+    } as PageBreakResponse);
+  } catch (error) {
+    console.error('Error removing page break:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    } as ErrorResponse);
+  }
+};
+
+// Available Content for Journal Editor
+
+export const getAvailableContent = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { eventId } = req.params;
+    const { year } = req.query;
+
+    if (!eventId) {
+      res.status(400).json({
+        success: false,
+        message: 'Event ID is required'
+      } as ErrorResponse);
+      return;
+    }
+
+    // Get event details
+    const event = await prisma.event.findUnique({
+      where: { event_id: parseInt(eventId) }
+    });
+
+    if (!event) {
+      res.status(404).json({
+        success: false,
+        message: 'Event not found'
+      } as ErrorResponse);
+      return;
+    }
+
+    // Get menus for the specific year if provided
+    const menuWhere: any = {};
+    if (year) {
+      menuWhere.event_date = {
+        gte: new Date(`${year}-01-01`),
+        lt: new Date(`${parseInt(year as string) + 1}-01-01`)
+      };
+    }
+
+    const menus = await prisma.event.findMany({
+      where: menuWhere,
+      select: {
+        event_id: true,
+        menu_title: true,
+        menu_image_s3_url: true,
+        event_date: true,
+        event_name: true
+      },
+      orderBy: { event_date: 'desc' }
+    });
+
+    // Get photos for the specific event (not filtered by date)
+    const photoWhere: any = { event_id: parseInt(eventId) };
+
+    // Get blog posts for the specific event (not filtered by date)
+    const blogWhere: any = { event_id: parseInt(eventId) };
+
+    const [photos, pagePhotos, blogs] = await Promise.all([
+      // Individual photos
       prisma.photo.findMany({
-        where: {
-          event_id: parseInt(eventId)
-        },
-        select: {
-          photo_id: true,
-          filename: true,
-          original_filename: true,
-          description: true,
-          caption: true,
-          s3_url: true,
-          photo_type: true,
-          taken_date: true
-        }
+        where: { ...photoWhere, photo_type: 'individual' },
+        orderBy: { taken_date: 'desc' }
       }),
-      // Get blog posts for the event
+      // Page photos
+      prisma.photo.findMany({
+        where: { ...photoWhere, photo_type: 'page' },
+        orderBy: { taken_date: 'desc' }
+      }),
+      // Blog posts
       prisma.blogPost.findMany({
-        where: {
-          event_id: parseInt(eventId)
-        },
-        select: {
-          blog_post_id: true,
-          title: true,
-          content: true,
-          excerpt: true,
-          featured_image: true,
-          images: true,
-          tags: true,
-          status: true,
-          published_at: true
-        }
+        where: blogWhere,
+        orderBy: { published_at: 'desc' }
       })
     ]);
 
-    // Generate signed URLs for menu images
-    const s3Service = require('../services/s3Service').default;
-    console.log('🔍 DEBUG: Generating signed URLs for menus...');
-    console.log('🔍 DEBUG: Found menus:', menus.length);
+    // Generate signed URLs for menu images and photos
+    const s3Service = await import('../services/s3Service');
     
-    const menusWithSignedUrls = await Promise.all(menus.map(async (menu) => {
-      console.log(`🔍 DEBUG: Processing menu ${menu.event_id}:`, menu.menu_image_s3_url);
+    // Helper function to extract S3 key from URL
+    const extractS3Key = (s3Url: string): string => {
+      if (!s3Url) return '';
+      // If it's already a key (no https://), return as is
+      if (!s3Url.startsWith('https://')) return s3Url;
       
-      if (menu.menu_image_s3_url) {
-        try {
-          // Extract the S3 key from the stored URL
-          const s3Key = `menus/${menu.menu_image_s3_url.split('/').pop()}`;
-          console.log(`🔍 DEBUG: Generated S3 key: ${s3Key}`);
-          
-          const signedUrl = await s3Service.getSignedUrl(s3Key, 3600); // 1 hour expiry
-          console.log(`🔍 DEBUG: Generated signed URL: ${signedUrl.substring(0, 100)}...`);
-          
-          return {
-            ...menu,
-            menu_image_s3_url: signedUrl
-          };
-        } catch (error) {
-          console.error(`❌ Failed to generate signed URL for menu ${menu.event_id}:`, error);
-          return menu;
-        }
-      }
-      console.log(`⚠️ Menu ${menu.event_id} has no S3 URL`);
-      return menu;
-    }));
-
-    // Generate signed URLs for photos
-    console.log('🔍 DEBUG: Generating signed URLs for photos...');
-    console.log('🔍 DEBUG: Found photos:', photos.length);
-    
-    const photosWithSignedUrls = await Promise.all(photos.map(async (photo) => {
-      console.log(`🔍 DEBUG: Processing photo ${photo.photo_id}:`, photo.s3_url);
+      // Fix double slashes in blog image paths for both signed and unsigned URLs
+      let fixedUrl = s3Url.replace('//api/blog-images/', '/api/blog-images/');
       
-      if (photo.s3_url) {
-        try {
-          // Extract the S3 key from the stored URL
-          const s3Key = `photos/${photo.filename}`;
-          console.log(`🔍 DEBUG: Generated S3 key: ${s3Key}`);
-          
-          const signedUrl = await s3Service.getSignedUrl(s3Key, 3600); // 1 hour expiry
-          console.log(`🔍 DEBUG: Generated signed URL: ${signedUrl.substring(0, 100)}...`);
-          
-          return {
-            ...photo,
-            s3_url: signedUrl
-          };
-        } catch (error) {
-          console.error(`❌ Failed to generate signed URL for photo ${photo.photo_id}:`, error);
-          return photo;
-        }
-      }
-      console.log(`⚠️ Photo ${photo.photo_id} has no S3 URL`);
-      return photo;
-    }));
+      // If it's already a signed URL (has query parameters), return the fixed URL
+      if (fixedUrl.includes('?X-Amz-')) return fixedUrl;
+      
+      // Extract key from full S3 URL for unsigned URLs
+      const url = new URL(fixedUrl);
+      let pathname = url.pathname.substring(1); // Remove leading slash
+      // Remove /preview from blog image paths
+      pathname = pathname.replace('/preview', '');
+      return pathname;
+    };
 
-    // Separate individual photos from page photos
-    const individualPhotos = photosWithSignedUrls.filter(photo => photo.photo_type === 'individual');
-    const pagePhotos = photosWithSignedUrls.filter(photo => photo.photo_type === 'page');
+    const menusWithSignedUrls = await Promise.all(
+      menus.map(async (menu) => ({
+        ...menu,
+        menu_image_s3_url: menu.menu_image_s3_url ? await s3Service.default.getSignedUrl(extractS3Key(menu.menu_image_s3_url)) : null
+      }))
+    );
+
+    const photosWithSignedUrls = await Promise.all(
+      photos.map(async (photo) => ({
+        ...photo,
+        s3_url: photo.s3_url ? await s3Service.default.getSignedUrl(extractS3Key(photo.s3_url)) : null
+      }))
+    );
+
+    const pagePhotosWithSignedUrls = await Promise.all(
+      pagePhotos.map(async (photo) => ({
+        ...photo,
+        s3_url: photo.s3_url ? await s3Service.default.getSignedUrl(extractS3Key(photo.s3_url)) : null
+      }))
+    );
+
+    // Blog images should use application routes, not signed URLs
+    const blogsWithSignedUrls = blogs;
 
     res.status(200).json({
       success: true,
       data: {
         menus: menusWithSignedUrls,
-        photos: individualPhotos,
-        page_photos: pagePhotos,
-        blogs
+        photos: photosWithSignedUrls,
+        page_photos: pagePhotosWithSignedUrls,
+        blogs: blogsWithSignedUrls
       }
     } as AvailableContentResponse);
   } catch (error) {
@@ -599,6 +722,29 @@ export const getAvailableContent = async (req: Request, res: Response): Promise<
 
 // Public Journal Viewer Functions
 
+export const getJournalYears = async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const years = await prisma.journalSection.findMany({
+      select: { year: true },
+      distinct: ['year'],
+      orderBy: { year: 'asc' }
+    });
+
+    const yearList = years.map(section => section.year);
+
+    res.status(200).json({
+      success: true,
+      data: { years: yearList }
+    });
+  } catch (error) {
+    console.error('Error fetching journal years:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    } as ErrorResponse);
+  }
+};
+
 export const getJournalViewerData = async (req: Request, res: Response): Promise<void> => {
   try {
     const { year } = req.query;
@@ -611,152 +757,112 @@ export const getJournalViewerData = async (req: Request, res: Response): Promise
       return;
     }
 
-    // Get all journal pages for the specified year, ordered by page number
-    const journalPages = await prisma.journalPage.findMany({
-      where: {
-        year: parseInt(year as string)
-      },
+    // Get all journal sections for the specified year
+    const journalSections = await prisma.journalSection.findMany({
+      where: { year: parseInt(year as string) },
       include: {
         content_items: {
-          orderBy: {
-            display_order: 'asc'
-          }
-        },
-        event: {
-          select: {
-            event_id: true,
-            event_name: true,
-            event_date: true
-          }
+          orderBy: { display_order: 'asc' }
         }
       },
-      orderBy: {
-        page_number: 'asc'
-      }
+      orderBy: { section_order: 'asc' }
     });
 
-    if (journalPages.length === 0) {
-      res.status(404).json({
-        success: false,
-        message: 'No journal pages found for this year'
-      } as ErrorResponse);
-      return;
-    }
+    // Manually fetch related data for content items
+    const sectionsWithData = await Promise.all(
+      journalSections.map(async (section) => {
+        const contentItemsWithData = await Promise.all(
+          section.content_items.map(async (item) => {
+            let relatedData = {};
 
-    // Manually fetch related data for content items (same logic as getJournalPage)
-    for (const page of journalPages) {
-      if (page.content_items.length > 0) {
-        const menuIds = page.content_items
-          .filter(item => item.content_type === 'menu' && item.content_id)
-          .map(item => item.content_id!);
-        
-        const photoIds = page.content_items
-          .filter(item => (item.content_type === 'photo' || item.content_type === 'page_photo') && item.content_id)
-          .map(item => item.content_id!);
-        
-        const blogIds = page.content_items
-          .filter(item => item.content_type === 'blog' && item.content_id)
-          .map(item => item.content_id!);
-
-        const [menus, photos, blogs] = await Promise.all([
-          menuIds.length > 0 ? prisma.event.findMany({ where: { event_id: { in: menuIds } } }) : [],
-          photoIds.length > 0 ? prisma.photo.findMany({ where: { photo_id: { in: photoIds } } }) : [],
-          blogIds.length > 0 ? prisma.blogPost.findMany({ where: { blog_post_id: { in: blogIds } } }) : []
-        ]);
-
-        // Generate signed URLs for menus
-        const s3Service = require('../services/s3Service').default;
-        console.log('🔍 JOURNAL VIEWER: Generating signed URLs for menus...');
-        
-        const menusWithSignedUrls = await Promise.all(menus.map(async (menu) => {
-          if (menu.menu_image_s3_url) {
-            try {
-              // Extract the S3 key from the stored URL
-              const s3Key = `menus/${menu.menu_image_s3_url.split('/').pop()}`;
-              const signedUrl = await s3Service.getSignedUrl(s3Key, 3600); // 1 hour expiry
-              return {
-                ...menu,
-                menu_image_s3_url: signedUrl
-              };
-            } catch (error) {
-              console.error(`❌ Failed to generate signed URL for menu ${menu.event_id}:`, error);
-              return menu;
+            if (item.content_type === 'menu' && item.content_id) {
+              const menu = await prisma.event.findUnique({
+                where: { event_id: item.content_id },
+                select: {
+                  event_id: true,
+                  menu_title: true,
+                  menu_image_s3_url: true,
+                  event_date: true,
+                  event_name: true
+                }
+              });
+              if (menu) relatedData = { menu };
+            } else if ((item.content_type === 'photo' || item.content_type === 'page_photo') && item.content_id) {
+              const photo = await prisma.photo.findUnique({
+                where: { photo_id: item.content_id }
+              });
+              if (photo) relatedData = { photo };
+            } else if (item.content_type === 'blog' && item.content_id) {
+              const blogPost = await prisma.blogPost.findUnique({
+                where: { blog_post_id: item.content_id }
+              });
+              if (blogPost) relatedData = { blog_post: blogPost };
             }
-          }
-          return menu;
-        }));
 
-        // Generate signed URLs for photos
-        console.log('🔍 JOURNAL VIEWER: Generating signed URLs for photos...');
-        
-        const photosWithSignedUrls = await Promise.all(photos.map(async (photo) => {
-          if (photo.s3_url) {
-            try {
-              // Extract the S3 key from the stored URL
-              const s3Key = `photos/${photo.filename}`;
-              const signedUrl = await s3Service.getSignedUrl(s3Key, 3600); // 1 hour expiry
-              return {
-                ...photo,
-                s3_url: signedUrl
-              };
-            } catch (error) {
-              console.error(`❌ Failed to generate signed URL for photo ${photo.photo_id}:`, error);
-              return photo;
+            return { ...item, ...relatedData };
+          })
+        );
+
+        return {
+          ...section,
+          content_items: contentItemsWithData
+        };
+      })
+    );
+
+    // Generate signed URLs for menu images and photos
+    const s3Service = await import('../services/s3Service');
+    
+    // Helper function to extract S3 key from URL
+    const extractS3Key = (s3Url: string): string => {
+      if (!s3Url) return '';
+      // If it's already a key (no https://), return as is
+      if (!s3Url.startsWith('https://')) return s3Url;
+      
+      // Fix double slashes in blog image paths for both signed and unsigned URLs
+      let fixedUrl = s3Url.replace('//api/blog-images/', '/api/blog-images/');
+      
+      // If it's already a signed URL (has query parameters), return the fixed URL
+      if (fixedUrl.includes('?X-Amz-')) return fixedUrl;
+      
+      // Extract key from full S3 URL for unsigned URLs
+      const url = new URL(fixedUrl);
+      let pathname = url.pathname.substring(1); // Remove leading slash
+      // Remove /preview from blog image paths
+      pathname = pathname.replace('/preview', '');
+      return pathname;
+    };
+    
+    const sectionsWithSignedUrls = await Promise.all(
+      sectionsWithData.map(async (section) => {
+        const contentItemsWithSignedUrls = await Promise.all(
+          section.content_items.map(async (item: any) => {
+            if (item.menu && item.menu.menu_image_s3_url) {
+              item.menu.menu_image_s3_url = await s3Service.default.getSignedUrl(extractS3Key(item.menu.menu_image_s3_url));
             }
-          }
-          return photo;
-        }));
+            if (item.photo && item.photo.s3_url) {
+              item.photo.s3_url = await s3Service.default.getSignedUrl(extractS3Key(item.photo.s3_url));
+            }
+            return item;
+          })
+        );
 
-        // Attach related data to content items
-        page.content_items.forEach(item => {
-          if (item.content_type === 'menu' && item.content_id) {
-            (item as any).menu = menusWithSignedUrls.find(menu => menu.event_id === item.content_id);
-          } else if ((item.content_type === 'photo' || item.content_type === 'page_photo') && item.content_id) {
-            (item as any).photo = photosWithSignedUrls.find(photo => photo.photo_id === item.content_id);
-          } else if (item.content_type === 'blog' && item.content_id) {
-            (item as any).blog_post = blogs.find(blog => blog.blog_post_id === item.content_id);
-          }
-        });
-      }
-    }
+        return {
+          ...section,
+          content_items: contentItemsWithSignedUrls
+        };
+      })
+    );
 
     res.status(200).json({
       success: true,
       data: {
         year: parseInt(year as string),
-        pages: journalPages
+        journal_sections: sectionsWithSignedUrls
       }
     });
   } catch (error) {
     console.error('Error fetching journal viewer data:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    } as ErrorResponse);
-  }
-};
-
-export const getJournalYears = async (_req: Request, res: Response): Promise<void> => {
-  try {
-    // Get all unique years from journal pages, ordered from oldest to newest
-    const years = await prisma.journalPage.findMany({
-      select: {
-        year: true
-      },
-      distinct: ['year'],
-      orderBy: {
-        year: 'asc'
-      }
-    });
-
-    res.status(200).json({
-      success: true,
-      data: {
-        years: years.map(y => y.year)
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching journal years:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error'
