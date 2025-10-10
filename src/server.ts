@@ -709,7 +709,7 @@ app.get('/menu/:id', requireAuth, async (req, res) => {
 });
 
 // Public Journal Viewer route
-app.get('/journal', async (req, res) => {
+app.get('/journal', async (_req, res) => {
   try {
     res.render('journal-viewer', {
       title: 'Thanksgiving Journal',
