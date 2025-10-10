@@ -50,25 +50,27 @@ model Event {
   blog_posts          BlogPost[]
   photos              Photo[]
   recipes             Recipe[]
+  journal_pages       JournalPage[]
 
   @@map("events")
 }
 
 model Photo {
-  photo_id          Int      @id @default(autoincrement())
+  photo_id          Int       @id @default(autoincrement())
   event_id          Int
-  filename          String   @db.VarChar(255)
-  original_filename String?  @db.VarChar(255)
+  filename          String    @db.VarChar(255)
+  original_filename String?   @db.VarChar(255)
   description       String?
   caption           String?
-  taken_date        DateTime @default(now())
+  taken_date        DateTime  @default(now())
   file_size         Int?
-  mime_type         String?  @db.VarChar(100)
+  mime_type         String?   @db.VarChar(100)
   file_data         String?
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
-  s3_url            String?  @db.VarChar(500)
-  event             Event    @relation(fields: [event_id], references: [event_id], onDelete: Cascade)
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+  s3_url            String?   @db.VarChar(500)
+  photo_type        PhotoType @default(individual)
+  event             Event     @relation(fields: [event_id], references: [event_id], onDelete: Cascade)
 
   @@map("Photos")
 }
@@ -117,7 +119,55 @@ model BlogPost {
   @@map("BlogPosts")
 }
 
+model JournalPage {
+  journal_page_id Int      @id @default(autoincrement())
+  event_id        Int
+  year            Int
+  page_number     Int      @default(1)
+  title           String?  @db.VarChar(255)
+  description     String?
+  layout_config   Json?
+  is_published    Boolean  @default(false)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  event           Event    @relation(fields: [event_id], references: [event_id], onDelete: Cascade)
+  content_items   JournalContentItem[]
+
+  @@unique([event_id, year, page_number])
+  @@map("JournalPages")
+}
+
+model JournalContentItem {
+  content_item_id Int           @id @default(autoincrement())
+  journal_page_id Int
+  content_type    ContentType
+  content_id      Int?
+  custom_text     String?
+  heading_level   Int?          @default(1)
+  display_order   Int
+  is_visible      Boolean       @default(true)
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
+  journal_page    JournalPage   @relation(fields: [journal_page_id], references: [journal_page_id], onDelete: Cascade)
+
+  @@map("JournalContentItems")
+}
+
 enum UserRole {
   user
   admin
+}
+
+enum PhotoType {
+  individual
+  page
+}
+
+enum ContentType {
+  menu
+  photo
+  page_photo
+  blog
+  text
+  heading
 }

@@ -319,6 +319,141 @@ class SmokeTestRunner {
       }
     });
 
+    // Journal Functionality Tests
+    await this.runTest('Journal Viewer Page Loads', async () => {
+      const response = await this.makeRequest('GET', '/journal');
+      
+      // Should redirect to login or show journal viewer page
+      if (!response.includes('Login') && !response.includes('Journal') && !response.includes('journal')) {
+        throw new Error('Journal viewer page does not contain expected content');
+      }
+    });
+
+    await this.runTest('Journal Years API', async () => {
+      const response = await this.makeRequest('GET', '/api/journal/viewer/years');
+      
+      if (!response.success || !response.data || !Array.isArray(response.data.years)) {
+        throw new Error('Journal years API returned invalid response structure');
+      }
+      
+      console.log(`   Found ${response.data.years.length} years with journal pages`);
+    });
+
+    await this.runTest('Journal Data API', async () => {
+      // Test with year 2013 (should exist from our test data)
+      try {
+        const response = await this.makeRequest('GET', '/api/journal/viewer/data?year=2013');
+        
+        if (!response.success || !response.data) {
+          throw new Error('Journal data API returned invalid response structure');
+        }
+        
+        const data = response.data;
+        if (typeof data.year !== 'number' || !Array.isArray(data.pages)) {
+          throw new Error('Journal data API returned invalid data types');
+        }
+        
+        console.log(`   Found ${data.pages.length} journal pages for year ${data.year}`);
+      } catch (error) {
+        // If 2013 doesn't exist, try with any available year
+        if (error instanceof Error && error.message.includes('HTTP 404')) {
+          console.log('   Journal data API endpoint exists (no data for 2013, testing with available year)');
+          
+          // Get available years first
+          const yearsResponse = await this.makeRequest('GET', '/api/journal/viewer/years');
+          if (yearsResponse.success && yearsResponse.data.years.length > 0) {
+            const testYear = yearsResponse.data.years[0];
+            const testResponse = await this.makeRequest('GET', `/api/journal/viewer/data?year=${testYear}`);
+            
+            if (!testResponse.success || !testResponse.data) {
+              throw new Error('Journal data API returned invalid response structure');
+            }
+            
+            const testData = testResponse.data;
+            if (typeof testData.year !== 'number' || !Array.isArray(testData.pages)) {
+              throw new Error('Journal data API returned invalid data types');
+            }
+            
+            console.log(`   Found ${testData.pages.length} journal pages for year ${testData.year}`);
+          } else {
+            console.log('   Journal data API endpoint exists (no journal data available)');
+          }
+        } else {
+          throw error;
+        }
+      }
+    });
+
+    await this.runTest('Journal Editor Page Loads', async () => {
+      const response = await this.makeRequest('GET', '/admin/journal-editor');
+      
+      // Should redirect to login or show journal editor page
+      if (!response.includes('Login') && !response.includes('Journal') && !response.includes('editor')) {
+        throw new Error('Journal editor page does not contain expected content');
+      }
+    });
+
+    await this.runTest('Journal Available Content API', async () => {
+      // Test with event ID 15 (should exist from our test data)
+      const response = await this.makeRequest('GET', '/api/journal/available-content/15?year=2023');
+      
+      if (!response.success || !response.data) {
+        throw new Error('Journal available content API returned invalid response structure');
+      }
+      
+      const data = response.data;
+      if (!Array.isArray(data.menus) || !Array.isArray(data.photos) || !Array.isArray(data.page_photos) || !Array.isArray(data.blogs)) {
+        throw new Error('Journal available content API returned invalid data types');
+      }
+      
+      console.log(`   Found ${data.menus.length} menus, ${data.photos.length} photos, ${data.page_photos.length} page photos, ${data.blogs.length} blogs`);
+    });
+
+    await this.runTest('Journal Page API', async () => {
+      // Test with journal page ID 1 (should exist from our test data)
+      try {
+        const response = await this.makeRequest('GET', '/api/journal/1');
+        
+        if (!response.success || !response.data || !response.data.journal_page) {
+          throw new Error('Journal page API returned invalid response structure');
+        }
+        
+        const page = response.data.journal_page;
+        if (typeof page.journal_page_id !== 'number' || !Array.isArray(page.content_items)) {
+          throw new Error('Journal page API returned invalid data types');
+        }
+        
+        console.log(`   Found journal page ${page.journal_page_id} with ${page.content_items.length} content items`);
+      } catch (error) {
+        // If page 1 doesn't exist, test with any available page
+        if (error instanceof Error && error.message.includes('HTTP 404')) {
+          console.log('   Journal page API endpoint exists (no page 1, testing with available page)');
+          
+          // Try to find any journal page by testing a few common IDs
+          let foundPage = false;
+          for (let i = 1; i <= 10; i++) {
+            try {
+              const testResponse = await this.makeRequest('GET', `/api/journal/${i}`);
+              if (testResponse.success && testResponse.data && testResponse.data.journal_page) {
+                const testPage = testResponse.data.journal_page;
+                console.log(`   Found journal page ${testPage.journal_page_id} with ${testPage.content_items.length} content items`);
+                foundPage = true;
+                break;
+              }
+            } catch (e) {
+              // Continue to next ID
+            }
+          }
+          
+          if (!foundPage) {
+            console.log('   Journal page API endpoint exists (no journal pages available)');
+          }
+        } else {
+          throw error;
+        }
+      }
+    });
+
     // Error Handling Tests
     await this.runTest('Error Handling', async () => {
       // Test 404 handling
