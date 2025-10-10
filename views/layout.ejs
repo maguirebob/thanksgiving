@@ -2166,6 +2166,7 @@
                     <li><a href="/">Home</a></li>
                     <li><a href="/about">About</a></li>
                     <li><a href="/carousel">Photos</a></li>
+                    <li><a href="/journal">Journal</a></li>
                     <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
                         <li class="dropdown">
                             <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
@@ -2174,6 +2175,7 @@
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="/admin/dashboard"><i class="fas fa-utensils"></i>Menu</a></li>
                                 <li><a class="dropdown-item" href="/photos"><i class="fas fa-images"></i>Photo</a></li>
+                                <li><a class="dropdown-item" href="/admin/journal-editor"><i class="fas fa-book"></i>Journal Editor</a></li>
                                 <li><a class="dropdown-item" href="/admin/users"><i class="fas fa-users"></i>User</a></li>
                             </ul>
                         </li>
