@@ -296,6 +296,12 @@ class JournalEditor {
 
     // Page Break Management
     async addPageBreak(contentItemId) {
+        // Check if this is a temporary content item (negative ID)
+        if (contentItemId < 0) {
+            alert('Please save the section first before adding page breaks to new content items.');
+            return;
+        }
+
         try {
             const response = await fetch(`/api/journal/content-items/${contentItemId}/page-break`, {
                 method: 'POST',
@@ -322,6 +328,12 @@ class JournalEditor {
     }
 
     async removePageBreak(contentItemId) {
+        // Check if this is a temporary content item (negative ID)
+        if (contentItemId < 0) {
+            alert('Please save the section first before removing page breaks from new content items.');
+            return;
+        }
+
         try {
             const response = await fetch(`/api/journal/content-items/${contentItemId}/page-break`, {
                 method: 'DELETE'
