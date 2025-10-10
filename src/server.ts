@@ -16,6 +16,8 @@ import photoRoutes from './routes/photoRoutes';
 import blogRoutes from './routes/blogRoutes';
 import eventRoutes from './routes/eventRoutes';
 import carouselRoutes from './routes/carouselRoutes';
+import journalRoutes from './routes/journalRoutes';
+import photoTypeRoutes from './routes/photoTypeRoutes';
 import { addUserToLocals, requireAuth, requireAdmin } from './middleware/auth';
 
 const app = express();
@@ -187,33 +189,25 @@ app.get('/', requireAuth, async (_req, res) => {
       }
     }
 
-    // Transform data to include actual menu image URLs (not API endpoints)
+    // Transform data to include S3 menu image URLs
     const transformedEvents = await Promise.all(events.map(async (event) => {
-      // Handle missing S3 URL field gracefully (for environments without migration)
-      const hasS3Url = (event as any).menu_image_s3_url;
-      
       let menuImageUrl: string;
-      if (hasS3Url) {
-        // Generate signed URL directly instead of using API endpoint
-        try {
-          const s3Service = require('./services/s3Service').default;
-          const s3Key = `menus/${event.menu_image_filename}`;
-          menuImageUrl = await s3Service.getSignedUrl(s3Key, 3600); // 1 hour expiry
-        } catch (error) {
-          logger.warn(`Failed to generate signed URL for ${event.menu_image_filename}, falling back to API endpoint`);
-          menuImageUrl = `/api/v1/menu-images/${event.event_id}`;
-        }
-      } else {
-        menuImageUrl = `/images/${event.menu_image_filename}`;
+      
+      // All menu images are now in S3
+      try {
+        const s3Service = require('./services/s3Service').default;
+        const s3Key = `menus/${event.menu_image_filename}`;
+        menuImageUrl = await s3Service.getSignedUrl(s3Key, 3600); // 1 hour expiry
+      } catch (error) {
+        logger.warn(`Failed to generate signed URL for ${event.menu_image_filename}, falling back to API endpoint`);
+        menuImageUrl = `/api/v1/menu-images/${event.event_id}`;
       }
       
       // Only log event details in debug mode
       logger.debug('Home page event:', {
         id: event.event_id,
         name: event.event_name,
-        hasS3Url: !!hasS3Url,
-        s3Url: hasS3Url,
-        localUrl: `/images/${event.menu_image_filename}`,
+        s3Url: event.menu_image_s3_url,
         finalUrl: menuImageUrl
       });
       
@@ -250,7 +244,7 @@ app.get('/health', (_req, res) => {
       status: 'OK', 
       timestamp: new Date().toISOString(),
       environment: process.env['NODE_ENV'] || 'unknown',
-      version: '2.12.71'
+      version: '2.12.74'
     });
   } catch (error) {
     logger.error('Health check error:', error);
@@ -267,7 +261,7 @@ app.get('/api/v1/version/display', (_req, res) => {
   res.json({
     success: true,
     data: {
-      version: '2.12.71',
+      version: '2.12.74',
       environment: config.getConfig().nodeEnv,
       buildDate: new Date().toISOString()
     }
@@ -714,6 +708,23 @@ app.get('/menu/:id', requireAuth, async (req, res) => {
   }
 });
 
+// Public Journal Viewer route
+app.get('/journal', async (req, res) => {
+  try {
+    res.render('journal-viewer', {
+      title: 'Thanksgiving Journal',
+      layout: 'layout'
+    });
+  } catch (error) {
+    console.error('Error rendering journal viewer:', error);
+    res.status(500).render('error', {
+      title: 'Error',
+      message: 'Failed to load journal viewer.',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 // Authentication routes
 app.use('/auth', authRoutes);
 
@@ -725,6 +736,8 @@ app.use('/api', photoRoutes);
 app.use('/api', blogRoutes);
 app.use('/api/v1', eventRoutes);
 app.use('/api/carousel', carouselRoutes);
+app.use('/api/journal', journalRoutes);
+app.use('/api/photos', photoTypeRoutes);
 
 // Error handling middleware
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

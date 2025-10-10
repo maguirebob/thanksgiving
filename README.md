@@ -346,7 +346,175 @@ npx prisma migrate dev --name describe_your_change
 npm run db:migrate
 ```
 
-### Production Deployment
+#### Database Safety & Protection
+**⚠️ CRITICAL: Always backup your database before destructive operations!**
+
+This project includes comprehensive database protection to prevent data loss:
+
+##### Automatic Backup Commands
+```bash
+# Create a backup before any destructive operation
+npm run db:backup
+
+# Check database status
+npm run db:check
+
+# List available backups
+npm run db:list
+
+# Restore from backup (with confirmation prompt)
+npm run db:restore <backup_file>
+
+# Safe reset (creates backup then resets)
+npm run db:safe-reset
+```
+
+##### Manual Backup Script
+```bash
+# Direct script usage
+./db-protect.sh backup          # Create backup
+./db-protect.sh status          # Check database status
+./db-protect.sh list            # List backups
+./db-protect.sh restore <file>  # Restore from backup
+./db-protect.sh help            # Show help
+```
+
+##### ⚠️ Dangerous Commands (Use with Extreme Caution)
+```bash
+# NEVER run these without a backup first:
+npx prisma migrate reset        # ❌ DESTROYS ALL DATA
+npx prisma migrate reset --force # ❌ DESTROYS ALL DATA
+
+# Instead, use the safe version:
+npm run db:safe-reset           # ✅ Creates backup first
+```
+
+##### Backup Location
+- Backups are stored in `./archive/` directory
+- Format: `backup_YYYYMMDD_HHMMSS.sql`
+- Test backups: `test_backup_test_YYYYMMDD_HHMMSS.sql`
+- Production backups: `production_backup_production_YYYYMMDD_HHMMSS.sql`
+
+##### Environment Protection Summary
+
+| Environment | Script | Backup Command | Status Check | Warning Command |
+|-------------|--------|----------------|--------------|-----------------|
+| **Local Dev** | `db-protect.sh` | `npm run db:backup` | `npm run db:check` | `npm run db:warn` |
+| **Railway Test** | `test-protect.sh` | `npm run test:backup` | `npm run test:status` | `npm run test:warn` |
+| **Railway Prod** | `prod-protect.sh` | `npm run prod:backup` | `npm run prod:status` | `npm run prod:warn` |
+
+##### Test Environment Protection
+**🧪 CRITICAL: Test data should be preserved for consistency!**
+
+For Railway test environment:
+```bash
+# Create test backup (REQUIRED before any changes)
+npm run test:backup
+
+# Check test database status
+npm run test:status
+
+# Show test operations warning
+npm run test:warn
+
+# Safe migration (backup + migrate)
+npm run test:safe-migrate
+
+# Sync test data from production
+npm run test:sync
+```
+
+##### Production Environment Protection
+**🚨 CRITICAL: Production data is irreplaceable!**
+
+For Railway production environment:
+```bash
+# Create production backup (REQUIRED before any changes)
+npm run prod:backup
+
+# Check production database status
+npm run prod:status
+
+# Show dangerous operations warning
+npm run prod:warn
+
+# Safe migration (backup + migrate)
+npm run prod:safe-migrate
+```
+
+##### ⚠️ ENVIRONMENT SAFETY RULES
+
+**Test Environment:**
+1. **NEVER run destructive commands on test without backup**
+2. **ALWAYS use `npm run test:backup` before any changes**
+3. **Test changes locally before applying to test environment**
+4. **Use `npm run test:sync` to refresh test data from production**
+
+**Production Environment:**
+1. **NEVER run destructive commands on production without backup**
+2. **ALWAYS use `npm run prod:backup` before any changes**
+3. **Use Railway dashboard for safe operations when possible**
+4. **Test all changes on test environment first**
+
+##### Recovery Procedures
+If you accidentally lose data:
+
+**Local Development:**
+1. **Stop all operations immediately**
+2. **Check available backups**: `npm run db:list`
+3. **Restore from most recent backup**: `npm run db:restore <backup_file>`
+4. **Verify data integrity**: `npm run db:check`
+
+**Test Environment:**
+1. **Stop all operations immediately**
+2. **Check available backups**: `npm run test:status`
+3. **Restore from backup**: `npm run test:restore <backup_file>`
+4. **Or sync from production**: `npm run test:sync`
+5. **Verify data integrity**: `npm run test:status`
+
+**Production Environment:**
+1. **Stop all operations immediately**
+2. **Check available backups**: `npm run prod:status`
+3. **Restore from most recent backup**: `npm run prod:restore <backup_file>`
+4. **Verify data integrity**: `npm run prod:status`
+5. **Contact admin immediately if production data is lost**
+
+##### Railway Deployment Workflow
+
+**Safe Deployment Process:**
+```bash
+# 1. Test changes locally first
+npm run dev
+
+# 2. Create backup before any Railway changes
+npm run test:backup      # For test environment
+npm run prod:backup      # For production environment
+
+# 3. Deploy to test environment
+git push origin test
+# Railway auto-deploys test branch
+
+# 4. Verify test environment
+npm run test:status
+
+# 5. Deploy to production (only after test verification)
+git push origin main
+# Railway auto-deploys main branch
+
+# 6. Verify production environment
+npm run prod:status
+```
+
+**Railway-Specific Commands:**
+```bash
+# Safe Railway operations
+npm run railway:safe-deploy    # Full safe deployment
+npm run railway:safe-backup    # Railway-specific backup
+npm run railway:safe-migrate   # Railway-safe migration
+npm run railway:status         # Railway deployment status
+```
+
+   ### Production Deployment
 
 The application is configured for Railway deployment:
 
