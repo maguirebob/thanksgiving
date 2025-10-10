@@ -45,7 +45,7 @@ class JournalViewer {
             yearSelector.innerHTML = `
                 <div class="no-content">
                     <i class="fas fa-calendar-times fa-2x mb-2 text-muted"></i>
-                    <p class="text-muted">No journal pages available</p>
+                    <p class="text-muted">No journal sections available</p>
                 </div>
             `;
             return;
@@ -108,12 +108,12 @@ class JournalViewer {
     renderJournalContent() {
         const journalContent = document.getElementById('journalContent');
         
-        if (!this.journalData || !this.journalData.pages || this.journalData.pages.length === 0) {
+        if (!this.journalData || !this.journalData.journal_sections || this.journalData.journal_sections.length === 0) {
             journalContent.innerHTML = `
                 <div class="no-content">
                     <i class="fas fa-book-open fa-3x mb-3 text-muted"></i>
-                    <h4>No journal pages found for ${this.currentYear}</h4>
-                    <p class="text-muted">There are no journal pages available for this year</p>
+                    <h4>No journal sections found for ${this.currentYear}</h4>
+                    <p class="text-muted">There are no journal sections available for this year</p>
                 </div>
             `;
             return;
@@ -125,34 +125,34 @@ class JournalViewer {
     
     renderCurrentPage() {
         const journalContent = document.getElementById('journalContent');
-        const page = this.journalData.pages[this.currentPage];
+        const section = this.journalData.journal_sections[this.currentPage];
         
-        if (!page) {
+        if (!section) {
             journalContent.innerHTML = `
                 <div class="no-content">
                     <i class="fas fa-exclamation-triangle fa-3x mb-3 text-muted"></i>
-                    <h4>Page not found</h4>
-                    <p class="text-muted">The requested page could not be found</p>
+                    <h4>Section not found</h4>
+                    <p class="text-muted">The requested section could not be found</p>
                 </div>
             `;
             return;
         }
         
         // Generate page navigation
-        const pageNav = this.journalData.pages.length > 1 ? this.generatePageNavigation() : '';
+        const pageNav = this.journalData.journal_sections.length > 1 ? this.generatePageNavigation() : '';
         
         // Generate content HTML
-        const contentHtml = this.generateContentHtml(page.content_items);
+        const contentHtml = this.generateContentHtml(section.content_items);
         
         journalContent.innerHTML = `
             <div class="journal-page">
                 <div class="text-center mb-4">
                     <h2 class="text-primary mb-2">
                         <i class="fas fa-calendar me-2"></i>
-                        ${this.currentYear} - Page ${page.page_number}
+                        ${this.currentYear} - Section ${section.section_order}
                     </h2>
-                    ${page.title ? `<h3 class="text-muted">${page.title}</h3>` : ''}
-                    ${page.description ? `<p class="lead text-muted">${page.description}</p>` : ''}
+                    ${section.title ? `<h3 class="text-muted">${section.title}</h3>` : ''}
+                    ${section.description ? `<p class="lead text-muted">${section.description}</p>` : ''}
                 </div>
                 
                 <div class="journal-content">
@@ -165,7 +165,7 @@ class JournalViewer {
     }
     
     generatePageNavigation() {
-        const totalPages = this.journalData.pages.length;
+        const totalPages = this.journalData.journal_sections.length;
         const currentPageNum = this.currentPage + 1;
         
         let navHtml = '<div class="page-nav">';
@@ -206,7 +206,7 @@ class JournalViewer {
     }
     
     goToPage(pageIndex) {
-        if (pageIndex >= 0 && pageIndex < this.journalData.pages.length) {
+        if (pageIndex >= 0 && pageIndex < this.journalData.journal_sections.length) {
             this.currentPage = pageIndex;
             this.renderCurrentPage();
         }
@@ -304,7 +304,7 @@ class JournalViewer {
                 
             case 'blog':
                 const blogImages = this.generateBlogImages(item.blog_post);
-                const blogExcerpt = item.blog_post?.excerpt || (item.blog_post?.content ? item.blog_post.content.substring(0, 150) + '...' : '');
+                const blogContent = item.blog_post?.content || '';
                 return `
                     <div class="${baseClasses}">
                         <div class="card">
@@ -313,7 +313,7 @@ class JournalViewer {
                                     <i class="fas fa-blog me-2"></i>
                                     ${item.blog_post?.title || 'Unknown Blog'}
                                 </h5>
-                                ${blogExcerpt ? `<p class="card-text">${blogExcerpt}</p>` : ''}
+                                ${blogContent ? `<div class="blog-content-text">${blogContent}</div>` : ''}
                                 ${blogImages}
                             </div>
                         </div>
@@ -361,7 +361,7 @@ class JournalViewer {
         journalContent.innerHTML = `
             <div class="loading">
                 <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
-                <h4>Loading journal pages...</h4>
+                <h4>Loading journal sections...</h4>
                 <p class="text-muted">Please wait while we load the content for ${this.currentYear}</p>
             </div>
         `;

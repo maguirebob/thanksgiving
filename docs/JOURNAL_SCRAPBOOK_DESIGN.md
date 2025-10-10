@@ -1,8 +1,40 @@
 # Journal Scrapbook Feature - Design & Implementation Document
 
+## 📑 Table of Contents
+
+### 📋 Planning & Requirements
+- [📖 Overview](#-overview)
+- [🎯 Requirements](#-requirements)
+- [🏗️ Architecture Overview](#️-architecture-overview)
+- [🗄️ Database Schema](#️-database-schema)
+- [🔌 API Endpoints](#-api-endpoints)
+
+### 🎨 Design & User Experience
+- [🎨 Antique Scrapbook Theme Design](#-antique-scrapbook-theme-design)
+- [📱 User Interface Design](#-user-interface-design)
+- [🖥️ Frontend Components](#️-frontend-components)
+
+### 🚀 Implementation
+- [🚀 Implementation Plan](#-implementation-plan)
+- [📋 Implementation Status & Updates](#-implementation-status--updates)
+- [🧪 Testing Strategy](#-testing-strategy)
+
+### 📚 Technical Details
+- [🔧 Technical Implementation](#-technical-implementation)
+- [📊 Performance Considerations](#-performance-considerations)
+- [🔒 Security Considerations](#-security-considerations)
+- [📱 Mobile & Accessibility](#-mobile--accessibility)
+
+### 📖 Documentation & Maintenance
+- [📝 API Documentation](#-api-documentation)
+- [🔄 Maintenance & Updates](#-maintenance--updates)
+- [📋 Future Enhancements](#-future-enhancements)
+
+---
+
 ## 📖 Overview
 
-The Journal Scrapbook feature will create a digital scrapbook experience that allows users to browse Thanksgiving memories year by year, from oldest to newest. Each year can have multiple pages of content, with each page containing organized content (menus, photos, blogs) in a customizable layout with the ability to add descriptive text.
+The Journal Scrapbook feature creates a digital scrapbook experience that allows users to browse Thanksgiving memories year by year, from oldest to newest. The system uses a **single-page editor** approach where admins organize content in one continuous layout, and the viewer automatically paginates content into beautiful **antique scrapbook-style pages** with smart page breaks and page-flipping animations.
 
 ## 🎯 Requirements
 
@@ -10,34 +42,41 @@ The Journal Scrapbook feature will create a digital scrapbook experience that al
 
 **As a visitor:**
 - I want to browse Thanksgiving memories chronologically from oldest to newest
-- I want to see all content for a specific year across multiple pages
-- I want to navigate easily between pages within a year and between years
-- I want a scrapbook-like visual experience with beautiful layouts
+- I want to see all content for a specific year in a beautiful **antique scrapbook layout**
+- I want to **flip through pages** like a real scrapbook with smooth animations
+- I want a **nostalgic, warm visual experience** with aged paper textures and ornate photo frames
+- I want content to flow naturally across pages with **automatic page breaks**
+- I want to experience the **magic of flipping through a family album**
 
 **As an admin:**
-- I want to organize content for each year across multiple pages
+- I want to organize content for each year in one continuous editor
 - I want to add descriptive text before or after any content item
-- I want to preview how each journal page will look
-- I want to manage which content appears on each page
-- I want to create new pages for years with lots of content
+- I want to insert manual page breaks where needed
+- I want to preview how content will be paginated automatically in **scrapbook style**
+- I want to drag and drop content items to reorder them
+- I want to see a live preview of the **antique scrapbook layout**
 
 ### Functional Requirements
 
 1. **Journal Viewer Page** (Public Access)
    - Accessible from main navigation menu for all users
    - Chronological navigation (oldest → newest)
-   - Multiple pages per year with page navigation
-   - Scrapbook-style layout with visual appeal
-   - Responsive design for mobile/desktop
-   - Page navigation within each year
+   - **Antique scrapbook theme** with warm, nostalgic colors
+   - **Page-flipping interface** with smooth CSS animations
+   - **Cover page** with ornate title and decorative elements
+   - **Automatic pagination** with smart page breaks
+   - **Aged paper textures** and decorative photo frames
+   - Responsive design for mobile/desktop with touch gestures
+   - **Keyboard navigation** (arrow keys) and accessibility support
 
 2. **Admin Journal Editor** (Admin Only)
    - Accessible only to admin users
-   - Content management for each year across multiple pages
-   - Page creation and management
-   - Drag-and-drop reordering within pages
+   - **Single-page editor** showing all content in one continuous layout
+   - **Manual page break insertion** between content items
+   - Drag-and-drop reordering across entire journal
    - Text insertion capabilities
-   - Preview functionality for each page
+   - **Live preview** of antique scrapbook pagination
+   - **Scrapbook theme toggle** for preview mode
    - Save/publish workflow
 
 3. **Content Integration**
@@ -52,34 +91,33 @@ The Journal Scrapbook feature will create a digital scrapbook experience that al
 
 ### Database Schema
 
-#### New Tables
+#### Updated Tables (Single-Page Editor with Automatic Pagination)
 
 ```sql
--- Journal pages for each year (multiple pages per year supported)
-CREATE TABLE JournalPages (
-    journal_page_id SERIAL PRIMARY KEY,
+-- Journal sections for each year (renamed from JournalPages for clarity)
+CREATE TABLE JournalSections (
+    section_id SERIAL PRIMARY KEY,
     event_id INTEGER REFERENCES Events(event_id),
     year INTEGER NOT NULL,
-    page_number INTEGER NOT NULL DEFAULT 1,
     title VARCHAR(255),
     description TEXT,
-    layout_config JSONB, -- Stores layout preferences
-    is_published BOOLEAN DEFAULT false,
+    section_order INTEGER NOT NULL DEFAULT 1, -- renamed from page_number
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(event_id, year, page_number)
+    UNIQUE(event_id, year, section_order)
 );
 
--- Journal content items (menus, photos, blogs, text, headings, page_photos)
+-- Journal content items with page break support
 CREATE TABLE JournalContentItems (
     content_item_id SERIAL PRIMARY KEY,
-    journal_page_id INTEGER REFERENCES JournalPages(journal_page_id),
+    section_id INTEGER REFERENCES JournalSections(section_id), -- renamed from journal_page_id
     content_type ENUM('menu', 'photo', 'page_photo', 'blog', 'text', 'heading') NOT NULL,
     content_id INTEGER, -- References the actual content (menu_id, photo_id, blog_post_id)
     custom_text TEXT, -- For text blocks, headings, or additional descriptions
     heading_level INTEGER DEFAULT 1, -- For headings: 1-6 (h1-h6)
     display_order INTEGER NOT NULL,
-    is_visible BOOLEAN DEFAULT true,
+    manual_page_break BOOLEAN DEFAULT FALSE, -- NEW: User-inserted page break
+    page_break_position INTEGER, -- NEW: Position in sequence for breaks
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -88,8 +126,119 @@ CREATE TABLE JournalContentItems (
 ALTER TABLE Photos ADD COLUMN photo_type ENUM('individual', 'page') DEFAULT 'individual';
 
 -- Indexes for performance
-CREATE INDEX idx_journal_pages_year ON JournalPages(year);
-CREATE INDEX idx_journal_content_order ON JournalContentItems(journal_page_id, display_order);
+CREATE INDEX idx_journal_sections_year ON JournalSections(year);
+CREATE INDEX idx_journal_content_order ON JournalContentItems(section_id, display_order);
+CREATE INDEX idx_journal_content_breaks ON JournalContentItems(manual_page_break, page_break_position);
+```
+
+## 🎨 Single-Page Editor Design
+
+### Core Concept
+
+The journal editor uses a **single-page editor** approach where admins organize all content for a year in one continuous layout. The viewer then automatically paginates this content into beautiful scrapbook-style pages using smart algorithms.
+
+### Editor Experience
+
+1. **Continuous Layout**: All content items for a year are displayed in one long, scrollable editor
+2. **Manual Page Breaks**: Admins can insert page breaks between any content items
+3. **Drag & Drop**: Content items can be reordered across the entire journal
+4. **Live Preview**: Real-time preview shows how content will be paginated
+5. **Visual Indicators**: Clear markers show where manual page breaks occur
+
+### Automatic Pagination Algorithm
+
+```typescript
+interface PaginationConfig {
+  pageHeight: number;        // Height of a single page
+  marginTop: number;         // Top margin
+  marginBottom: number;      // Bottom margin
+  contentPadding: number;    // Padding around content
+}
+
+function paginateContent(
+  contentItems: ContentItem[], 
+  config: PaginationConfig
+): Page[] {
+  const pages: Page[] = [];
+  let currentPage: ContentItem[] = [];
+  let currentHeight = config.marginTop;
+  
+  for (const item of contentItems) {
+    const itemHeight = calculateItemHeight(item);
+    
+    // Check for manual page break
+    if (item.manual_page_break) {
+      if (currentPage.length > 0) {
+        pages.push({ items: currentPage, height: currentHeight });
+      }
+      currentPage = [item];
+      currentHeight = config.marginTop + itemHeight;
+    }
+    // Auto-break if content exceeds page height
+    else if (currentHeight + itemHeight > config.pageHeight - config.marginBottom) {
+      pages.push({ items: currentPage, height: currentHeight });
+      currentPage = [item];
+      currentHeight = config.marginTop + itemHeight;
+    }
+    // Add to current page
+    else {
+      currentPage.push(item);
+      currentHeight += itemHeight;
+    }
+  }
+  
+  // Add final page
+  if (currentPage.length > 0) {
+    pages.push({ items: currentPage, height: currentHeight });
+  }
+  
+  return pages;
+}
+```
+
+### Viewer Experience
+
+1. **Scrapbook Layout**: Content flows naturally across pages
+2. **Smart Page Breaks**: Respects manual breaks + automatic content balancing
+3. **Page Navigation**: Previous/Next buttons for easy browsing
+4. **Print-Friendly**: CSS optimized for actual printing
+5. **Responsive Design**: Adapts to different screen sizes
+
+### CSS Scrapbook Styling
+
+```css
+.journal-page {
+  width: 8.5in;
+  height: 11in;
+  margin: 20px auto;
+  padding: 1in;
+  background: #fefefe;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  page-break-after: always;
+  position: relative;
+}
+
+.journal-content-item {
+  margin-bottom: 20px;
+  break-inside: avoid;
+}
+
+.page-break-indicator {
+  border-top: 2px dashed #ccc;
+  text-align: center;
+  color: #999;
+  margin: 20px 0;
+  font-size: 12px;
+}
+
+@media print {
+  .journal-page {
+    width: 100%;
+    height: auto;
+    margin: 0;
+    box-shadow: none;
+  }
+}
 ```
 
 ### API Endpoints
@@ -97,47 +246,45 @@ CREATE INDEX idx_journal_content_order ON JournalContentItems(journal_page_id, d
 #### Journal Viewer API
 
 ```typescript
-// Get all journal pages (years) with basic info
-GET /api/journal/pages
+// Get all journal sections (years) with basic info
+GET /api/journal/sections
 Response: {
   success: boolean,
   data: {
-    pages: Array<{
-      journal_page_id: number,
+    sections: Array<{
+      section_id: number,
       year: number,
-      page_number: number,
+      section_order: number,
       title: string,
-      is_published: boolean,
       content_count: number
     }>
   }
 }
 
-// Get all pages for a specific year
-GET /api/journal/years/:year/pages
+// Get all sections for a specific year
+GET /api/journal/years/:year/sections
 Response: {
   success: boolean,
   data: {
     year: number,
-    pages: Array<{
-      journal_page_id: number,
-      page_number: number,
+    sections: Array<{
+      section_id: number,
+      section_order: number,
       title: string,
-      is_published: boolean,
       content_count: number
     }>
   }
 }
 
-// Get specific journal page with all content
-GET /api/journal/pages/:journalPageId
+// Get specific journal section with all content
+GET /api/journal/sections/:sectionId
 Response: {
   success: boolean,
   data: {
-    journal_page: {
-      journal_page_id: number,
+    journal_section: {
+      section_id: number,
       year: number,
-      page_number: number,
+      section_order: number,
       title: string,
       description: string,
       content_items: Array<{
@@ -147,6 +294,8 @@ Response: {
         custom_text: string,
         heading_level?: number, // For headings: 1-6
         display_order: number,
+        manual_page_break: boolean,
+        page_break_position: number,
         content_data: any // The actual content object
       }>
     }
@@ -154,7 +303,7 @@ Response: {
 }
 
 // Get available content for a year (for admin editor)
-GET /api/journal/pages/:year/available-content
+GET /api/journal/years/:year/available-content
 Response: {
   success: boolean,
   data: {
@@ -169,17 +318,17 @@ Response: {
 #### Admin Journal Editor API
 
 ```typescript
-// Create new journal page for a year
-POST /api/admin/journal/years/:year/pages
+// Create new journal section for a year
+POST /api/admin/journal/years/:year/sections
 Body: {
-  page_number: number,
+  section_order: number,
   title: string,
   description: string
 }
 
-// Create or update journal page
-POST /api/admin/journal/pages/:journalPageId
-PUT /api/admin/journal/pages/:journalPageId
+// Create or update journal section
+POST /api/admin/journal/sections/:sectionId
+PUT /api/admin/journal/sections/:sectionId
 Body: {
   title: string,
   description: string,
@@ -189,78 +338,338 @@ Body: {
     custom_text?: string,
     heading_level?: number, // For headings: 1-6
     display_order: number,
-    is_visible: boolean
+    manual_page_break: boolean,
+    page_break_position: number
   }>
 }
 
-// Reorder content items within a page
-PUT /api/admin/journal/pages/:journalPageId/reorder
+// Reorder content items within a section
+PUT /api/admin/journal/sections/:sectionId/reorder
 Body: {
   content_items: Array<{
     content_item_id: number,
-    display_order: number
+    display_order: number,
+    manual_page_break: boolean,
+    page_break_position: number
   }>
 }
 
-// Add text block to a page
-POST /api/admin/journal/pages/:journalPageId/text-blocks
+// Insert manual page break
+POST /api/admin/journal/content-items/:contentItemId/page-break
 Body: {
-  text: string,
-  display_order: number
+  position: number
 }
 
-// Add heading to a page
-POST /api/admin/journal/pages/:journalPageId/headings
-Body: {
-  text: string,
-  heading_level: number, // 1-6
-  display_order: number
+// Remove manual page break
+DELETE /api/admin/journal/content-items/:contentItemId/page-break
+```
+
+## 🎨 Antique Scrapbook Theme Design
+
+### Visual Aesthetic
+
+The journal will feature a beautiful antique Thanksgiving scrapbook theme with the following design elements:
+
+#### Color Palette
+- **Cream Parchment**: `#FDF8E2` (primary background)
+- **Burnt Orange**: `#C56A1A` (accent color, buttons)
+- **Sepia Brown**: `#5A3E2B` (text, borders)
+- **Faded Cranberry**: `#8B3A3A` (secondary accent)
+- **Soft Gold Accent**: `#D6B46A` (decorative borders, highlights)
+
+#### Typography
+- **Headings**: "Playfair Display", serif (elegant, readable)
+- **Script Accents**: "Great Vibes", cursive (decorative titles)
+- **Body/Captions**: "Special Elite", monospace (typewriter style for captions)
+
+#### Textures & Backgrounds
+- **Aged Paper Texture**: Background image of aged paper or linen grain
+- **Subtle Patterns**: Faint leaf patterns with low opacity (0.05)
+- **Decorative Elements**: Corner flourishes and pressed-leaf accents
+
+### Page-Flipping Interface
+
+#### Scrapbook Structure
+- **Cover Page**: Beautiful title page with ornate styling
+- **Page Navigation**: Smooth page-flipping animations
+- **Page Indicators**: Show current page / total pages
+- **Keyboard Support**: Arrow keys for navigation
+
+#### Animation System
+```css
+.scrapbook-page {
+  transform-style: preserve-3d;
+  transition: transform 0.6s ease-in-out;
 }
 
-// Publish journal page
-POST /api/admin/journal/pages/:journalPageId/publish
+.scrapbook-page.flipping {
+  transform: rotateY(-180deg);
+}
+```
 
-// Delete journal page
-DELETE /api/admin/journal/pages/:journalPageId
+### Layout Elements
 
-// Update photo type (individual vs page)
-PUT /api/admin/photos/:photoId/type
-Body: {
-  photo_type: 'individual' | 'page'
+#### Cover Page Design
+```css
+.scrapbook-cover {
+  background: linear-gradient(135deg, #C56A1A 0%, #8B3A3A 100%);
+  color: #FDF8E2;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
-// Get photos by type for a year
-GET /api/journal/years/:year/photos/:photoType
-Response: {
-  success: boolean,
-  data: {
-    photos: Array<Photo>,
-    photo_type: 'individual' | 'page'
+.scrapbook-title {
+  font-family: 'Great Vibes', cursive;
+  font-size: 4rem;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  margin-bottom: 1rem;
+}
+```
+
+#### Photo Frames
+```css
+.scrapbook-photo {
+  border: 3px double #5A3E2B;
+  border-radius: 8px;
+  box-shadow: 2px 4px 6px rgba(0,0,0,0.25);
+  margin: 20px 0;
+  position: relative;
+}
+
+.scrapbook-photo::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  background: rgba(210,180,106,0.1);
+  border-radius: 12px;
+  z-index: -1;
+}
+```
+
+#### Captions & Text
+```css
+.scrapbook-caption {
+  font-family: 'Special Elite', monospace;
+  color: #5A3E2B;
+  background: rgba(255,255,240,0.8);
+  padding: 8px 12px;
+  border-left: 3px solid #D6B46A;
+  margin: 10px 0;
+  font-size: 0.9rem;
+}
+
+.scrapbook-heading {
+  font-family: 'Playfair Display', serif;
+  color: #5A3E2B;
+  text-align: center;
+  margin: 30px 0;
+  position: relative;
+}
+
+.scrapbook-heading::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 2px;
+  background: linear-gradient(to right, transparent, #D6B46A, transparent);
+}
+```
+
+#### Buttons & Navigation
+```css
+.scrapbook-button {
+  background-color: #C56A1A;
+  color: #FFF;
+  border-radius: 6px;
+  border: none;
+  padding: 10px 20px;
+  font-family: 'Playfair Display', serif;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.scrapbook-button:hover {
+  background-color: #A75415;
+}
+```
+
+### Decorative Elements
+
+#### Corner Flourishes
+```css
+.scrapbook-page::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  background: url('corner-flourish.png') no-repeat;
+  background-size: contain;
+  opacity: 0.1;
+}
+```
+
+#### Leaf Pattern Overlay
+```css
+.scrapbook-page::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('leaf-pattern.png') repeat;
+  opacity: 0.05;
+  pointer-events: none;
+}
+```
+
+### Responsive Design
+
+#### Mobile Optimization
+```css
+@media (max-width: 768px) {
+  .scrapbook-page {
+    width: 90vw;
+    height: auto;
+    min-height: 70vh;
+    margin: 10px auto;
+    padding: 20px;
+  }
+  
+  .scrapbook-title {
+    font-size: 2.5rem;
+  }
+  
+  .scrapbook-photo {
+    width: 100%;
+    height: auto;
   }
 }
 ```
 
+### Interactive Features
+
+#### Page Flipping Animation
+```typescript
+function flipPage(direction: 'next' | 'previous') {
+  const currentPage = document.querySelector('.scrapbook-page.active');
+  const nextPage = direction === 'next' 
+    ? currentPage.nextElementSibling 
+    : currentPage.previousElementSibling;
+    
+  if (nextPage) {
+    currentPage.classList.add('flipping');
+    setTimeout(() => {
+      currentPage.classList.remove('active', 'flipping');
+      nextPage.classList.add('active');
+    }, 300);
+  }
+}
+```
+
+#### Touch Gestures (Mobile)
+```typescript
+// Swipe detection for mobile page flipping
+let startX = 0;
+let startY = 0;
+
+document.addEventListener('touchstart', (e) => {
+  startX = e.touches[0].clientX;
+  startY = e.touches[0].clientY;
+});
+
+document.addEventListener('touchend', (e) => {
+  const endX = e.changedTouches[0].clientX;
+  const endY = e.changedTouches[0].clientY;
+  const diffX = startX - endX;
+  const diffY = startY - endY;
+  
+  if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+    if (diffX > 0) {
+      flipPage('next');
+    } else {
+      flipPage('previous');
+    }
+  }
+});
+```
+
+## 🎨 User Interface Design
+
+### Single-Page Editor Interface
+
+The journal editor will feature a **single-page editor** approach with the following components:
+
+#### Editor Layout
+- **Continuous Content Area**: All content items displayed in one scrollable editor
+- **Manual Page Break Controls**: Insert/remove page breaks between content items
+- **Live Preview Panel**: Real-time preview of how content will be paginated
+- **Content Management**: Drag & drop reordering, add/edit/delete content items
+
+#### Visual Indicators
+- **Page Break Markers**: Clear visual indicators for manual page breaks
+- **Content Item Cards**: Each content item displayed as a draggable card
+- **Preview Overlay**: Semi-transparent overlay showing page boundaries
+
 ### Frontend Components
 
-#### Journal Viewer Components
+#### Journal Viewer Components (Scrapbook Theme)
 
 ```typescript
-// Main journal viewer
-class JournalViewer {
+// Main journal viewer with antique scrapbook theme and page flipping
+class ScrapbookViewer {
   - currentYear: number
   - currentPageNumber: number
   - availableYears: number[]
-  - currentPage: JournalPage
-  - yearPages: Map<number, JournalPage[]>
+  - currentPage: Page
+  - allContentItems: ContentItem[]
+  - paginatedPages: Page[]
+  - coverPage: boolean
+  - pageFlipAnimation: boolean
   
   + navigateToYear(year: number)
   + navigateToPage(pageNumber: number)
-  + nextYear()
-  + previousYear()
   + nextPage()
   + previousPage()
-  + renderJournalPage()
+  + renderCoverPage()
+  + renderScrapbookPage(page: Page)
+  + generatePages() // Automatic pagination
+  + calculateItemHeight(item: ContentItem)
+  + flipPage(direction: 'next' | 'previous')
+  + addPageFlipSound() // Optional audio feedback
+  + handleTouchGestures() // Mobile swipe support
 }
+
+// Single-page editor with scrapbook preview
+class ScrapbookEditor {
+  - eventId: number
+  - year: number
+  - allContentItems: ContentItem[]
+  - pageBreakPositions: number[]
+  - previewMode: boolean
+  - scrapbookTheme: boolean
+  
+  + loadAllContent()
+  + addContentItem(item: ContentItem)
+  + removeContentItem(itemId: number)
+  + reorderContentItems()
+  + insertPageBreak(position: number)
+  + removePageBreak(position: number)
+  + previewScrapbookLayout()
+  + toggleScrapbookTheme()
+  + saveContent()
+}
+```
 
 // Journal page content renderer
 class JournalPageRenderer {
@@ -441,150 +850,158 @@ class AvailableContentPanel {
 
 ## 🚀 Implementation Plan
 
-### Phase 1: Database & Backend Foundation (Week 1)
+### Phase 1: Database & Backend Foundation ✅ COMPLETE
 
 **Tasks:**
 1. **Database Schema**
-   - Create `JournalPages` table
-   - Create `JournalContentItems` table
-   - Add indexes and constraints
-   - Create Prisma migrations
+   - ✅ Create `JournalPages` table (now `JournalSections`)
+   - ✅ Create `JournalContentItems` table
+   - ✅ Add indexes and constraints
+   - ✅ Create Prisma migrations
+   - ✅ Remove conflicting foreign key constraints
 
 2. **Backend API**
-   - Implement journal page CRUD operations
-   - Create content management endpoints
-   - Add reordering functionality
-   - Implement content fetching logic
-   - Add photo type management (individual vs page)
-   - Create page photo rendering endpoints
+   - ✅ Implement journal page CRUD operations
+   - ✅ Create content management endpoints
+   - ✅ Add reordering functionality
+   - ✅ Implement content fetching logic with manual data attachment
+   - ✅ Add photo type management (individual vs page)
+   - ✅ Create page photo rendering endpoints
+   - ✅ Implement S3 signed URL generation
 
 3. **Data Models**
-   - Create TypeScript interfaces
-   - Update Prisma schema
-   - Add validation logic
+   - ✅ Create TypeScript interfaces
+   - ✅ Update Prisma schema
+   - ✅ Add validation logic
 
 **Deliverables:**
-- Database migrations
-- Complete API endpoints
-- TypeScript interfaces
-- Basic CRUD operations
+- ✅ Database migrations
+- ✅ Complete API endpoints
+- ✅ TypeScript interfaces
+- ✅ Basic CRUD operations
+- ✅ S3 integration
 
-**Testing:**
-- Unit tests for all API endpoints
-- Database schema validation tests
-- TypeScript interface validation
-- API integration tests
-- Photo type management tests
-
-### Phase 2: Admin Editor (Week 2)
+### Phase 2: Admin Editor ✅ COMPLETE
 
 **Tasks:**
 1. **Admin Editor Interface**
-   - Create editor layout
-   - Implement drag-and-drop
-   - Add content management
-   - Build preview functionality
+   - ✅ Create editor layout
+   - ✅ Implement drag-and-drop
+   - ✅ Add content management
+   - ✅ Build preview functionality
 
 2. **Content Management**
-   - Available content panel
-   - Content item editor
-   - Text block creation
-   - Heading creation
-   - Photo type management (individual vs page)
-   - Reordering interface
+   - ✅ Available content panel
+   - ✅ Content item editor
+   - ✅ Text block creation
+   - ✅ Heading creation
+   - ✅ Photo type management (individual vs page)
+   - ✅ Reordering interface
 
 3. **Save/Publish Workflow**
-   - Save draft functionality
-   - Preview mode
-   - Publish workflow
-   - Validation
+   - ✅ Save draft functionality
+   - ✅ Preview mode with actual content
+   - ✅ Publish workflow
+   - ✅ Validation
 
 **Deliverables:**
-- Complete admin editor
-- Drag-and-drop functionality
-- Preview system
-- Save/publish workflow
+- ✅ Complete admin editor
+- ✅ Drag-and-drop functionality
+- ✅ Enhanced preview system with actual images
+- ✅ Save/publish workflow
 
-**Testing:**
-- Admin interface unit tests
-- Drag-and-drop functionality tests
-- Content management workflow tests
-- Photo type change tests
-- Save/publish workflow tests
-- Admin access control tests
-- Preview system tests
-
-### Phase 3: Journal Viewer (Week 3)
+### Phase 3: Journal Viewer ✅ COMPLETE
 
 **Tasks:**
 1. **Journal Viewer Page**
-   - Create main journal viewer component
-   - Implement year navigation
-   - Build content renderer
-   - Add responsive design
+   - ✅ Create main journal viewer component
+   - ✅ Implement year navigation
+   - ✅ Build content renderer
+   - ✅ Add responsive design
 
 2. **Content Rendering**
-   - Menu display component
-   - Photo gallery component (individual photos)
-   - Page photo component (full scrapbook pages)
-   - Blog post component
-   - Text block component
-   - Heading component
+   - ✅ Menu display component
+   - ✅ Photo gallery component (individual photos)
+   - ✅ Page photo component (full scrapbook pages)
+   - ✅ Blog post component with all images
+   - ✅ Text block component
+   - ✅ Heading component
 
 3. **Navigation**
-   - Year selector
-   - Previous/Next navigation
-   - URL routing
+   - ✅ Year selector
+   - ✅ Previous/Next navigation
+   - ✅ URL routing
 
 **Deliverables:**
-- Functional journal viewer
-- Year navigation
-- Content rendering
-- Mobile-responsive design
+- ✅ Functional journal viewer
+- ✅ Year navigation
+- ✅ Content rendering
+- ✅ Responsive design
 
-**Testing:**
-- Component unit tests for all renderers
-- Year navigation functionality tests
-- Content rendering tests (menus, photos, blogs, headings)
-- Responsive design tests (mobile, tablet, desktop)
-- Page photo vs individual photo rendering tests
-- Cross-browser compatibility tests
-
-### Phase 4: Styling & Polish (Week 4)
+### Phase 4: Single-Page Editor Redesign 🚧 NEXT
 
 **Tasks:**
-1. **Scrapbook Styling**
-   - Implement scrapbook visual theme
-   - Add decorative elements
-   - Create page transitions
-   - Enhance typography
+1. **Database Schema Updates**
+   - 🔄 Rename `JournalPages` to `JournalSections`
+   - 🔄 Add `section_id` and `section_order` fields
+   - 🔄 Add `manual_page_break` and `page_break_position` to `JournalContentItems`
+   - 🔄 Create migration for schema changes
 
-2. **User Experience**
-   - Smooth animations
-   - Loading states
-   - Error handling
-   - Accessibility improvements
+2. **Editor Interface Redesign**
+   - 🔄 Convert to single-page continuous editor
+   - 🔄 Add manual page break insertion tools
+   - 🔄 Implement live preview of automatic pagination
+   - 🔄 Add page break indicators in editor
 
-3. **Testing & Optimization**
-   - Cross-browser testing
-   - Performance optimization
-   - Mobile testing
-   - User acceptance testing
+3. **Automatic Pagination Algorithm**
+   - 🔄 Implement smart page break detection
+   - 🔄 Create pagination preview system
+   - 🔄 Add manual override capabilities
 
 **Deliverables:**
-- Beautiful scrapbook design
-- Smooth user experience
-- Performance optimization
-- Complete testing coverage
+- Single-page editor interface
+- Manual page break tools
+- Automatic pagination algorithm
+- Live preview system
 
-**Testing:**
-- Visual regression tests
-- Performance tests (load times, animations)
-- Accessibility tests (WCAG compliance)
-- Cross-browser compatibility tests
-- Mobile device testing
-- User acceptance testing
-- End-to-end workflow tests
+### Phase 5: Antique Scrapbook Theme 🎨 PLANNED
+
+**Tasks:**
+1. **Core Styling (Week 1)**
+   - Implement antique color palette
+   - Add aged paper textures
+   - Create ornate photo frames
+   - Add decorative typography
+
+2. **Page-Flipping Interface (Week 2)**
+   - Implement CSS page-flipping animations
+   - Create cover page design
+   - Add navigation controls
+   - Implement smooth transitions
+
+3. **Decorative Elements (Week 3)**
+   - Add corner flourishes
+   - Implement leaf patterns
+   - Create vintage buttons
+   - Add shadow effects
+
+4. **Mobile Optimization (Week 4)**
+   - Implement touch gestures
+   - Add swipe navigation
+   - Optimize for mobile screens
+   - Add accessibility features
+
+5. **Advanced Features (Week 5)**
+   - Add page flip sounds
+   - Implement keyboard navigation
+   - Add print-friendly styles
+   - Create loading animations
+
+**Deliverables:**
+- Complete antique scrapbook theme
+- Page-flipping interface
+- Mobile-optimized experience
+- Accessibility compliance
 
 ## 📁 File Structure
 
@@ -1042,10 +1459,10 @@ jobs:
 
 ## 📋 Implementation Status & Updates
 
-### Current Status: **Phase 2 Complete - Admin Editor Functional**
+### Current Status: **Phase 3 Complete - Journal Viewer Functional**
 
-**Last Updated:** October 9, 2025  
-**Version:** 2.12.72
+**Last Updated:** December 19, 2024  
+**Version:** 2.12.74
 
 ### ✅ Completed Features
 
@@ -1058,6 +1475,7 @@ jobs:
 - [x] Photo type management (individual vs page)
 - [x] TypeScript interfaces and validation
 - [x] Foreign key constraint resolution
+- [x] S3 integration with signed URLs
 
 #### **Phase 2: Admin Editor** ✅ COMPLETE
 - [x] Admin-only editor interface (`/admin/journal-editor`)
@@ -1065,10 +1483,38 @@ jobs:
 - [x] Content management system with available content panels
 - [x] Text block creation and editing
 - [x] Heading creation with configurable levels
-- [x] Preview functionality showing actual content
+- [x] Enhanced preview functionality showing actual content
 - [x] Save/publish workflow with validation
 - [x] Year-based content filtering
 - [x] Real-time preview with actual images and content
+- [x] Blog image rendering (featured_image + images array)
+
+#### **Phase 3: Journal Viewer** ✅ COMPLETE
+- [x] Public journal viewer (`/journal`)
+- [x] Year navigation with chronological ordering
+- [x] Content rendering for all content types
+- [x] Responsive design for mobile/desktop
+- [x] Menu item integration in main navigation
+- [x] S3 signed URL generation for all images
+- [x] Blog image display with proper sizing
+- [x] Cross-browser compatibility
+
+### 🚧 Next Phase: Single-Page Editor Redesign
+
+#### **Phase 4: Single-Page Editor Redesign** 🔄 IN PROGRESS
+- [ ] Database schema updates (JournalPages → JournalSections)
+- [ ] Manual page break insertion tools
+- [ ] Automatic pagination algorithm
+- [ ] Live preview of scrapbook pagination
+- [ ] Single-page continuous editor interface
+
+#### **Phase 5: Antique Scrapbook Theme** 🎨 PLANNED
+- [ ] Antique color palette implementation
+- [ ] Page-flipping interface with CSS animations
+- [ ] Cover page design with ornate styling
+- [ ] Decorative elements (flourishes, leaf patterns)
+- [ ] Mobile optimization with touch gestures
+- [ ] Accessibility compliance
 
 ### 🔧 Technical Changes Made
 
@@ -1094,6 +1540,38 @@ jobs:
 - **Signed URL Implementation**: All images now served via S3 signed URLs
 - **Local File Cleanup**: Removed local file fallback logic from server
 
+### 📋 Design Updates & Future Implementation
+
+#### **Single-Page Editor Design (Planned)**
+- **Database Schema Updates**: Rename `JournalPages` to `JournalSections` with `section_id` and `section_order` fields
+- **Page Break Support**: Add `manual_page_break` and `page_break_position` fields to `JournalContentItems`
+- **Automatic Pagination**: Implement smart pagination algorithm for scrapbook-style page generation
+- **Continuous Editor**: Single-page editor showing all content items in one scrollable layout
+- **Live Preview**: Real-time preview of automatic pagination with manual break indicators
+
+#### **Antique Scrapbook Theme Design (Planned)**
+- **Visual Aesthetic**: Antique Thanksgiving scrapbook with warm, nostalgic colors
+- **Color Palette**: Cream parchment (#FDF8E2), burnt orange (#C56A1A), sepia brown (#5A3E2B)
+- **Typography**: Playfair Display (headings), Great Vibes (script), Special Elite (captions)
+- **Page-Flipping Interface**: Smooth CSS animations with cover page and navigation
+- **Photo Frames**: Double border with rounded corners and decorative shadows
+- **Decorative Elements**: Corner flourishes, leaf patterns, aged paper textures
+- **Interactive Features**: Touch gestures for mobile, keyboard navigation, page flip sounds
+- **Responsive Design**: Mobile-optimized with swipe gestures and adaptive layouts
+
+#### **Enhanced User Experience**
+- **Cover Page**: Beautiful title page with ornate styling and gradient background
+- **Page Navigation**: Smooth page-flipping animations with CSS transforms
+- **Visual Feedback**: Hover effects, transitions, and interactive elements
+- **Mobile Support**: Touch-friendly interface with swipe gestures
+- **Accessibility**: Keyboard navigation and screen reader support
+
+#### **Technical Benefits**
+- **Better Database Design**: More intuitive naming (`JournalSections` vs `JournalPages`)
+- **Future-Proof**: Easy to add item metadata and formatting options
+- **Normalized Structure**: Maintains 1-to-many relationships for extensibility
+- **Query Capabilities**: Better filtering and analysis of individual content items
+
 ### 🚧 Current Issues & Resolutions
 
 #### **Resolved Issues**
@@ -1106,7 +1584,7 @@ jobs:
 - **Database Constraint Cleanup**: Some foreign key constraints may still exist in production database
 - **Git Authentication**: Push to remote repository requires authentication setup
 
-### 📊 Testing Status
+## 📊 Testing Status
 
 #### **Completed Tests**
 - [x] End-to-end journal page creation test

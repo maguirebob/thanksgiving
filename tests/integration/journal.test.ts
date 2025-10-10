@@ -8,7 +8,7 @@ import photoTypeRoutes from '../../src/routes/photoTypeRoutes';
 const prisma = new PrismaClient({
   datasources: {
     db: {
-      url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL
+      url: process.env['TEST_DATABASE_URL'] || process.env['DATABASE_URL'] || ''
     }
   }
 });
@@ -50,9 +50,9 @@ describe('Journal API Integration Tests', () => {
   afterAll(async () => {
     // Clean up test data
     await prisma.journalContentItem.deleteMany({
-      where: { journal_page: { event_id: testEventId } }
+      where: { journal_section: { event_id: testEventId } }
     });
-    await prisma.journalPage.deleteMany({
+    await prisma.journalSection.deleteMany({
       where: { event_id: testEventId }
     });
     await prisma.photo.deleteMany({
@@ -65,7 +65,7 @@ describe('Journal API Integration Tests', () => {
   });
 
   describe('Journal Pages CRUD', () => {
-    let journalPageId: number;
+    let journalSectionId: number;
 
     it('should create a journal page', async () => {
       const response = await request(app)
@@ -79,8 +79,8 @@ describe('Journal API Integration Tests', () => {
         .expect(201);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.data.journal_page.title).toBe('Test Journal Page');
-      journalPageId = response.body.data.journal_page.journal_page_id;
+      expect(response.body.data.journal_section.title).toBe('Test Journal Page');
+      journalSectionId = response.body.data.journal_section.section_id;
     });
 
     it('should get journal pages', async () => {
@@ -90,22 +90,22 @@ describe('Journal API Integration Tests', () => {
         .expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.data.journal_pages).toHaveLength(1);
+      expect(response.body.data.journal_sections).toHaveLength(1);
       expect(response.body.data.pagination.total).toBe(1);
     });
 
     it('should get a specific journal page', async () => {
       const response = await request(app)
-        .get(`/api/journal/${journalPageId}`)
+        .get(`/api/journal/${journalSectionId}`)
         .expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.data.journal_page.journal_page_id).toBe(journalPageId);
+      expect(response.body.data.journal_section.section_id).toBe(journalSectionId);
     });
 
     it('should update a journal page', async () => {
       const response = await request(app)
-        .put(`/api/journal/${journalPageId}`)
+        .put(`/api/journal/${journalSectionId}`)
         .send({
           title: 'Updated Journal Page',
           is_published: true
@@ -113,48 +113,48 @@ describe('Journal API Integration Tests', () => {
         .expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.data.journal_page.title).toBe('Updated Journal Page');
-      expect(response.body.data.journal_page.is_published).toBe(true);
+      expect(response.body.data.journal_section.title).toBe('Updated Journal Page');
+      expect(response.body.data.journal_section.is_published).toBe(true);
     });
 
     it('should delete a journal page', async () => {
       await request(app)
-        .delete(`/api/journal/${journalPageId}`)
+        .delete(`/api/journal/${journalSectionId}`)
         .expect(200);
 
       // Verify it's deleted
       await request(app)
-        .get(`/api/journal/${journalPageId}`)
+        .get(`/api/journal/${journalSectionId}`)
         .expect(404);
     });
   });
 
   describe('Content Items CRUD', () => {
-    let journalPageId: number;
-    let contentItemId: number;
+    let journalSectionId: number;
 
     beforeEach(async () => {
-      // Create a journal page for content item tests
-      const journalPage = await prisma.journalPage.create({
+      // Create a journal section for content item tests
+      const journalSection = await prisma.journalSection.create({
         data: {
           event_id: testEventId,
           year: 2023,
-          title: 'Content Test Page'
+          section_order: 2, // Use different section order to avoid unique constraint
+          title: 'Content Test Section'
         }
       });
-      journalPageId = journalPage.journal_page_id;
+      journalSectionId = journalSection.section_id;
     });
 
     afterEach(async () => {
-      // Clean up journal page
-      await prisma.journalPage.delete({
-        where: { journal_page_id: journalPageId }
+      // Clean up journal section
+      await prisma.journalSection.delete({
+        where: { section_id: journalSectionId }
       });
     });
 
     it('should create a content item', async () => {
       const response = await request(app)
-        .post(`/api/journal/${journalPageId}/content-items`)
+        .post(`/api/journal/${journalSectionId}/content-items`)
         .send({
           content_type: 'text',
           custom_text: 'Test content',
@@ -164,14 +164,13 @@ describe('Journal API Integration Tests', () => {
 
       expect(response.body.success).toBe(true);
       expect(response.body.data.content_item.custom_text).toBe('Test content');
-      contentItemId = response.body.data.content_item.content_item_id;
     });
 
     it('should update a content item', async () => {
       // Create content item first
       const contentItem = await prisma.journalContentItem.create({
         data: {
-          journal_page_id: journalPageId,
+          journal_section_id: journalSectionId,
           content_type: 'text',
           custom_text: 'Original text',
           display_order: 1
@@ -193,7 +192,7 @@ describe('Journal API Integration Tests', () => {
       // Create content item first
       const contentItem = await prisma.journalContentItem.create({
         data: {
-          journal_page_id: journalPageId,
+          journal_section_id: journalSectionId,
           content_type: 'text',
           custom_text: 'To be deleted',
           display_order: 1
