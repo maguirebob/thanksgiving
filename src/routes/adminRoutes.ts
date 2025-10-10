@@ -18,6 +18,30 @@ router.get('/', async (_req: Request, res: Response) => {
 });
 
 /**
+ * Journal Editor
+ */
+router.get('/journal-editor', async (_req: Request, res: Response) => {
+  try {
+    // Get 2013 event for testing (you might want to make this configurable)
+    const currentEvent = await prisma.event.findFirst({
+      where: { event_date: { gte: new Date('2013-01-01'), lt: new Date('2014-01-01') } }
+    });
+
+    res.render('admin/journal-editor', {
+      title: 'Journal Editor',
+      currentEventId: currentEvent?.event_id || 15, // Default to 2013 event for testing
+      currentEvent: currentEvent
+    });
+  } catch (error) {
+    console.error('Error loading journal editor:', error);
+    res.status(500).render('error', {
+      title: 'Error',
+      message: 'Failed to load journal editor'
+    });
+  }
+});
+
+/**
  * Admin dashboard
  */
 router.get('/dashboard', async (_req: Request, res: Response) => {
