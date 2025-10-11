@@ -10,77 +10,15 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <!-- Scrapbook Theme CSS -->
-    <link href="/css/scrapbook-theme.css" rel="stylesheet">
+    <link href="/css/scrapbook-theme.css?v=<%= Date.now() %>" rel="stylesheet">
     
     <style>
-        /* Scrapbook Journal Viewer Styles */
+        /* Minimal inline styles - main styles in external CSS */
         .journal-viewer {
-            background: var(--scrapbook-cream);
+            background: #b6a998;
             min-height: 100vh;
             padding: 2rem 0;
             position: relative;
-        }
-        
-        .journal-header {
-            background: var(--scrapbook-aged-paper);
-            border-radius: 15px;
-            box-shadow: 0 8px 32px var(--scrapbook-shadow-medium);
-            padding: 3rem 2rem;
-            margin-bottom: 2rem;
-            text-align: center;
-            position: relative;
-            border: 2px solid var(--scrapbook-warm-brown);
-        }
-        
-        .journal-header::before {
-            content: '';
-            position: absolute;
-            top: -4px;
-            left: -4px;
-            right: -4px;
-            bottom: -4px;
-            background: linear-gradient(45deg, var(--scrapbook-gold), var(--scrapbook-amber), var(--scrapbook-gold));
-            border-radius: 17px;
-            z-index: -1;
-            opacity: 0.3;
-        }
-        
-        .journal-nav {
-            background: var(--scrapbook-parchment);
-            border-radius: 15px;
-            box-shadow: 0 4px 20px var(--scrapbook-shadow-light);
-            padding: 2rem;
-            margin-bottom: 2rem;
-            border: 1px solid var(--scrapbook-warm-brown);
-        }
-        
-        .journal-page {
-            background: var(--scrapbook-aged-paper);
-            border-radius: 15px;
-            box-shadow: 0 8px 32px var(--scrapbook-shadow-medium);
-            padding: 3rem;
-            margin-bottom: 2rem;
-            min-height: 600px;
-            position: relative;
-            border: 2px solid var(--scrapbook-warm-brown);
-        }
-        
-        .journal-page::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(45deg, 
-                var(--scrapbook-warm-brown) 0%, 
-                var(--scrapbook-rust) 25%, 
-                var(--scrapbook-burgundy) 50%, 
-                var(--scrapbook-warm-brown) 75%, 
-                var(--scrapbook-deep-brown) 100%);
-            border-radius: 17px;
-            z-index: -1;
-            opacity: 0.2;
         }
         
         .journal-content {
