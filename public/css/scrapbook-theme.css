@@ -140,19 +140,19 @@
 }
 
 .scrapbook-page {
-  background: var(--scrapbook-aged-paper);
+  background-color: #f5f0e8;
+  background-image: url('https://www.transparenttextures.com/patterns/paper-fibers.png');
+  border: 1px solid #d9c9a7;
   margin: 2rem auto;
   max-width: 900px;
   width: 100%;
   height: 820px; /* Fixed page height */
   padding: 2rem;
   position: relative;
-  box-shadow: 
-    0 8px 32px var(--scrapbook-shadow-medium),
-    0 0 0 1px var(--scrapbook-warm-brown),
-    inset 0 0 0 1px rgba(139, 69, 19, 0.1);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
   border-radius: 12px;
   transform-style: preserve-3d;
+  transform: perspective(1000px) rotateX(1deg);
   transition: transform 0.6s ease-in-out, box-shadow 0.3s ease;
   overflow: hidden;
   display: flex;
@@ -160,30 +160,174 @@
 }
 
 .scrapbook-page:hover {
-  transform: translateY(-4px) rotateX(2deg);
+  transform: perspective(1000px) rotateX(0.2deg) translateY(-3px);
   box-shadow: 
-    0 12px 40px var(--scrapbook-shadow-medium),
-    0 0 0 1px var(--scrapbook-burgundy),
-    inset 0 0 0 1px rgba(139, 69, 19, 0.15);
+    /* Enhanced shadow when lifted */
+    0 12px 35px rgba(0, 0, 0, 0.2),
+    0 6px 18px rgba(0, 0, 0, 0.15),
+    0 3px 9px rgba(0, 0, 0, 0.12),
+    /* Subtle inner depth */
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-/* Worn edges effect */
+/* Paper texture overlay */
 .scrapbook-page::before {
   content: '';
   position: absolute;
-  top: -3px;
-  left: -3px;
-  right: -3px;
-  bottom: -3px;
-  background: linear-gradient(45deg, 
-    var(--scrapbook-warm-brown) 0%, 
-    var(--scrapbook-rust) 25%, 
-    var(--scrapbook-burgundy) 50%, 
-    var(--scrapbook-warm-brown) 75%, 
-    var(--scrapbook-deep-brown) 100%);
-  border-radius: 15px;
-  z-index: -1;
-  opacity: 0.4;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    /* Subtle noise texture */
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 2px,
+      rgba(139, 69, 19, 0.001) 2px,
+      rgba(139, 69, 19, 0.001) 3px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 3px,
+      rgba(160, 82, 45, 0.0008) 3px,
+      rgba(160, 82, 45, 0.0008) 4px
+    ),
+    /* Paper surface irregularities */
+    radial-gradient(circle at 15% 15%, rgba(139, 69, 19, 0.008) 0%, transparent 8%),
+    radial-gradient(circle at 85% 85%, rgba(160, 82, 45, 0.006) 0%, transparent 6%),
+    radial-gradient(circle at 25% 75%, rgba(139, 69, 19, 0.004) 0%, transparent 5%),
+    radial-gradient(circle at 75% 25%, rgba(160, 82, 45, 0.003) 0%, transparent 4%);
+  pointer-events: none;
+  border-radius: 12px;
+  opacity: 0.7;
+}
+
+/* Bronze photo corner pieces - all four corners */
+.scrapbook-page {
+  position: relative;
+}
+
+/* Top-left corner */
+.scrapbook-page::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-left: 25px solid transparent;
+  border-top: 25px solid #cd7f32;
+  border-right: 15px solid transparent;
+  border-bottom: 15px solid transparent;
+  box-shadow: 
+    inset 2px -2px 4px rgba(255, 255, 255, 0.4),
+    inset -2px 2px 4px rgba(0, 0, 0, 0.3),
+    0 2px 6px rgba(0, 0, 0, 0.4);
+  z-index: 2;
+}
+
+/* Top-right corner */
+.scrapbook-page::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-right: 25px solid transparent;
+  border-top: 25px solid #cd7f32;
+  border-left: 15px solid transparent;
+  border-bottom: 15px solid transparent;
+  box-shadow: 
+    inset -2px -2px 4px rgba(255, 255, 255, 0.4),
+    inset 2px 2px 4px rgba(0, 0, 0, 0.3),
+    0 2px 6px rgba(0, 0, 0, 0.4);
+  z-index: 2;
+}
+
+/* Bottom-left corner */
+.scrapbook-page-container::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-left: 25px solid transparent;
+  border-bottom: 25px solid #cd7f32;
+  border-right: 15px solid transparent;
+  border-top: 15px solid transparent;
+  box-shadow: 
+    inset 2px 2px 4px rgba(255, 255, 255, 0.4),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.3),
+    0 -2px 6px rgba(0, 0, 0, 0.4);
+  z-index: 2;
+}
+
+/* Bottom-right corner */
+.scrapbook-page-container::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-right: 25px solid transparent;
+  border-bottom: 25px solid #cd7f32;
+  border-left: 15px solid transparent;
+  border-top: 15px solid transparent;
+  box-shadow: 
+    inset -2px 2px 4px rgba(255, 255, 255, 0.4),
+    inset 2px -2px 4px rgba(0, 0, 0, 0.3),
+    0 -2px 6px rgba(0, 0, 0, 0.4);
+  z-index: 2;
+}
+
+/* Decorative elements for content items */
+.scrapbook-content-item.heading::before {
+  content: '❦';
+  position: absolute;
+  left: -2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(139, 69, 19, 0.3);
+  font-size: 1.2rem;
+  font-family: serif;
+}
+
+.scrapbook-content-item.heading::after {
+  content: '❦';
+  position: absolute;
+  right: -2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(139, 69, 19, 0.3);
+  font-size: 1.2rem;
+  font-family: serif;
+}
+
+/* Decorative border for text blocks */
+.scrapbook-content-item.text {
+  position: relative;
+}
+
+.scrapbook-content-item.text::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    /* Decorative corner elements */
+    radial-gradient(circle 3px at 5% 5%, rgba(139, 69, 19, 0.1) 0%, transparent 50%),
+    radial-gradient(circle 3px at 95% 5%, rgba(139, 69, 19, 0.1) 0%, transparent 50%),
+    radial-gradient(circle 3px at 5% 95%, rgba(139, 69, 19, 0.1) 0%, transparent 50%),
+    radial-gradient(circle 3px at 95% 95%, rgba(139, 69, 19, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+  border-radius: 8px;
 }
 
 /* Cover page styling */
@@ -379,6 +523,18 @@
   width: 100%;
   height: auto;
   object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 
+    0 2px 8px rgba(139, 69, 19, 0.1),
+    0 1px 4px rgba(160, 82, 45, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.scrapbook-content-item.photo .scrapbook-image:hover {
+  transform: scale(1.01);
+  box-shadow: 
+    0 4px 16px rgba(139, 69, 19, 0.15),
+    0 2px 8px rgba(160, 82, 45, 0.1);
 }
 
 .scrapbook-content-item.page_photo {
@@ -406,12 +562,38 @@
 
 .scrapbook-content-item.blog {
   padding: 1.5rem;
-  background: var(--scrapbook-parchment);
+  background: 
+    linear-gradient(135deg, var(--scrapbook-parchment) 0%, #f8f5f0 100%),
+    radial-gradient(circle at 10% 20%, rgba(139, 69, 19, 0.05) 0%, transparent 50%);
   border-left: 4px solid var(--scrapbook-maroon);
   border-radius: 8px;
+  box-shadow: 
+    0 4px 16px rgba(139, 69, 19, 0.1),
+    0 2px 8px rgba(160, 82, 45, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
   overflow-y: auto;
   height: calc(100% - 3rem);
   min-height: 600px;
+  position: relative;
+}
+
+.scrapbook-content-item.blog::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(139, 69, 19, 0.01) 2px,
+      rgba(139, 69, 19, 0.01) 4px
+    );
+  pointer-events: none;
+  border-radius: 8px;
 }
 
 .scrapbook-content-item.blog::-webkit-scrollbar {
@@ -596,9 +778,11 @@
 }
 
 .page-nav-btn {
-  background: linear-gradient(135deg, var(--scrapbook-warm-brown), var(--scrapbook-burgundy));
+  background: 
+    linear-gradient(135deg, var(--scrapbook-warm-brown), var(--scrapbook-burgundy)),
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
   color: var(--scrapbook-cream);
-  border: none;
+  border: 2px solid var(--scrapbook-maroon);
   padding: 0.5rem 1rem;
   border-radius: 20px;
   font-family: var(--font-casual);
@@ -606,28 +790,41 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 3px 12px var(--scrapbook-shadow-medium);
+  box-shadow: 
+    0 4px 16px rgba(139, 69, 19, 0.3),
+    0 2px 8px rgba(160, 82, 45, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
   position: relative;
   overflow: hidden;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .page-nav-btn::before {
-  content: '';
+  content: '❦';
   position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, 
-    transparent, 
-    rgba(255, 255, 255, 0.2), 
-    transparent);
-  transition: left 0.5s ease;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.3);
+  font-family: serif;
+  transition: opacity 0.3s ease;
+  opacity: 0;
+}
+
+.page-nav-btn:hover::before {
+  opacity: 1;
 }
 
 .page-nav-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px var(--scrapbook-shadow-medium);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 
+    0 6px 24px rgba(139, 69, 19, 0.4),
+    0 3px 12px rgba(160, 82, 45, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  background: 
+    linear-gradient(135deg, var(--scrapbook-burgundy), var(--scrapbook-maroon)),
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
 }
 
 .page-nav-btn:hover::before {
