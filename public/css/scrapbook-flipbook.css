@@ -130,6 +130,8 @@ body {
     0 6px 16px rgba(0,0,0,0.35);
   border-radius: 6px;
   position: relative;
+  min-height: 600px; /* Ensure minimum height for content */
+  height: auto; /* Allow content to determine height */
 }
 
 .page-inner {
@@ -211,11 +213,12 @@ body {
   margin-bottom: 1rem;
 }
 
-.cover-subtitle {
-  color: #f4d28d;
+.cover .cover-subtitle {
+  color: #f8e6b8 !important; /* Lighter gold color with !important to override .page p */
   font-size: 1.2rem;
   margin-bottom: 2rem;
-  opacity: 0.9;
+  opacity: 1.0; /* Full opacity for better readability */
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3); /* Add subtle shadow for contrast */
 }
 
 .cover-decoration {
@@ -271,9 +274,10 @@ body {
 }
 
 .scrapbook-subtitle {
-  color: var(--ink);
+  color: #8b7355; /* Lighter brown color for better readability */
   font-family: "Georgia", serif;
   font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2); /* Add subtle shadow for contrast */
 }
 
 /* Content styling within pages */
@@ -307,11 +311,15 @@ body {
   box-shadow: 0 4px 15px rgba(0,0,0,0.2);
 }
 
+/* Ensure menu images fit properly in all modes */
 .menu-image {
-  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
   height: auto;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
 }
 
 .photo-image {
@@ -396,45 +404,65 @@ body {
 
 .scrapbook-shell.fullscreen .flipbook {
   position: fixed;
-  top: 80px; /* Position further below the toolbar */
-  left: 20px; /* Move slightly to the right */
-  transform: none;
-  width: calc(100vw - 40px); /* Account for left and right margins */
-  height: calc(100vh - 80px); /* Account for increased toolbar space */
+  top: 50px; /* Reduced further to give more space */
+  left: 50%; /* Center horizontally */
+  transform: translateX(-50%); /* Center the flipbook */
+  width: calc(100vw - 20px); /* Reduced margins from 40px to 20px */
+  height: calc(100vh - 50px); /* Reduced top margin from 60px to 50px */
   margin: 0;
   box-shadow: none;
+  max-width: calc(100vw - 20px); /* Ensure it doesn't exceed viewport */
+  max-height: calc(100vh - 50px); /* Ensure it doesn't exceed viewport */
 }
 
 .scrapbook-shell.fullscreen .page {
-  height: calc(100vh - 80px); /* Match flipbook height */
+  height: calc(100vh - 50px); /* Match flipbook height */
   width: 100%;
   margin: 0;
   padding: 0;
 }
 
 .scrapbook-shell.fullscreen .page-inner {
-  padding: 1rem;
-  height: calc(100% - 2rem);
+  padding: 0.5rem; /* Reduced padding to give more space */
+  height: calc(100% - 1rem); /* Adjusted for reduced padding */
 }
 
-/* Ensure menu images fit properly in all modes */
-.menu-image {
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-}
-
-/* Only use flexbox centering for menu content to prevent cutoff */
+/* Menu content specific styling */
 .menu-content {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
-  padding: 0;
-  margin: 0;
+  padding: 0.5rem;
+}
+
+.menu-content .menu-image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+/* Page photo specific styling */
+.page-photo-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0.5rem;
+}
+
+.page-photo-content .page-photo-image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
 }
 
 /* Ensure menu images fit properly in fullscreen */
