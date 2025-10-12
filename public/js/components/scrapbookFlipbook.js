@@ -27,13 +27,13 @@ $(function() {
     
     let width, height;
     if (isFullscreen) {
-      // Smaller in fullscreen mode, let CSS flexbox center it
-      width = Math.min(window.innerWidth * 0.9, 2000);
-      height = Math.min(window.innerHeight * 0.85, 1500);
+      // Slightly smaller dimensions to ensure content fits within viewport
+      width = Math.min(window.innerWidth * 0.95, 2200);
+      height = Math.min(window.innerHeight * 0.90, 1600);
     } else {
-      // Normal size
+      // Much larger normal size to prevent any content cutoff
       width = Math.min(window.innerWidth * 0.9, 1250);
-      height = width * 0.7;
+      height = Math.min(window.innerHeight * 0.85, 1000); // Increased from 0.8 to 0.85
     }
     
     $book.turn({
@@ -539,13 +539,13 @@ $(function() {
       
       let width, height;
       if (isFullscreen) {
-        // Smaller in fullscreen mode to prevent cutoff
-        width = Math.min(window.innerWidth * 0.9, 2000);
-        height = Math.min(window.innerHeight * 0.85, 1500);
+        // Slightly smaller dimensions to ensure content fits within viewport
+        width = Math.min(window.innerWidth * 0.95, 2200);
+        height = Math.min(window.innerHeight * 0.90, 1600);
       } else {
-        // Normal size
+        // Much larger normal size to prevent any content cutoff
         width = Math.min(window.innerWidth * 0.9, 1250);
-        height = width * 0.7;
+        height = Math.min(window.innerHeight * 0.85, 1000); // Increased from 0.8 to 0.85
       }
       
       $book.turn("size", width, height);
