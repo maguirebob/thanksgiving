@@ -334,9 +334,11 @@ body {
 .photo-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
   gap: 0.5rem;
   margin: 0.5rem 0;
   padding: 0.5rem;
+  height: 100%;
 }
 
 .photo-content {
@@ -358,15 +360,43 @@ body {
 /* Fullscreen photo container adjustments */
 .scrapbook-shell.fullscreen .photo-container {
   grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
   gap: 0.75rem;
   margin: 0.75rem 0;
   padding: 0.75rem;
+  height: 100%;
 }
 
 .scrapbook-shell.fullscreen .photo-image {
   max-height: 400px;
   width: 100%;
   height: auto;
+}
+
+/* Fullscreen blog images adjustments */
+.scrapbook-shell.fullscreen .blog-images-container {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 0.5rem 0;
+  max-width: 100%;
+}
+
+.scrapbook-shell.fullscreen .blog-images-container .blog-image {
+  flex: 1;
+  min-width: 48%;
+  max-width: 48%;
+  height: auto;
+  max-height: 60vh; /* Larger than before but not too large */
+  object-fit: contain; /* Ensure images fit within bounds */
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.scrapbook-shell.fullscreen .blog-content {
+  max-width: 100%;
+  overflow: hidden;
+  padding: 0.5rem;
 }
 
 .page-photo-content {
@@ -443,16 +473,30 @@ body {
 }
 
 .scrapbook-shell.fullscreen .flipbook {
-  position: fixed;
-  top: 50px; /* Reduced further to give more space */
-  left: 50%; /* Center horizontally */
-  transform: translateX(-50%); /* Center the flipbook */
-  width: calc(100vw - 20px); /* Reduced margins from 40px to 20px */
-  height: calc(100vh - 50px); /* Reduced top margin from 60px to 50px */
-  margin: 0;
-  box-shadow: none;
-  max-width: calc(100vw - 20px); /* Ensure it doesn't exceed viewport */
-  max-height: calc(100vh - 50px); /* Ensure it doesn't exceed viewport */
+  position: fixed !important;
+  top: 50% !important; /* Center vertically */
+  left: 50% !important; /* Center horizontally */
+  transform: translate(-50%, -50%) !important; /* Perfect centering */
+  width: 90vw !important; /* Use viewport width */
+  height: 80vh !important; /* Use viewport height */
+  margin: 0 !important;
+  box-shadow: none !important;
+  max-width: 90vw !important; /* Ensure it doesn't exceed viewport */
+  max-height: 80vh !important; /* Ensure it doesn't exceed viewport */
+  overflow: hidden !important; /* Hide any overflow from flipbook */
+}
+
+.scrapbook-shell.fullscreen .flipbook > div {
+  overflow: hidden; /* Hide overflow from turn.js generated elements */
+}
+
+/* Hide turn.js specific elements that might cause black boxes */
+.scrapbook-shell.fullscreen .turn-page-wrapper {
+  overflow: hidden;
+}
+
+.scrapbook-shell.fullscreen .turn-page-shadow {
+  display: none; /* Hide shadow elements that might extend beyond bounds */
 }
 
 .scrapbook-shell.fullscreen .page {
@@ -460,6 +504,7 @@ body {
   width: 100%;
   margin: 0;
   padding: 0;
+  overflow: hidden; /* Hide page overflow */
 }
 
 .scrapbook-shell.fullscreen .page-inner {
