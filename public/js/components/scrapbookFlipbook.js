@@ -351,7 +351,7 @@ $(function() {
       case 'menu':
         return 600; // Menu gets its own page
       case 'photo':
-        return 250; // Reduced to fit more photos on one page (350px max height + padding)
+        return 180; // Reduced to fit 4 photos on one page (820px / 4 = ~200px per photo)
       case 'page_photo':
         return 600; // Page photo gets its own page
       case 'blog':
