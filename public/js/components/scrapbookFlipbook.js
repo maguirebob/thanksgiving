@@ -56,6 +56,9 @@ $(function() {
       }
     });
     
+    // Add keyboard navigation
+    addKeyboardNavigation();
+    
     flipbookInitialized = true;
   }
   
@@ -148,6 +151,34 @@ $(function() {
     setTimeout(() => {
       initializeFlipbook();
     }, 100);
+  }
+  
+  // Add keyboard navigation for page turning
+  function addKeyboardNavigation() {
+    $(document).on('keydown', function(e) {
+      // Only handle arrow keys when the flipbook is visible
+      if (!$book.is(':visible') || !flipbookInitialized) {
+        return;
+      }
+      
+      const currentPage = $book.turn('page');
+      const totalPages = $book.turn('pages');
+      
+      switch(e.keyCode) {
+        case 37: // Left arrow key
+          e.preventDefault();
+          if (currentPage > 1) {
+            $book.turn('previous');
+          }
+          break;
+        case 39: // Right arrow key
+          e.preventDefault();
+          if (currentPage < totalPages) {
+            $book.turn('next');
+          }
+          break;
+      }
+    });
   }
   
   // Load available years
@@ -320,7 +351,7 @@ $(function() {
       case 'menu':
         return 600; // Menu gets its own page
       case 'photo':
-        return 300;
+        return 250; // Reduced to fit more photos on one page (350px max height + padding)
       case 'page_photo':
         return 600; // Page photo gets its own page
       case 'blog':
@@ -372,6 +403,8 @@ $(function() {
     }
     
     let html = '';
+    let photoItems = [];
+    
     contentItems.forEach((item, index) => {
       console.log(`📄 Processing item ${index}:`, item.content_type, item);
       switch (item.content_type) {
@@ -395,9 +428,7 @@ $(function() {
         case 'photo':
           console.log('📄 Photo item data:', item.photo);
           if (item.photo && item.photo.s3_url) {
-            html += `<div class="photo-content">
-              <img src="${item.photo.s3_url}" alt="Photo" class="photo-image">
-            </div>`;
+            photoItems.push(item);
           }
           break;
         case 'page_photo':
@@ -419,6 +450,17 @@ $(function() {
           break;
       }
     });
+    
+    // Add photo container if we have photos
+    if (photoItems.length > 0) {
+      html += '<div class="photo-container">';
+      photoItems.forEach(item => {
+        html += `<div class="photo-content">
+          <img src="${item.photo.s3_url}" alt="Photo" class="photo-image">
+        </div>`;
+      });
+      html += '</div>';
+    }
     
     console.log('📄 Final HTML generated:', html);
     return html;
