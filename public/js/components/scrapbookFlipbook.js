@@ -33,7 +33,7 @@ $(function() {
     } else {
       // Much larger normal size to prevent any content cutoff
       width = Math.min(window.innerWidth * 0.9, 1250);
-      height = Math.min(window.innerHeight * 0.85, 1000); // Increased from 0.8 to 0.85
+      height = Math.min(window.innerHeight * 0.8, 1000); // Reduced height to test image scaling
     }
     
     $book.turn({
@@ -119,9 +119,12 @@ $(function() {
       flipbookInitialized = false;
     }
     
+    // Wait longer for CSS to apply and force a reflow
     setTimeout(() => {
+      // Force a reflow to ensure CSS is applied
+      $shell[0].offsetHeight;
       initializeFlipbook();
-    }, 100);
+    }, 300); // Increased from 100ms to 300ms
   }
 
   function exitFullscreen() {
@@ -148,9 +151,12 @@ $(function() {
       flipbookInitialized = false;
     }
     
+    // Wait longer for CSS to apply and force a reflow
     setTimeout(() => {
+      // Force a reflow to ensure CSS is applied
+      $shell[0].offsetHeight;
       initializeFlipbook();
-    }, 100);
+    }, 300); // Increased from 100ms to 300ms
   }
   
   // Add keyboard navigation for page turning
@@ -587,7 +593,7 @@ $(function() {
       } else {
         // Much larger normal size to prevent any content cutoff
         width = Math.min(window.innerWidth * 0.9, 1250);
-        height = Math.min(window.innerHeight * 0.85, 1000); // Increased from 0.8 to 0.85
+        height = Math.min(window.innerHeight * 0.8, 1000); // Reduced height to test image scaling
       }
       
       $book.turn("size", width, height);
