@@ -50,7 +50,7 @@ model Event {
   blog_posts          BlogPost[]
   photos              Photo[]
   recipes             Recipe[]
-  journal_pages       JournalPage[]
+  journal_sections     JournalSection[]
 
   @@map("events")
 }
@@ -119,36 +119,38 @@ model BlogPost {
   @@map("BlogPosts")
 }
 
-model JournalPage {
-  journal_page_id Int      @id @default(autoincrement())
-  event_id        Int
-  year            Int
-  page_number     Int      @default(1)
-  title           String?  @db.VarChar(255)
-  description     String?
-  layout_config   Json?
-  is_published    Boolean  @default(false)
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
-  event           Event    @relation(fields: [event_id], references: [event_id], onDelete: Cascade)
-  content_items   JournalContentItem[]
+model JournalSection {
+  section_id     Int      @id @default(autoincrement())
+  event_id       Int
+  year           Int
+  section_order  Int      @default(1)
+  title          String?  @db.VarChar(255)
+  description    String?
+  layout_config  Json?
+  is_published   Boolean  @default(false)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+  event          Event    @relation(fields: [event_id], references: [event_id], onDelete: Cascade)
+  content_items  JournalContentItem[]
 
-  @@unique([event_id, year, page_number])
-  @@map("JournalPages")
+  @@unique([event_id, year, section_order])
+  @@map("JournalSections")
 }
 
 model JournalContentItem {
-  content_item_id Int           @id @default(autoincrement())
-  journal_page_id Int
-  content_type    ContentType
-  content_id      Int?
-  custom_text     String?
-  heading_level   Int?          @default(1)
-  display_order   Int
-  is_visible      Boolean       @default(true)
-  created_at      DateTime      @default(now())
-  updated_at      DateTime      @updatedAt
-  journal_page    JournalPage   @relation(fields: [journal_page_id], references: [journal_page_id], onDelete: Cascade)
+  content_item_id      Int           @id @default(autoincrement())
+  journal_section_id   Int
+  content_type         ContentType
+  content_id           Int?
+  custom_text          String?
+  heading_level        Int?          @default(1)
+  display_order        Int
+  is_visible           Boolean       @default(true)
+  manual_page_break    Boolean       @default(false)
+  page_break_position  Int?          @default(1)
+  created_at           DateTime      @default(now())
+  updated_at           DateTime      @updatedAt
+  journal_section      JournalSection @relation(fields: [journal_section_id], references: [section_id], onDelete: Cascade)
 
   @@map("JournalContentItems")
 }

@@ -1,14 +1,16 @@
 import { Router } from 'express';
 import {
-  createJournalPage,
-  getJournalPages,
-  getJournalPage,
-  updateJournalPage,
-  deleteJournalPage,
+  createJournalSection,
+  getJournalSections,
+  getJournalSection,
+  updateJournalSection,
+  deleteJournalSection,
   createContentItem,
   updateContentItem,
   deleteContentItem,
   reorderContentItems,
+  addPageBreak,
+  removePageBreak,
   getAvailableContent,
   getJournalViewerData,
   getJournalYears
@@ -16,18 +18,22 @@ import {
 
 const router = Router();
 
-// Journal Pages Routes
-router.post('/', createJournalPage);
-router.get('/', getJournalPages);
-router.get('/:journalPageId', getJournalPage);
-router.put('/:journalPageId', updateJournalPage);
-router.delete('/:journalPageId', deleteJournalPage);
+// Journal Sections Routes
+router.post('/', createJournalSection);
+router.get('/', getJournalSections);
+router.get('/:sectionId', getJournalSection);
+router.put('/:sectionId', updateJournalSection);
+router.delete('/:sectionId', deleteJournalSection);
 
 // Content Items Routes
-router.post('/:journalPageId/content-items', createContentItem);
-router.put('/content-items/:contentItemId', updateContentItem);
-router.delete('/content-items/:contentItemId', deleteContentItem);
-router.put('/:journalPageId/reorder', reorderContentItems);
+router.post('/:sectionId/content-items', createContentItem);
+router.put('/content-items/:itemId', updateContentItem);
+router.delete('/content-items/:itemId', deleteContentItem);
+router.put('/:sectionId/reorder', reorderContentItems);
+
+// Page Break Management Routes
+router.post('/content-items/:contentItemId/page-break', addPageBreak);
+router.delete('/content-items/:contentItemId/page-break', removePageBreak);
 
 // Available Content Route
 router.get('/available-content/:eventId', getAvailableContent);

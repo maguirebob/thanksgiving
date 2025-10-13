@@ -1,10 +1,10 @@
 // Journal-related TypeScript interfaces
 
-export interface JournalPage {
-  journal_page_id: number;
+export interface JournalSection {
+  section_id: number;
   event_id: number;
   year: number;
-  page_number: number;
+  section_order: number;
   title?: string;
   description?: string;
   layout_config?: any;
@@ -16,13 +16,15 @@ export interface JournalPage {
 
 export interface JournalContentItem {
   content_item_id: number;
-  journal_page_id: number;
+  journal_section_id: number;
   content_type: ContentType;
   content_id?: number;
   custom_text?: string;
   heading_level?: number;
   display_order: number;
   is_visible: boolean;
+  manual_page_break: boolean;
+  page_break_position?: number;
   created_at: Date;
   updated_at: Date;
   // Related content data (populated via joins)
@@ -68,16 +70,16 @@ export interface MenuData {
 }
 
 // API Request/Response interfaces
-export interface CreateJournalPageRequest {
+export interface CreateJournalSectionRequest {
   event_id: number;
   year: number;
-  page_number?: number;
+  section_order?: number;
   title?: string;
   description?: string;
   layout_config?: any;
 }
 
-export interface UpdateJournalPageRequest {
+export interface UpdateJournalSectionRequest {
   title?: string;
   description?: string;
   layout_config?: any;
@@ -91,6 +93,8 @@ export interface CreateContentItemRequest {
   heading_level?: number;
   display_order: number;
   is_visible?: boolean;
+  manual_page_break?: boolean;
+  page_break_position?: number;
 }
 
 export interface UpdateContentItemRequest {
@@ -100,6 +104,8 @@ export interface UpdateContentItemRequest {
   heading_level?: number;
   display_order?: number;
   is_visible?: boolean;
+  manual_page_break?: boolean;
+  page_break_position?: number;
 }
 
 export interface ReorderContentItemsRequest {
@@ -113,18 +119,36 @@ export interface UpdatePhotoTypeRequest {
   photo_type: PhotoType;
 }
 
-// API Response interfaces
-export interface JournalPageResponse {
+// Page break management interfaces
+export interface AddPageBreakRequest {
+  content_item_id: number;
+  page_break_position: number;
+}
+
+export interface RemovePageBreakRequest {
+  content_item_id: number;
+}
+
+export interface PageBreakResponse {
   success: boolean;
   data: {
-    journal_page: JournalPage;
+    content_item: JournalContentItem;
+    page_break_added: boolean;
   };
 }
 
-export interface JournalPagesResponse {
+// API Response interfaces
+export interface JournalSectionResponse {
   success: boolean;
   data: {
-    journal_pages: JournalPage[];
+    journal_section: JournalSection;
+  };
+}
+
+export interface JournalSectionsResponse {
+  success: boolean;
+  data: {
+    journal_sections: JournalSection[];
     pagination?: {
       total: number;
       page: number;

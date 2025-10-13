@@ -349,11 +349,11 @@ class SmokeTestRunner {
         }
         
         const data = response.data;
-        if (typeof data.year !== 'number' || !Array.isArray(data.pages)) {
+        if (typeof data.year !== 'number' || !Array.isArray(data.journal_sections)) {
           throw new Error('Journal data API returned invalid data types');
         }
         
-        console.log(`   Found ${data.pages.length} journal pages for year ${data.year}`);
+        console.log(`   Found ${data.journal_sections.length} journal sections for year ${data.year}`);
       } catch (error) {
         // If 2013 doesn't exist, try with any available year
         if (error instanceof Error && error.message.includes('HTTP 404')) {
@@ -370,11 +370,11 @@ class SmokeTestRunner {
             }
             
             const testData = testResponse.data;
-            if (typeof testData.year !== 'number' || !Array.isArray(testData.pages)) {
+            if (typeof testData.year !== 'number' || !Array.isArray(testData.journal_sections)) {
               throw new Error('Journal data API returned invalid data types');
             }
             
-            console.log(`   Found ${testData.pages.length} journal pages for year ${testData.year}`);
+            console.log(`   Found ${testData.journal_sections.length} journal sections for year ${testData.year}`);
           } else {
             console.log('   Journal data API endpoint exists (no journal data available)');
           }
@@ -414,16 +414,16 @@ class SmokeTestRunner {
       try {
         const response = await this.makeRequest('GET', '/api/journal/1');
         
-        if (!response.success || !response.data || !response.data.journal_page) {
-          throw new Error('Journal page API returned invalid response structure');
+        if (!response.success || !response.data || !response.data.journal_section) {
+          throw new Error('Journal section API returned invalid response structure');
         }
         
-        const page = response.data.journal_page;
-        if (typeof page.journal_page_id !== 'number' || !Array.isArray(page.content_items)) {
-          throw new Error('Journal page API returned invalid data types');
+        const section = response.data.journal_section;
+        if (typeof section.section_id !== 'number' || !Array.isArray(section.content_items)) {
+          throw new Error('Journal section API returned invalid data types');
         }
         
-        console.log(`   Found journal page ${page.journal_page_id} with ${page.content_items.length} content items`);
+        console.log(`   Found journal section ${section.section_id} with ${section.content_items.length} content items`);
       } catch (error) {
         // If page 1 doesn't exist, test with any available page
         if (error instanceof Error && error.message.includes('HTTP 404')) {
@@ -434,9 +434,9 @@ class SmokeTestRunner {
           for (let i = 1; i <= 10; i++) {
             try {
               const testResponse = await this.makeRequest('GET', `/api/journal/${i}`);
-              if (testResponse.success && testResponse.data && testResponse.data.journal_page) {
-                const testPage = testResponse.data.journal_page;
-                console.log(`   Found journal page ${testPage.journal_page_id} with ${testPage.content_items.length} content items`);
+              if (testResponse.success && testResponse.data && testResponse.data.journal_section) {
+                const testSection = testResponse.data.journal_section;
+                console.log(`   Found journal section ${testSection.section_id} with ${testSection.content_items.length} content items`);
                 foundPage = true;
                 break;
               }
