@@ -21,7 +21,7 @@ describe('Smoke Tests - Journal Functionality', () => {
     // Add journal routes for testing
     app.get('/api/journal/viewer/years', async (_req, res) => {
       try {
-        const years = await prisma.journalPage.findMany({
+        const years = await prisma.journalSection.findMany({
           select: { year: true },
           distinct: ['year'],
           orderBy: { year: 'asc' }
@@ -50,11 +50,11 @@ describe('Smoke Tests - Journal Functionality', () => {
           });
         }
 
-        const journalPages = await prisma.journalPage.findMany({
+        const journalSections = await prisma.journalSection.findMany({
           where: { year: parseInt(year as string) },
           include: {
             content_items: {
-              orderBy: { display_order: 'asc' }
+              orderBy: { section_order: 'asc' }
             },
             event: {
               select: {
@@ -64,14 +64,14 @@ describe('Smoke Tests - Journal Functionality', () => {
               }
             }
           },
-          orderBy: { page_number: 'asc' }
+          orderBy: { section_order: 'asc' }
         });
 
         res.json({
           success: true,
           data: {
             year: parseInt(year as string),
-            pages: journalPages
+            journal_sections: journalSections
           }
         });
       } catch (error) {
@@ -164,25 +164,25 @@ describe('Smoke Tests - Journal Functionality', () => {
       try {
         const journalPageId = req.params.journalPageId;
 
-        const journalPage = await prisma.journalPage.findUnique({
-          where: { journal_page_id: parseInt(journalPageId) },
+        const journalSection = await prisma.journalSection.findUnique({
+          where: { section_id: parseInt(journalPageId) },
           include: {
             content_items: {
-              orderBy: { display_order: 'asc' }
+              orderBy: { section_order: 'asc' }
             }
           }
         });
 
-        if (!journalPage) {
+        if (!journalSection) {
           return res.status(404).json({
             success: false,
-            message: 'Journal page not found'
+            message: 'Journal section not found'
           });
         }
 
         res.json({
           success: true,
-          data: { journal_page: journalPage }
+          data: { journal_section: journalSection }
         });
       } catch (error) {
         res.status(500).json({
@@ -253,13 +253,13 @@ describe('Smoke Tests - Journal Functionality', () => {
       // First, ensure we have some test data
       const event = await testUtils.createTestEvent(prisma);
       
-      // Create a test journal page
-      const journalPage = await prisma.journalPage.create({
+      // Create a test journal section
+      const journalSection = await prisma.journalSection.create({
         data: {
           event_id: event.event_id,
           year: 2023,
-          page_number: 1,
-          title: 'Test Page',
+          section_order: 1,
+          title: 'Test Section',
           description: 'Test Description'
         }
       });
@@ -267,11 +267,11 @@ describe('Smoke Tests - Journal Functionality', () => {
       // Create a test content item
       await prisma.journalContentItem.create({
         data: {
-          journal_page_id: journalPage.journal_page_id,
+          section_id: journalSection.section_id,
           content_type: 'text',
           content_id: null,
           custom_text: 'Test content',
-          display_order: 1
+          section_order: 1
         }
       });
 
@@ -282,9 +282,9 @@ describe('Smoke Tests - Journal Functionality', () => {
 
       expect(response.body.success).toBe(true);
       expect(response.body.data).toHaveProperty('year', 2023);
-      expect(response.body.data).toHaveProperty('pages');
-      expect(Array.isArray(response.body.data.pages)).toBe(true);
-      expect(response.body.data.pages.length).toBeGreaterThan(0);
+      expect(response.body.data).toHaveProperty('journal_sections');
+      expect(Array.isArray(response.body.data.journal_sections)).toBe(true);
+      expect(response.body.data.journal_sections.length).toBeGreaterThan(0);
     });
 
     test('should handle missing year parameter', async () => {
@@ -303,7 +303,7 @@ describe('Smoke Tests - Journal Functionality', () => {
         .expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.data.pages).toHaveLength(0);
+      expect(response.body.data.journal_sections).toHaveLength(0);
     });
   });
 
@@ -341,24 +341,24 @@ describe('Smoke Tests - Journal Functionality', () => {
     test('should get journal page by ID', async () => {
       const event = await testUtils.createTestEvent(prisma);
       
-      const journalPage = await prisma.journalPage.create({
+      const journalSection = await prisma.journalSection.create({
         data: {
           event_id: event.event_id,
           year: 2023,
-          page_number: 1,
-          title: 'Test Page',
+          section_order: 1,
+          title: 'Test Section',
           description: 'Test Description'
         }
       });
 
       const response = await request(app)
-        .get(`/api/journal/${journalPage.journal_page_id}`)
+        .get(`/api/journal/${journalSection.section_id}`)
         .expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.data).toHaveProperty('journal_page');
-      expect(response.body.data.journal_page.journal_page_id).toBe(journalPage.journal_page_id);
-      expect(response.body.data.journal_page.title).toBe('Test Page');
+      expect(response.body.data).toHaveProperty('journal_section');
+      expect(response.body.data.journal_section.section_id).toBe(journalSection.section_id);
+      expect(response.body.data.journal_section.title).toBe('Test Section');
     });
 
     test('should handle missing event ID parameter', async () => {
@@ -394,17 +394,17 @@ describe('Smoke Tests - Journal Functionality', () => {
         .expect(404);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toContain('Journal page not found');
+      expect(response.body.message).toContain('Journal section not found');
     });
   });
 
   describe('Journal Database Schema Tests', () => {
-    test('should have journal pages table', async () => {
+    test('should have journal sections table', async () => {
       const result = await prisma.$queryRaw`
         SELECT table_name 
         FROM information_schema.tables 
         WHERE table_schema = 'public' 
-        AND table_name = 'JournalPages'
+        AND table_name = 'JournalSections'
       `;
       
       expect(result).toHaveLength(1);
@@ -421,44 +421,44 @@ describe('Smoke Tests - Journal Functionality', () => {
       expect(result).toHaveLength(1);
     });
 
-    test('should be able to create journal page', async () => {
+    test('should be able to create journal section', async () => {
       const event = await testUtils.createTestEvent(prisma);
       
-      const journalPage = await prisma.journalPage.create({
+      const journalSection = await prisma.journalSection.create({
         data: {
           event_id: event.event_id,
           year: 2023,
-          page_number: 1,
-          title: 'Smoke Test Page',
+          section_order: 1,
+          title: 'Smoke Test Section',
           description: 'Created during smoke test'
         }
       });
 
-      expect(journalPage.journal_page_id).toBeDefined();
-      expect(journalPage.title).toBe('Smoke Test Page');
-      expect(journalPage.year).toBe(2023);
+      expect(journalSection.section_id).toBeDefined();
+      expect(journalSection.title).toBe('Smoke Test Section');
+      expect(journalSection.year).toBe(2023);
     });
 
     test('should be able to create journal content item', async () => {
       const event = await testUtils.createTestEvent(prisma);
       
-      const journalPage = await prisma.journalPage.create({
+      const journalSection = await prisma.journalSection.create({
         data: {
           event_id: event.event_id,
           year: 2023,
-          page_number: 1,
-          title: 'Smoke Test Page',
+          section_order: 1,
+          title: 'Smoke Test Section',
           description: 'Created during smoke test'
         }
       });
 
       const contentItem = await prisma.journalContentItem.create({
         data: {
-          journal_page_id: journalPage.journal_page_id,
+          section_id: journalSection.section_id,
           content_type: 'text',
           content_id: null,
           custom_text: 'Smoke test content',
-          display_order: 1
+          section_order: 1
         }
       });
 
