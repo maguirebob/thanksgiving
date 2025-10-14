@@ -21,7 +21,7 @@ const prisma = new PrismaClient();
 export const createJournalSection = async (req: Request, res: Response): Promise<void> => {
   console.log('🔍 === CREATE JOURNAL SECTION DEBUG START ===');
   console.log('📊 Request body:', JSON.stringify(req.body, null, 2));
-  console.log('🌍 Environment:', process.env.NODE_ENV);
+  console.log('🌍 Environment:', process.env['NODE_ENV']);
   console.log('📅 Timestamp:', new Date().toISOString());
   
   try {

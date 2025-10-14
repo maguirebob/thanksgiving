@@ -2,6 +2,11 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.6] - 2025-10-14
+
+- Fix TypeScript error: Use bracket notation for process.env.NODE_ENV
+- Resolves TS4111 error in journalController.ts
+- Required for Docker build to succeed
 ## [2.13.5] - 2025-10-14
 
 - Add comprehensive debugging to journal section creation
