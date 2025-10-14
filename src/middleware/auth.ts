@@ -12,8 +12,10 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
       originalUrl: req.originalUrl
     });
     
-    // Store the original URL to redirect back after login
-    req.session.returnTo = req.originalUrl;
+    // Store the original URL to redirect back after login (only if session exists)
+    if (req.session) {
+      req.session.returnTo = req.originalUrl;
+    }
     return res.redirect('/auth/login');
   }
   next();
