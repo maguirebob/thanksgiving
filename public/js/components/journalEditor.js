@@ -56,13 +56,16 @@ class JournalEditor {
         document.getElementById('sectionTitle')?.addEventListener('input', () => this.markDirty());
         document.getElementById('sectionDescription')?.addEventListener('input', () => this.markDirty());
         
-        // Page break management
+        // Page break management and content item deletion
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('add-page-break-btn')) {
                 this.addPageBreak(e.target.dataset.itemId);
             }
             if (e.target.classList.contains('remove-page-break-btn')) {
                 this.removePageBreak(e.target.dataset.itemId);
+            }
+            if (e.target.classList.contains('delete-item-btn')) {
+                this.deleteContentItem(e.target.dataset.itemId);
             }
         });
     }
@@ -350,6 +353,41 @@ class JournalEditor {
         } catch (error) {
             console.error('Error removing page break:', error);
             alert('Error removing page break');
+        }
+    }
+
+    async deleteContentItem(contentItemId) {
+        // Check if this is a temporary content item (negative ID)
+        if (contentItemId < 0) {
+            // Remove from local content items array
+            this.contentItems = this.contentItems.filter(item => item.content_item_id !== contentItemId);
+            this.renderContentLayout();
+            this.markDirty();
+            return;
+        }
+
+        // Confirm deletion
+        if (!confirm('Are you sure you want to delete this content item?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/journal/content-items/${contentItemId}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                // Remove from local content items array
+                this.contentItems = this.contentItems.filter(item => item.content_item_id !== contentItemId);
+                this.renderContentLayout();
+                this.markDirty();
+            } else {
+                alert('Failed to delete content item: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error deleting content item:', error);
+            alert('Error deleting content item');
         }
     }
 
