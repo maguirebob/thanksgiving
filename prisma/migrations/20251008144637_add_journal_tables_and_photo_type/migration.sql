@@ -54,3 +54,5 @@ ALTER TABLE "JournalContentItems" ADD CONSTRAINT "JournalContentItems_photo_cont
 -- AddForeignKey
 ALTER TABLE "JournalContentItems" ADD CONSTRAINT "JournalContentItems_blog_content_id_fkey" FOREIGN KEY ("content_id") REFERENCES "BlogPosts"("blog_post_id") ON DELETE SET NULL ON UPDATE CASCADE;
 
+
+
