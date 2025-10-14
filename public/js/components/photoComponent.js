@@ -55,9 +55,16 @@ class PhotoComponent {
                 <!-- Search and Filter -->
                 <div class="photo-search mb-3">
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <input type="text" class="form-control" id="photoSearchInput" 
                                    placeholder="Search photos by caption or description...">
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" id="photoTypeFilter">
+                                <option value="all">All Types</option>
+                                <option value="individual">Individual Photos</option>
+                                <option value="page">Page Photos</option>
+                            </select>
                         </div>
                         <div class="col-md-3">
                             <select class="form-select" id="photoSortSelect">
@@ -138,6 +145,15 @@ class PhotoComponent {
                             <textarea class="form-control" id="photoDescription" rows="3" 
                                       placeholder="Describe this photo..."></textarea>
                         </div>
+                        
+                        <div class="mb-3">
+                            <label for="photoType" class="form-label">Photo Type</label>
+                            <select class="form-select" id="photoType" required>
+                                <option value="individual">Individual Photo</option>
+                                <option value="page">Page Photo</option>
+                            </select>
+                            <div class="form-text">Choose how this photo will be displayed in the journal</div>
+                        </div>
 
                         <!-- Image Preview -->
                         <div id="photoPreview" class="mb-3" style="display: none;">
@@ -199,20 +215,26 @@ class PhotoComponent {
                 e.preventDefault();
                 e.stopPropagation();
                 
-                
                 const formData = new FormData();
                 const fileInput = document.getElementById('photoFile');
                 const descriptionInput = document.getElementById('photoDescription');
                 const captionInput = document.getElementById('photoCaption');
+                const photoTypeInput = document.getElementById('photoType');
                 
                 if (!fileInput.files[0]) {
                     alert('Please select a photo file');
                     return;
                 }
                 
+                if (!photoTypeInput) {
+                    alert('Photo type field not found. Please refresh the page.');
+                    return;
+                }
+                
                 formData.append('photo', fileInput.files[0]);
                 formData.append('description', descriptionInput.value || '');
                 formData.append('caption', captionInput.value || '');
+                formData.append('photo_type', photoTypeInput.value);
                 
                 try {
                     const response = await fetch(`/api/events/${this.eventId}/photos`, {
@@ -239,6 +261,7 @@ class PhotoComponent {
         // Search and filter events
         const searchInput = document.getElementById('photoSearchInput');
         const sortSelect = document.getElementById('photoSortSelect');
+        const photoTypeFilter = document.getElementById('photoTypeFilter');
         const clearFiltersBtn = document.getElementById('clearFiltersBtn');
 
         if (searchInput) {
@@ -246,6 +269,9 @@ class PhotoComponent {
         }
         if (sortSelect) {
             sortSelect.addEventListener('change', () => this.handleSort());
+        }
+        if (photoTypeFilter) {
+            photoTypeFilter.addEventListener('change', () => this.handleTypeFilter());
         }
         if (clearFiltersBtn) {
             clearFiltersBtn.addEventListener('click', () => this.clearFilters());
@@ -314,7 +340,8 @@ class PhotoComponent {
 
         if (noPhotosMessage) noPhotosMessage.style.display = 'none';
 
-        const sortedPhotos = this.sortPhotos([...this.photos]);
+        let filteredPhotos = this.filterPhotos([...this.photos]);
+        const sortedPhotos = this.sortPhotos(filteredPhotos);
         
         photosGrid.innerHTML = sortedPhotos.map(photo => this.createPhotoCard(photo)).join('');
     }
@@ -340,6 +367,9 @@ class PhotoComponent {
                     <div class="card-body d-flex flex-column">
                         <h6 class="card-title">${escapedCaption}</h6>
                         ${escapedDescription ? `<p class="card-text text-muted small">${escapedDescription}</p>` : ''}
+                        <div class="mb-2">
+                            <span class="badge ${photo.photo_type === 'page' ? 'bg-success' : 'bg-primary'}">${photo.photo_type === 'page' ? 'Page Photo' : 'Individual Photo'}</span>
+                        </div>
                         <div class="mt-auto">
                             <small class="text-muted">${takenDate}</small>
                             <div class="btn-group btn-group-sm mt-2 w-100" role="group">
@@ -361,6 +391,24 @@ class PhotoComponent {
                 </div>
             </div>
         `;
+    }
+
+    filterPhotos(photos) {
+        const searchTerm = document.getElementById('photoSearchInput')?.value.toLowerCase() || '';
+        const typeFilter = document.getElementById('photoTypeFilter')?.value || 'all';
+        
+        return photos.filter(photo => {
+            // Search filter
+            const matchesSearch = !searchTerm || 
+                (photo.caption && photo.caption.toLowerCase().includes(searchTerm)) ||
+                (photo.description && photo.description.toLowerCase().includes(searchTerm)) ||
+                (photo.original_filename && photo.original_filename.toLowerCase().includes(searchTerm));
+            
+            // Type filter
+            const matchesType = typeFilter === 'all' || photo.photo_type === typeFilter;
+            
+            return matchesSearch && matchesType;
+        });
     }
 
     sortPhotos(photos) {
@@ -469,6 +517,7 @@ class PhotoComponent {
         const fileInput = document.getElementById('photoFile');
         const captionInput = document.getElementById('photoCaption');
         const descriptionInput = document.getElementById('photoDescription');
+        const photoTypeInput = document.getElementById('photoType');
         const submitBtn = document.getElementById('uploadPhotoSubmitBtn');
 
         if (!fileInput.files[0]) {
@@ -476,10 +525,16 @@ class PhotoComponent {
             return;
         }
 
+        if (!photoTypeInput) {
+            this.showError('Photo type field not found. Please refresh the page.');
+            return;
+        }
+
         const formData = new FormData();
         formData.append('photo', fileInput.files[0]);
         if (captionInput.value) formData.append('caption', captionInput.value);
         if (descriptionInput.value) formData.append('description', descriptionInput.value);
+        formData.append('photo_type', photoTypeInput.value);
 
         // Disable submit button
         if (submitBtn) {
@@ -661,6 +716,14 @@ class PhotoComponent {
                         </div>
                         
                         <div style="margin-bottom: 15px;">
+                            <label for="editPhotoType" style="display: block; margin-bottom: 5px; font-weight: bold;">Photo Type:</label>
+                            <select id="editPhotoType" name="photo_type" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="individual" ${photo.photo_type === 'individual' ? 'selected' : ''}>Individual Photo</option>
+                                <option value="page" ${photo.photo_type === 'page' ? 'selected' : ''}>Page Photo</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
                             <label for="editTakenDate" style="display: block; margin-bottom: 5px; font-weight: bold;">Date Taken:</label>
                             <input type="datetime-local" id="editTakenDate" name="taken_date" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" value="${this.formatDateForInput(photo.taken_date)}">
                         </div>
@@ -722,7 +785,8 @@ class PhotoComponent {
         const updateData = {
             description: formData.get('description'),
             caption: formData.get('caption'),
-            taken_date: formData.get('taken_date')
+            taken_date: formData.get('taken_date'),
+            photo_type: formData.get('photo_type')
         };
 
         try {
@@ -780,9 +844,14 @@ class PhotoComponent {
         this.displayPhotos();
     }
 
+    handleTypeFilter() {
+        this.displayPhotos();
+    }
+
     clearFilters() {
         document.getElementById('photoSearchInput').value = '';
         document.getElementById('photoSortSelect').value = 'newest';
+        document.getElementById('photoTypeFilter').value = 'all';
         this.loadPhotos(1);
     }
 
