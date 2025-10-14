@@ -72,30 +72,39 @@ class JournalEditor {
 
     // Event and Section Management
     async loadCurrentEvent() {
-            console.log('=== LOAD CURRENT EVENT DEBUG ===');
-            console.log('window.currentEventId:', window.currentEventId);
+        console.log('=== LOAD CURRENT EVENT DEBUG ===');
+        console.log('Available events:', window.events);
+        
+        // Since we removed hardcoding, start with no event selected
+        this.currentEventId = null;
+        this.currentYear = null;
+        
+        // Set default year to current year
+        this.currentYear = new Date().getFullYear();
+        console.log('Default year set to:', this.currentYear);
+        
+        // Try to find an event for the current year
+        await this.findEventForYear(this.currentYear);
+        
+        console.log('=== END LOAD CURRENT EVENT DEBUG ===');
+    }
+
+    // Find event for a specific year
+    async findEventForYear(year) {
+        console.log(`Looking for event for year: ${year}`);
+        
+        // Find event that matches the year
+        const eventForYear = window.events.find(event => {
+            const eventYear = new Date(event.event_date).getFullYear();
+            return eventYear === year;
+        });
+        
+        if (eventForYear) {
+            this.currentEventId = eventForYear.event_id;
+            console.log(`Found event for year ${year}:`, eventForYear.event_name, `(ID: ${eventForYear.event_id})`);
             
-        if (window.currentEventId) {
-            this.currentEventId = window.currentEventId;
-            
-            // Check if there are existing sections for this event
-            try {
-                const response = await fetch(`/api/journal?event_id=${this.currentEventId}`);
-            const result = await response.json();
-                
-                if (result.success && result.data.journal_sections.length > 0) {
-                    // Use the year from the first existing section
-                    this.currentYear = result.data.journal_sections[0].year;
-                    console.log('Found existing sections for year:', this.currentYear);
-            } else {
-                    // Default to current year if no sections exist
-                    this.currentYear = new Date().getFullYear();
-                    console.log('No existing sections, defaulting to current year:', this.currentYear);
-            }
-        } catch (error) {
-                console.error('Error checking existing sections:', error);
-                this.currentYear = new Date().getFullYear();
-            }
+            // Update the UI to show current event
+            this.updateCurrentEventDisplay(eventForYear);
             
             // Set the year selector value
             const yearSelect = document.getElementById('yearSelect');
@@ -107,17 +116,42 @@ class JournalEditor {
             const createBtn = document.getElementById('createSectionBtn');
             if (createBtn) createBtn.disabled = false;
             
-            console.log('Journal Editor initialized for event:', this.currentEventId, 'year:', this.currentYear);
-            } else {
-            console.error('No current event ID found');
+            // Load journal sections and available content
+            await this.loadJournalSections();
+            await this.loadAvailableContent();
+        } else {
+            console.log(`No event found for year ${year}`);
+            this.currentEventId = null;
+            this.hideCurrentEventDisplay();
         }
-        console.log('=== END LOAD CURRENT EVENT DEBUG ===');
+    }
+
+    // Update the current event display in the UI
+    updateCurrentEventDisplay(event) {
+        const display = document.getElementById('currentEventDisplay');
+        const nameSpan = document.getElementById('currentEventName');
+        const idSpan = document.getElementById('currentEventId');
+        
+        if (display && nameSpan && idSpan) {
+            nameSpan.textContent = event.event_name;
+            idSpan.textContent = event.event_id;
+            display.style.display = 'block';
+        }
+    }
+
+    // Hide the current event display
+    hideCurrentEventDisplay() {
+        const display = document.getElementById('currentEventDisplay');
+        if (display) {
+            display.style.display = 'none';
+        }
     }
 
     async handleYearChange(event) {
         this.currentYear = parseInt(event.target.value);
-        await this.loadJournalSections();
-        await this.loadAvailableContent();
+        
+        // Find the event for the selected year
+        await this.findEventForYear(this.currentYear);
     }
 
     async handleSectionChange(event) {
@@ -156,7 +190,9 @@ class JournalEditor {
         if (!this.currentEventId || !this.currentYear) return;
 
         try {
-            const response = await fetch(`/api/journal?event_id=${this.currentEventId}&year=${this.currentYear}`);
+            const response = await fetch(`/api/journal?event_id=${this.currentEventId}&year=${this.currentYear}`, {
+                credentials: 'include'
+            });
             const result = await response.json();
 
             if (result.success) {
@@ -193,7 +229,9 @@ class JournalEditor {
         if (!this.currentSectionId) return;
 
         try {
-            const response = await fetch(`/api/journal/${this.currentSectionId}`);
+            const response = await fetch(`/api/journal/${this.currentSectionId}`, {
+                credentials: 'include'
+            });
             const result = await response.json();
 
             if (result.success) {
@@ -239,6 +277,7 @@ class JournalEditor {
                 headers: {
                     'Content-Type': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     event_id: this.currentEventId,
                     year: this.currentYear,
@@ -279,7 +318,8 @@ class JournalEditor {
 
         try {
             const response = await fetch(`/api/journal/${this.currentSectionId}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                credentials: 'include'
             });
 
             const result = await response.json();
@@ -311,6 +351,7 @@ class JournalEditor {
                 headers: {
                     'Content-Type': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     page_break_position: 1
                 })
@@ -339,7 +380,8 @@ class JournalEditor {
 
         try {
             const response = await fetch(`/api/journal/content-items/${contentItemId}/page-break`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                credentials: 'include'
             });
 
             const result = await response.json();
@@ -373,7 +415,8 @@ class JournalEditor {
 
         try {
             const response = await fetch(`/api/journal/content-items/${contentItemId}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                credentials: 'include'
             });
 
             const result = await response.json();
@@ -403,7 +446,9 @@ class JournalEditor {
             const url = `/api/journal/available-content/${this.currentEventId}?year=${this.currentYear}`;
             console.log('Making request to:', url);
             
-            const response = await fetch(url);
+            const response = await fetch(url, {
+                credentials: 'include'
+            });
             console.log('Response status:', response.status);
             
             if (!response.ok) {
@@ -610,6 +655,7 @@ class JournalEditor {
                 headers: {
                     'Content-Type': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     title: titleInput?.value || null,
                     description: descriptionInput?.value || null
@@ -648,6 +694,7 @@ class JournalEditor {
                 headers: {
                     'Content-Type': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     is_published: true
                 })
@@ -670,7 +717,9 @@ class JournalEditor {
 
         try {
             // First, get existing content items to determine which ones to delete
-            const existingResponse = await fetch(`/api/journal/${this.currentSectionId}`);
+            const existingResponse = await fetch(`/api/journal/${this.currentSectionId}`, {
+                credentials: 'include'
+            });
             const existingResult = await existingResponse.json();
             
             if (!existingResult.success) {
@@ -685,7 +734,8 @@ class JournalEditor {
                 const itemsToDelete = existingIds.filter(id => !currentIds.includes(id));
                 for (const itemId of itemsToDelete) {
                     await fetch(`/api/journal/content-items/${itemId}`, {
-                        method: 'DELETE'
+                        method: 'DELETE',
+                        credentials: 'include'
                     });
             }
 
@@ -698,6 +748,7 @@ class JournalEditor {
                         headers: {
                             'Content-Type': 'application/json'
                         },
+                        credentials: 'include',
                         body: JSON.stringify({
                             content_type: item.content_type,
                             content_id: item.content_id,
@@ -716,6 +767,7 @@ class JournalEditor {
                         headers: {
                             'Content-Type': 'application/json'
                         },
+                        credentials: 'include',
                         body: JSON.stringify({
                             content_type: item.content_type,
                             content_id: item.content_id,

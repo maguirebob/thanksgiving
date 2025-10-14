@@ -704,6 +704,79 @@ The application uses Prisma with the following models:
    - Tag releases properly
    - Push to remote after versioning
 
+### GitHub Issue Management
+
+**CRITICAL: Always add issues to the kanban board!**
+
+When creating GitHub issues, follow this process to ensure they appear in the kanban board:
+
+#### Creating Issues with Kanban Integration
+
+1. **Create the issue:**
+   ```bash
+   gh issue create --title "Your Issue Title" --body "Issue description" --label "bug"
+   ```
+
+2. **Add to Thanksgiving Website Backlog project:**
+   ```bash
+   gh project item-add 1 --owner maguirebob --url https://github.com/maguirebob/thanksgiving/issues/[ISSUE_NUMBER]
+   ```
+
+#### Complete Issue Creation Process
+
+**Step 1: Create Issue**
+```bash
+gh issue create --title "Bug Title" --body "## Bug Description
+Detailed description here...
+
+## Steps to Reproduce
+1. Step one
+2. Step two
+
+## Expected Behavior
+What should happen
+
+## Priority
+High/Medium/Low" --label "bug"
+```
+
+**Step 2: Get Issue Number**
+The command will output: `https://github.com/maguirebob/thanksgiving/issues/XX`
+
+**Step 3: Add to Kanban**
+```bash
+gh project item-add 1 --owner maguirebob --url https://github.com/maguirebob/thanksgiving/issues/XX
+```
+
+#### Available Labels
+- `bug` - For bugs and issues
+- `documentation` - For documentation tasks
+- `enhancement` - For new features
+- `help wanted` - For community help needed
+
+#### Project Information
+- **Project Name:** Thanksgiving Website Backlog
+- **Project ID:** 1
+- **Owner:** maguirebob
+- **Repository:** thanksgiving
+
+#### Verification Commands
+```bash
+# List all open issues
+gh issue list --state open
+
+# View specific issue
+gh issue view [NUMBER]
+
+# List projects
+gh project list
+
+# Check if issue is in project
+gh project item-list 1
+```
+
+**⚠️ IMPORTANT:** Issues created without adding to the project will NOT appear in the kanban board!
+
 ## 🎯 Next Steps
 
 The application is production-ready! Consider:
