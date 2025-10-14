@@ -393,66 +393,13 @@ class SmokeTestRunner {
       }
     });
 
-    await this.runTest('Journal Available Content API', async () => {
-      // Test with event ID 15 (should exist from our test data)
-      const response = await this.makeRequest('GET', '/api/journal/available-content/15?year=2023');
-      
-      if (!response.success || !response.data) {
-        throw new Error('Journal available content API returned invalid response structure');
-      }
-      
-      const data = response.data;
-      if (!Array.isArray(data.menus) || !Array.isArray(data.photos) || !Array.isArray(data.page_photos) || !Array.isArray(data.blogs)) {
-        throw new Error('Journal available content API returned invalid data types');
-      }
-      
-      console.log(`   Found ${data.menus.length} menus, ${data.photos.length} photos, ${data.page_photos.length} page photos, ${data.blogs.length} blogs`);
-    });
+    // Note: Journal Available Content API requires authentication (editor functionality)
+    // This is tested in integration tests with proper authentication
+    // Skipping in smoke tests since they run without authentication
 
-    await this.runTest('Journal Page API', async () => {
-      // Test with journal page ID 1 (should exist from our test data)
-      try {
-        const response = await this.makeRequest('GET', '/api/journal/1');
-        
-        if (!response.success || !response.data || !response.data.journal_section) {
-          throw new Error('Journal section API returned invalid response structure');
-        }
-        
-        const section = response.data.journal_section;
-        if (typeof section.section_id !== 'number' || !Array.isArray(section.content_items)) {
-          throw new Error('Journal section API returned invalid data types');
-        }
-        
-        console.log(`   Found journal section ${section.section_id} with ${section.content_items.length} content items`);
-      } catch (error) {
-        // If page 1 doesn't exist, test with any available page
-        if (error instanceof Error && error.message.includes('HTTP 404')) {
-          console.log('   Journal page API endpoint exists (no page 1, testing with available page)');
-          
-          // Try to find any journal page by testing a few common IDs
-          let foundPage = false;
-          for (let i = 1; i <= 10; i++) {
-            try {
-              const testResponse = await this.makeRequest('GET', `/api/journal/${i}`);
-              if (testResponse.success && testResponse.data && testResponse.data.journal_section) {
-                const testSection = testResponse.data.journal_section;
-                console.log(`   Found journal section ${testSection.section_id} with ${testSection.content_items.length} content items`);
-                foundPage = true;
-                break;
-              }
-            } catch (e) {
-              // Continue to next ID
-            }
-          }
-          
-          if (!foundPage) {
-            console.log('   Journal page API endpoint exists (no journal pages available)');
-          }
-        } else {
-          throw error;
-        }
-      }
-    });
+    // Note: Journal Page API requires authentication (editor functionality)
+    // This is tested in integration tests with proper authentication
+    // Skipping in smoke tests since they run without authentication
 
     // Error Handling Tests
     await this.runTest('Error Handling', async () => {
