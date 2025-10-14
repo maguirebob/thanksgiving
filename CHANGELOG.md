@@ -2,6 +2,13 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.9] - 2025-10-14
+
+- Add comprehensive project conventions and rules document
+- Created PROJECT_CONVENTIONS_AND_RULES.md with all established conventions
+- Covers git workflow, versioning, code quality, database management
+- Includes debugging methodology, deployment process, and security best practices
+- Generic document for reuse in future projects
 ## [2.13.8] - 2025-10-14
 
 - Fix authentication middleware: Add null safety and proper HTTPS session handling

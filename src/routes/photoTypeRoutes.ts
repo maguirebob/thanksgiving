@@ -9,3 +9,5 @@ router.get('/events/:event_id/photos/:photo_type', getPhotosByType);
 
 export default router;
 
+
+
