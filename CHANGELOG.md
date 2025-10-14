@@ -2,6 +2,12 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.3] - 2025-10-14
+
+- Fix TypeScript error: Add null safety for existingSections[0]
+- Fix TS2532 error: Object is possibly 'undefined'
+- Add optional chaining and null coalescing for section_order access
+- Ensures build passes without TypeScript compilation errors
 ## [2.12.70] - 2025-10-08
 
 - Add migration for BlogPosts images field
