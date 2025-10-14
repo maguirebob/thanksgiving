@@ -650,6 +650,60 @@ The application uses Prisma with the following models:
 - [Architecture Documentation](docs/Thanksgiving%20Website%20Architecture.md) - Detailed system architecture
 - [Test Documentation](tests/README.md) - Testing guide and conventions
 
+## 🤝 Development Workflow & Rules
+
+### Core Development Rules
+
+1. **Always Use Versioning Function**
+   - Use `npm run version:patch` for bug fixes
+   - Use `npm run version:minor` for new features  
+   - Use `npm run version:major` for breaking changes
+   - **NEVER** manually edit version numbers
+
+2. **Server Restart Protocol**
+   - **ALWAYS** stop and start the server after making changes
+   - Use `pkill -f "ts-node-dev" && npm run dev` to ensure clean restart
+   - This prevents caching issues and ensures changes are loaded
+
+3. **Environment Management Rules**
+   - **NEVER** make changes directly in test or production
+   - **ALWAYS** work in dev branch first
+   - **ALWAYS** backup database before any destructive operations
+   - Follow strict dev → test → main promotion workflow
+
+4. **Database Change Rules**
+   - **ALWAYS** backup before schema changes
+   - **ALWAYS** test migrations locally first
+   - **ALWAYS** backup test environment before changes
+   - **ALWAYS** backup production before any changes
+
+5. **Journal Scrapbook Development**
+   - Journal editor and viewer are core features
+   - Always test drag-and-drop functionality
+   - Always test image display in both editor and viewer
+   - Always test page break functionality
+   - Always test delete functionality for content items
+
+### Development Best Practices
+
+1. **Testing Protocol**
+   - Run smoke tests after major changes
+   - Test journal editor functionality thoroughly
+   - Verify image display across all content types
+   - Test responsive design on different screen sizes
+
+2. **Code Quality**
+   - Fix TypeScript errors immediately
+   - Use proper error handling
+   - Add debugging logs when needed
+   - Clean up temporary files after debugging
+
+3. **Git Workflow**
+   - Commit frequently with descriptive messages
+   - Use semantic versioning for all releases
+   - Tag releases properly
+   - Push to remote after versioning
+
 ## 🎯 Next Steps
 
 The application is production-ready! Consider:
