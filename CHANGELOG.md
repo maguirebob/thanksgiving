@@ -2,6 +2,13 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.5] - 2025-10-14
+
+- Add production migration safety safeguards
+- Enhanced Railway deployment script with automatic backup and rollback
+- Migration validation script to catch issues before deployment
+- Comprehensive production migration safety documentation
+- Prevents silent migration failures like the JournalPages rename issue
 ## [2.13.4] - 2025-10-14
 
 - Add migration to rename JournalPages to JournalSections
