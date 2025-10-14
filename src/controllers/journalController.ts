@@ -60,7 +60,7 @@ export const createJournalSection = async (req: Request, res: Response): Promise
 
     // Calculate next section_order
     const nextSectionOrder = existingSections.length > 0 
-      ? existingSections[0].section_order + 1 
+      ? (existingSections[0]?.section_order || 0) + 1 
       : 1;
 
     // Create journal section
