@@ -2,6 +2,13 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.5] - 2025-10-14
+
+- Add comprehensive debugging to journal section creation
+- Detailed logging in createJournalSection controller
+- Enhanced frontend debugging in createNewSection
+- Will help diagnose test vs dev environment differences
+- Includes request/response data, error details, and environment info
 ## [2.13.4] - 2025-10-14
 
 - Add migration to rename JournalPages to JournalSections

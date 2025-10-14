@@ -19,11 +19,26 @@ const prisma = new PrismaClient();
 // Journal Sections CRUD Operations
 
 export const createJournalSection = async (req: Request, res: Response): Promise<void> => {
+  console.log('🔍 === CREATE JOURNAL SECTION DEBUG START ===');
+  console.log('📊 Request body:', JSON.stringify(req.body, null, 2));
+  console.log('🌍 Environment:', process.env.NODE_ENV);
+  console.log('📅 Timestamp:', new Date().toISOString());
+  
   try {
     const { event_id, year, section_order, title, description, layout_config }: CreateJournalSectionRequest = req.body;
+    
+    console.log('📋 Parsed request data:');
+    console.log('   event_id:', event_id, '(type:', typeof event_id, ')');
+    console.log('   year:', year, '(type:', typeof year, ')');
+    console.log('   section_order:', section_order, '(type:', typeof section_order, ')');
+    console.log('   title:', title);
+    console.log('   description:', description);
 
     // Validate required fields
     if (!event_id || !year) {
+      console.log('❌ Validation failed: Missing required fields');
+      console.log('   event_id present:', !!event_id);
+      console.log('   year present:', !!year);
       res.status(400).json({
         success: false,
         message: 'Event ID and year are required'
@@ -31,12 +46,16 @@ export const createJournalSection = async (req: Request, res: Response): Promise
       return;
     }
 
+    console.log('✅ Validation passed: Required fields present');
+
     // Check if event exists
+    console.log('🔍 Checking if event exists...');
     const event = await prisma.event.findUnique({
       where: { event_id }
     });
 
     if (!event) {
+      console.log('❌ Event not found for event_id:', event_id);
       res.status(404).json({
         success: false,
         message: 'Event not found'
@@ -44,7 +63,14 @@ export const createJournalSection = async (req: Request, res: Response): Promise
       return;
     }
 
+    console.log('✅ Event found:', {
+      event_id: event.event_id,
+      event_name: event.event_name,
+      event_date: event.event_date
+    });
+
     // Find the next available section_order for this event/year combination
+    console.log('🔍 Finding existing sections for event_id:', event_id, 'year:', year);
     const existingSections = await prisma.journalSection.findMany({
       where: {
         event_id,
@@ -58,21 +84,31 @@ export const createJournalSection = async (req: Request, res: Response): Promise
       }
     });
 
+    console.log('📊 Existing sections found:', existingSections.length);
+    console.log('📋 Existing sections data:', existingSections);
+
     // Calculate next section_order
     const nextSectionOrder = existingSections.length > 0 
       ? (existingSections[0]?.section_order || 0) + 1 
       : 1;
 
+    console.log('🧮 Calculated next section_order:', nextSectionOrder);
+    console.log('📝 Final section_order to use:', section_order || nextSectionOrder);
+
     // Create journal section
+    console.log('🔨 Creating journal section with data:');
+    const createData = {
+      event_id,
+      year,
+      section_order: section_order || nextSectionOrder,
+      title: title || null,
+      description: description || null,
+      layout_config: layout_config || null
+    };
+    console.log('📋 Create data:', JSON.stringify(createData, null, 2));
+
     const journalSection = await prisma.journalSection.create({
-      data: {
-        event_id,
-        year,
-        section_order: section_order || nextSectionOrder,
-        title: title || null,
-        description: description || null,
-        layout_config: layout_config || null
-      },
+      data: createData,
       include: {
         content_items: {
           orderBy: { display_order: 'asc' }
@@ -80,12 +116,34 @@ export const createJournalSection = async (req: Request, res: Response): Promise
       }
     });
 
+    console.log('✅ Journal section created successfully:', {
+      section_id: journalSection.section_id,
+      event_id: journalSection.event_id,
+      year: journalSection.year,
+      section_order: journalSection.section_order,
+      title: journalSection.title
+    });
+
     res.status(201).json({
       success: true,
       data: { journal_section: journalSection }
     } as JournalSectionResponse);
+    
+    console.log('🎉 === CREATE JOURNAL SECTION DEBUG END - SUCCESS ===');
   } catch (error) {
-    console.error('Error creating journal section:', error);
+    console.log('❌ === CREATE JOURNAL SECTION DEBUG END - ERROR ===');
+    console.error('💥 Error creating journal section:', error);
+    console.error('🔍 Error details:');
+    console.error('   Error name:', error instanceof Error ? error.name : 'Unknown');
+    console.error('   Error message:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('   Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    
+    // Log additional error details for Prisma errors
+    if (error && typeof error === 'object' && 'code' in error) {
+      console.error('   Prisma error code:', (error as any).code);
+      console.error('   Prisma error meta:', (error as any).meta);
+    }
+    
     res.status(500).json({
       success: false,
       message: 'Internal server error'
