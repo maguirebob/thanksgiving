@@ -2,6 +2,13 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.4] - 2025-10-14
+
+- Add migration to rename JournalPages to JournalSections
+- Safely renames JournalPages table to JournalSections without data loss
+- Updates column names: journal_page_id -> section_id, page_number -> section_order
+- Updates foreign key constraints and indexes
+- Fixes database schema mismatch between dev and test environments
 ## [2.13.3] - 2025-10-14
 
 - Fix TypeScript error: Add null safety for existingSections[0]
