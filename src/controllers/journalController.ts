@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma';
 import {
   CreateJournalSectionRequest,
   UpdateJournalSectionRequest,
@@ -13,8 +13,6 @@ import {
   PageBreakResponse,
   ErrorResponse
 } from '../types/journal';
-
-const prisma = new PrismaClient();
 
 // Journal Sections CRUD Operations
 
