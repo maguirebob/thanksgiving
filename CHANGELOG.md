@@ -2,6 +2,12 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.11] - 2025-10-14
+
+- Fix Prisma client initialization in journal controller
+- Use centralized Prisma client from lib/prisma.ts instead of creating new instance
+- This ensures proper DATABASE_URL configuration in all environments
+- Should resolve 500 errors when creating journal sections
 ## [2.13.10] - 2025-10-14
 
 - Fix session configuration: Revert to secure=false for Railway
