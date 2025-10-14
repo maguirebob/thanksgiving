@@ -4,6 +4,11 @@ All notable changes to the Thanksgiving Menu Collection will be documented in th
 
 ## [2.13.5] - 2025-10-14
 
+- Add comprehensive debugging to journal section creation
+- Detailed logging in createJournalSection controller
+- Enhanced frontend debugging in createNewSection
+- Will help diagnose test vs dev environment differences
+- Includes request/response data, error details, and environment info
 - Add production migration safety safeguards
 - Enhanced Railway deployment script with automatic backup and rollback
 - Migration validation script to catch issues before deployment
