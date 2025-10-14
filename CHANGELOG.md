@@ -2,6 +2,12 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.8] - 2025-10-14
+
+- Fix authentication middleware: Add null safety and proper HTTPS session handling
+- Fixed requireAuth middleware to handle null sessions gracefully
+- Updated session configuration to use secure cookies in production
+- This should resolve 500 errors when creating journal sections
 ## [2.13.7] - 2025-10-14
 
 - Fix smoke tests: Remove authenticated journal API tests
