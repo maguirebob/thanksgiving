@@ -2,6 +2,13 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.7] - 2025-10-14
+
+- Fix smoke tests: Remove authenticated journal API tests
+- Journal Available Content API and Journal Page API require authentication
+- These are editor endpoints, not public viewer endpoints
+- Smoke tests should only test public functionality
+- Integration tests cover authenticated endpoints with proper auth
 ## [2.13.6] - 2025-10-14
 
 - Fix TypeScript error: Use bracket notation for process.env.NODE_ENV
