@@ -142,7 +142,7 @@ class VersionManager {
 }
 
 // CLI Interface
-if (require.main === module) {
+if (process.argv[1] && process.argv[1].endsWith('version-manager.ts')) {
   const args = process.argv.slice(2);
   const manager = new VersionManager();
 

@@ -38,14 +38,9 @@ global.console = {
 // Mock alert
 global.alert = jest.fn();
 
-// Mock setTimeout and setInterval
-global.setTimeout = jest.fn((fn, delay) => {
-    return setTimeout(fn, delay);
-});
-
-global.setInterval = jest.fn((fn, delay) => {
-    return setInterval(fn, delay);
-});
+// Mock setTimeout and setInterval - use native implementations
+global.setTimeout = setTimeout;
+global.setInterval = setInterval;
 
 // Clean up after each test
 afterEach(() => {
