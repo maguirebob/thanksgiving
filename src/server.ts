@@ -121,7 +121,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env['NODE_ENV'] === 'production', // Use secure cookies in production
+    secure: false, // Set to false for Railway deployment to avoid HTTPS issues
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     sameSite: 'lax' // Allow cross-site cookies for Railway
@@ -244,7 +244,7 @@ app.get('/health', (_req, res) => {
       status: 'OK', 
       timestamp: new Date().toISOString(),
       environment: process.env['NODE_ENV'] || 'unknown',
-      version: '2.13.9'
+      version: '2.13.10'
     });
   } catch (error) {
     logger.error('Health check error:', error);
@@ -261,7 +261,7 @@ app.get('/api/v1/version/display', (_req, res) => {
   res.json({
     success: true,
     data: {
-      version: '2.13.9',
+      version: '2.13.10',
       environment: config.getConfig().nodeEnv,
       buildDate: new Date().toISOString()
     }

@@ -2,6 +2,12 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.10] - 2025-10-14
+
+- Fix session configuration: Revert to secure=false for Railway
+- Railway HTTPS setup incompatible with secure cookies
+- Sessions not being created properly with secure=true
+- This should fix login and session persistence issues
 ## [2.13.9] - 2025-10-14
 
 - Add comprehensive project conventions and rules document
