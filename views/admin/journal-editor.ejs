@@ -36,6 +36,17 @@
               </select>
             </div>
           </div>
+          
+          <!-- Current Event Display -->
+          <div class="row mt-3" id="currentEventDisplay" style="display: none;">
+            <div class="col-12">
+              <div class="alert alert-info">
+                <strong>Current Event:</strong> <span id="currentEventName">-</span> 
+                <span class="text-muted">(ID: <span id="currentEventId">-</span>)</span>
+              </div>
+            </div>
+          </div>
+          
           <div class="row mt-3">
             <div class="col-md-6">
               <button type="button" class="btn btn-outline-primary" id="createSectionBtn" disabled>
@@ -472,8 +483,9 @@
 </style>
 
 <script>
-  // Make event ID available to JavaScript
-  window.currentEventId = <%= currentEventId %>;
-  console.log('Journal Editor - Current Event ID:', window.currentEventId);
+  // Make events data available to JavaScript
+  window.events = <%- JSON.stringify(events) %>;
+  window.currentEventId = null; // Will be set dynamically based on year selection
+  console.log('Journal Editor - Available Events:', window.events);
 </script>
 <script src="/js/components/journalEditor.js"></script>

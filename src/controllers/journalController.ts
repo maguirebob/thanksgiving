@@ -44,12 +44,31 @@ export const createJournalSection = async (req: Request, res: Response): Promise
       return;
     }
 
+    // Find the next available section_order for this event/year combination
+    const existingSections = await prisma.journalSection.findMany({
+      where: {
+        event_id,
+        year
+      },
+      select: {
+        section_order: true
+      },
+      orderBy: {
+        section_order: 'desc'
+      }
+    });
+
+    // Calculate next section_order
+    const nextSectionOrder = existingSections.length > 0 
+      ? existingSections[0].section_order + 1 
+      : 1;
+
     // Create journal section
     const journalSection = await prisma.journalSection.create({
       data: {
         event_id,
         year,
-        section_order: section_order || 1,
+        section_order: section_order || nextSectionOrder,
         title: title || null,
         description: description || null,
         layout_config: layout_config || null
