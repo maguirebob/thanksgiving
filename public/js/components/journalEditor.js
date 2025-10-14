@@ -262,14 +262,29 @@ class JournalEditor {
 
     // Section CRUD Operations
     async createNewSection() {
-        console.log('=== CREATE NEW SECTION DEBUG ===');
-        console.log('currentEventId:', this.currentEventId);
-        console.log('currentYear:', this.currentYear);
+        console.log('🔍 === CREATE NEW SECTION DEBUG START ===');
+        console.log('📊 Frontend data:');
+        console.log('   currentEventId:', this.currentEventId, '(type:', typeof this.currentEventId, ')');
+        console.log('   currentYear:', this.currentYear, '(type:', typeof this.currentYear, ')');
+        console.log('🌍 Environment:', window.location.hostname);
+        console.log('📅 Timestamp:', new Date().toISOString());
         
         if (!this.currentEventId || !this.currentYear) {
+            console.log('❌ Validation failed: Missing event or year');
             alert('Please select an event and year first');
             return;
         }
+
+        const requestData = {
+            event_id: this.currentEventId,
+            year: this.currentYear,
+            section_order: 1, // Will be auto-incremented
+            title: 'New Section',
+            description: ''
+        };
+        
+        console.log('📋 Request data being sent:', JSON.stringify(requestData, null, 2));
+        console.log('🔗 Making request to:', '/api/journal');
 
         try {
             const response = await fetch('/api/journal', {
@@ -278,28 +293,46 @@ class JournalEditor {
                     'Content-Type': 'application/json'
                 },
                 credentials: 'include',
-                body: JSON.stringify({
-                    event_id: this.currentEventId,
-                    year: this.currentYear,
-                    section_order: 1, // Will be auto-incremented
-                    title: 'New Section',
-                    description: ''
-                })
+                body: JSON.stringify(requestData)
             });
+            
+            console.log('📡 Response received:');
+            console.log('   Status:', response.status);
+            console.log('   Status Text:', response.statusText);
+            console.log('   Headers:', Object.fromEntries(response.headers.entries()));
+
+            if (!response.ok) {
+                console.log('❌ Response not OK, status:', response.status);
+                const errorText = await response.text();
+                console.log('📄 Error response body:', errorText);
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
 
             const result = await response.json();
+            console.log('📋 Response JSON:', JSON.stringify(result, null, 2));
+            
             if (result.success) {
+                console.log('✅ Section created successfully:', result.data.journal_section);
                 await this.loadJournalSections();
                 // Select the new section
                 this.currentSectionId = result.data.journal_section.section_id;
                 document.getElementById('sectionSelect').value = this.currentSectionId;
                 await this.loadSectionContent();
-                } else {
+                console.log('🎉 === CREATE NEW SECTION DEBUG END - SUCCESS ===');
+            } else {
+                console.log('❌ API returned success: false');
+                console.log('📄 Error message:', result.message);
                 alert('Failed to create section: ' + result.message);
+                console.log('❌ === CREATE NEW SECTION DEBUG END - API ERROR ===');
             }
         } catch (error) {
-            console.error('Error creating section:', error);
-            alert('Error creating section');
+            console.log('❌ === CREATE NEW SECTION DEBUG END - EXCEPTION ===');
+            console.error('💥 Error creating section:', error);
+            console.error('🔍 Error details:');
+            console.error('   Error name:', error.name);
+            console.error('   Error message:', error.message);
+            console.error('   Error stack:', error.stack);
+            alert('Error creating section: ' + error.message);
         }
     }
 
