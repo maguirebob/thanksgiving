@@ -31,7 +31,8 @@ module.exports = {
         '<rootDir>/tests/controllers/**/*.test.ts',
         '<rootDir>/tests/middleware/**/*.test.ts',
         '<rootDir>/tests/routes/**/*.test.ts',
-        '<rootDir>/tests/integration/**/*.test.ts'
+        '<rootDir>/tests/integration/**/*.test.ts',
+        '<rootDir>/tests/smoke/**/*.test.ts'
       ],
       transform: {
         '^.+\\.ts$': 'ts-jest',

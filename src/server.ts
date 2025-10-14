@@ -244,7 +244,7 @@ app.get('/health', (_req, res) => {
       status: 'OK', 
       timestamp: new Date().toISOString(),
       environment: process.env['NODE_ENV'] || 'unknown',
-      version: '2.13.0'
+      version: '2.13.1'
     });
   } catch (error) {
     logger.error('Health check error:', error);
@@ -261,7 +261,7 @@ app.get('/api/v1/version/display', (_req, res) => {
   res.json({
     success: true,
     data: {
-      version: '2.13.0',
+      version: '2.13.1',
       environment: config.getConfig().nodeEnv,
       buildDate: new Date().toISOString()
     }
@@ -752,6 +752,9 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 app.use((_req, res) => {
   res.status(404).json({ error: 'Not Found' });
 });
+
+// Export app for testing
+export { app };
 
 const PORT = config.getPort();
 
