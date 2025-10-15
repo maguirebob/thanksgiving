@@ -24,7 +24,13 @@ export const createJournalSection = async (req: Request, res: Response): Promise
   console.log('🔗 Prisma client check:', typeof prisma);
   
   try {
-    const { event_id, year, section_order, title, description, layout_config }: CreateJournalSectionRequest = req.body;
+    // Bypass TypeScript type checking to isolate the issue
+    const event_id = req.body.event_id;
+    const year = req.body.year;
+    const section_order = req.body.section_order;
+    const title = req.body.title;
+    const description = req.body.description;
+    const layout_config = req.body.layout_config;
     
     console.log('📋 Parsed request data:');
     console.log('   event_id:', event_id, '(type:', typeof event_id, ')');
@@ -41,7 +47,7 @@ export const createJournalSection = async (req: Request, res: Response): Promise
       res.status(400).json({
         success: false,
         message: 'Event ID and year are required'
-      } as ErrorResponse);
+      });
       return;
     }
 
@@ -58,7 +64,7 @@ export const createJournalSection = async (req: Request, res: Response): Promise
       res.status(404).json({
         success: false,
         message: 'Event not found'
-      } as ErrorResponse);
+      });
       return;
     }
 
@@ -126,7 +132,7 @@ export const createJournalSection = async (req: Request, res: Response): Promise
     res.status(201).json({
       success: true,
       data: { journal_section: journalSection }
-    } as JournalSectionResponse);
+    });
     
     console.log('🎉 === CREATE JOURNAL SECTION DEBUG END - SUCCESS ===');
   } catch (error) {
@@ -146,7 +152,7 @@ export const createJournalSection = async (req: Request, res: Response): Promise
     res.status(500).json({
       success: false,
       message: 'Internal server error'
-    } as ErrorResponse);
+    });
   }
 };
 

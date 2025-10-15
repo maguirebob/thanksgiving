@@ -2,6 +2,12 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.15] - 2025-10-15
+
+- Bypass TypeScript type checking in createJournalSection
+- Removed destructuring with type annotation that may be causing issues
+- Using direct property access to isolate the problem
+- Should show debugging output if TypeScript was the issue
 ## [2.13.14] - 2025-10-15
 
 - Restore original createJournalSection function with debugging
