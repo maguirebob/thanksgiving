@@ -2,6 +2,11 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.12] - 2025-10-15
+
+- Add Prisma client debugging to journal controller
+- Added prisma client type check to debug initialization issues
+- This will help identify if the Prisma client is properly imported
 ## [2.13.11] - 2025-10-14
 
 - Fix Prisma client initialization in journal controller

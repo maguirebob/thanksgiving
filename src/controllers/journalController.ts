@@ -21,6 +21,7 @@ export const createJournalSection = async (req: Request, res: Response): Promise
   console.log('📊 Request body:', JSON.stringify(req.body, null, 2));
   console.log('🌍 Environment:', process.env['NODE_ENV']);
   console.log('📅 Timestamp:', new Date().toISOString());
+  console.log('🔗 Prisma client check:', typeof prisma);
   
   try {
     const { event_id, year, section_order, title, description, layout_config }: CreateJournalSectionRequest = req.body;
