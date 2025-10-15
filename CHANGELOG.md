@@ -2,6 +2,11 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.20] - 2025-10-15
+
+- Fix TypeScript build errors
+- Removed unused variables section_order and layout_config
+- Build now passes successfully
 ## [2.13.19] - 2025-10-15
 
 - Create step-by-step test version
