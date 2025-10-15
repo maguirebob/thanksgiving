@@ -2,6 +2,12 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.13] - 2025-10-15
+
+- Create minimal test version of createJournalSection function
+- Replaced complex function with simple test that returns success
+- This will help isolate if the issue is with the function logic or setup
+- Should show debugging output if function is being called
 ## [2.13.12] - 2025-10-15
 
 - Add Prisma client debugging to journal controller
