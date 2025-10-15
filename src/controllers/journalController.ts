@@ -25,10 +25,8 @@ export const createJournalSection = async (req: Request, res: Response): Promise
     // Step 1: Parse request data (no database yet)
     const event_id = req.body.event_id;
     const year = req.body.year;
-    const section_order = req.body.section_order;
     const title = req.body.title;
     const description = req.body.description;
-    const layout_config = req.body.layout_config;
     
     console.log('✅ Step 2: Parsed request data successfully');
     console.log('   event_id:', event_id, '(type:', typeof event_id, ')');
