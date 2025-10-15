@@ -2,6 +2,12 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.14] - 2025-10-15
+
+- Restore original createJournalSection function with debugging
+- Minimal test confirmed function setup works correctly
+- Now testing original logic with comprehensive debugging
+- Should identify the specific database operation causing the error
 ## [2.13.13] - 2025-10-15
 
 - Create minimal test version of createJournalSection function
