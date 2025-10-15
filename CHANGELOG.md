@@ -2,6 +2,12 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.17] - 2025-10-15
+
+- Create ultra-simple test version
+- Removed all database operations and complex logic
+- Just logs and returns mock data to isolate the issue
+- Should show debugging output if function is being called
 ## [2.13.16] - 2025-10-15
 
 - Fix TypeScript build error
