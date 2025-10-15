@@ -2,6 +2,12 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.21] - 2025-10-15
+
+- Add journal section query test
+- Tests prisma.journalSection.findMany operation
+- Should identify if the issue is with querying existing sections
+- Still returns mock data, no create operation yet
 ## [2.13.20] - 2025-10-15
 
 - Fix TypeScript build errors

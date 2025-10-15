@@ -64,18 +64,43 @@ export const createJournalSection = async (req: Request, res: Response): Promise
       event_name: event.event_name
     });
 
-    // For now, just return success with mock data
-    console.log('✅ Step 6: Returning success with mock data');
+    // Step 4: Test journal section query
+    console.log('🔍 Step 6: Testing journal section query...');
+    const existingSections = await prisma.journalSection.findMany({
+      where: {
+        event_id,
+        year
+      },
+      select: {
+        section_order: true
+      },
+      orderBy: {
+        section_order: 'desc'
+      }
+    });
+
+    console.log('✅ Step 7: Journal section query successful');
+    console.log('📊 Existing sections found:', existingSections.length);
+
+    // Calculate next section_order
+    const nextSectionOrder = existingSections.length > 0 
+      ? (existingSections[0]?.section_order || 0) + 1 
+      : 1;
+
+    console.log('✅ Step 8: Calculated next section_order:', nextSectionOrder);
+
+    // For now, just return success with mock data (no create yet)
+    console.log('✅ Step 9: Returning success with mock data');
     res.status(201).json({
       success: true,
       data: { 
         journal_section: {
-          section_id: 777,
+          section_id: 666,
           event_id: event_id,
           year: year,
-          section_order: 1,
-          title: title || 'Step Test Section',
-          description: description || 'Step Test Description'
+          section_order: nextSectionOrder,
+          title: title || 'Query Test Section',
+          description: description || 'Query Test Description'
         }
       }
     });
