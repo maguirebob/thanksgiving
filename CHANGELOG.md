@@ -2,6 +2,12 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.19] - 2025-10-15
+
+- Create step-by-step test version
+- Tests each operation individually to isolate the issue
+- Includes Prisma event lookup but stops before journal section operations
+- Should show exactly where the error occurs
 ## [2.13.18] - 2025-10-15
 
 - Restore original function with step-by-step debugging
