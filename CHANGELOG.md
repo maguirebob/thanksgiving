@@ -2,6 +2,11 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.16] - 2025-10-15
+
+- Fix TypeScript build error
+- Removed unused CreateJournalSectionRequest import
+- Build now passes successfully
 ## [2.13.15] - 2025-10-15
 
 - Bypass TypeScript type checking in createJournalSection
