@@ -255,6 +255,7 @@ export const SCHEMA_VERSIONS: Record<string, SchemaVersion> = {
     migrationStatus: 'complete',
     notes: 'Added manual_page_break and page_break_position columns to JournalContentItems as required fields'
   }
+};
 
 export const getCurrentVersion = (): string => {
   try {
