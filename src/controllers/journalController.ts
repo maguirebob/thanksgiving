@@ -27,10 +27,12 @@ export const createJournalSection = async (req: Request, res: Response): Promise
     const year: number = parseInt(req.body.year);
     const title: string | null = req.body.title || null;
     const description: string | null = req.body.description || null;
+    const section_order: number = parseInt(req.body.section_order) || 1;
     
     console.log('✅ Step 2: Parsed request data');
     console.log('   event_id:', event_id, '(type:', typeof event_id, ')');
     console.log('   year:', year, '(type:', typeof year, ')');
+    console.log('   section_order:', section_order, '(type:', typeof section_order, ')');
 
     // Validate required fields
     if (!event_id || !year) {
@@ -64,8 +66,8 @@ export const createJournalSection = async (req: Request, res: Response): Promise
       event_name: event.event_name
     });
 
-    // Test journal section query
-    console.log('🔍 Step 6: Testing journal section query...');
+    // Test journal section query to check for conflicts
+    console.log('🔍 Step 6: Testing journal section query for conflicts...');
     const existingSections = await prisma.journalSection.findMany({
       where: {
         event_id,
@@ -82,19 +84,25 @@ export const createJournalSection = async (req: Request, res: Response): Promise
     console.log('✅ Step 7: Journal section query successful');
     console.log('📊 Existing sections found:', existingSections.length);
 
-    // Calculate next section_order
-    const nextSectionOrder = existingSections.length > 0 
-      ? (existingSections[0]?.section_order || 0) + 1 
-      : 1;
+    // Check if the requested section_order already exists
+    const sectionOrderExists = existingSections.some(section => section.section_order === section_order);
+    if (sectionOrderExists) {
+      console.log('❌ Section order conflict: section_order', section_order, 'already exists');
+      res.status(409).json({
+        success: false,
+        message: `Section order ${section_order} already exists for this event and year`
+      });
+      return;
+    }
 
-    console.log('✅ Step 8: Calculated next section_order:', nextSectionOrder);
+    console.log('✅ Step 8: Section order validation passed');
 
     // Test journal section creation
     console.log('🔍 Step 9: Testing journal section creation...');
     const createData = {
       event_id,
       year,
-      section_order: nextSectionOrder,
+      section_order,
       title: title || null,
       description: description || null
     };
@@ -130,6 +138,25 @@ export const createJournalSection = async (req: Request, res: Response): Promise
     console.error('   Error name:', error instanceof Error ? error.name : 'Unknown');
     console.error('   Error message:', error instanceof Error ? error.message : 'Unknown error');
     console.error('   Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    
+    // Log additional error details for Prisma errors
+    if (error && typeof error === 'object' && 'code' in error) {
+      console.error('   Prisma error code:', (error as any).code);
+      console.error('   Prisma error meta:', (error as any).meta);
+    }
+    
+    // Handle specific Prisma errors with better error messages
+    if (error && typeof error === 'object' && 'code' in error) {
+      const prismaError = error as any;
+      if (prismaError.code === 'P2002') {
+        console.log('❌ Unique constraint violation detected');
+        res.status(409).json({
+          success: false,
+          message: 'A journal section with this event ID, year, and section order already exists'
+        });
+        return;
+      }
+    }
     
     res.status(500).json({
       success: false,
