@@ -97,6 +97,76 @@ $(function() {
     }
   }
   
+  // Initialize Turn.js on specific element
+  function initializeFlipbookOnElement($element) {
+    console.log('🔄 Initializing Turn.js on new element...');
+    
+    // Check if we're in fullscreen mode
+    const isFullscreen = $('.scrapbook-shell').hasClass('fullscreen');
+    
+    let width, height;
+    if (isFullscreen) {
+      // Slightly smaller dimensions to ensure content fits within viewport
+      width = Math.min(window.innerWidth * 0.95, 2200);
+      height = Math.min(window.innerHeight * 0.90, 1600);
+    } else {
+      // Much larger normal size to prevent any content cutoff
+      width = Math.min(window.innerWidth * 0.9, 1250);
+      height = Math.min(window.innerHeight * 0.8, 1000);
+    }
+    
+    console.log(`🔄 Turn.js dimensions for new element: ${width}x${height}`);
+    
+    try {
+      $element.turn({
+        width: width,
+        height: height,
+        center: true,
+        gradients: true,
+        duration: 900,
+        acceleration: true,
+        elevation: 150,
+        display: 'single',
+        when: {
+          turning: function(event, page, view) {
+            console.log('Turning to page:', page);
+          },
+          turned: function(event, page, view) {
+            console.log('Turned to page:', page);
+            updateNavigationButtonsForElement($element, page);
+          }
+        }
+      });
+      
+      // Wait a moment for Turn.js to fully initialize
+      setTimeout(() => {
+        try {
+          const totalPages = $element.children().length;
+          console.log(`🔄 Total pages in new element DOM: ${totalPages}`);
+          console.log('🔄 Forcing turn to page 1 on new element');
+          $element.turn('page', 1);
+          
+          const turnPages = $element.turn('pages');
+          console.log(`🔄 New element Turn.js reports ${turnPages} pages`);
+          
+          const currentPage = $element.turn('page');
+          console.log(`🔄 New element Turn.js current page: ${currentPage}`);
+          
+          updateNavigationButtonsForElement($element, currentPage);
+          
+          console.log('✅ Turn.js initialization complete on new element');
+        } catch (error) {
+          console.log('⚠️ Error accessing Turn.js methods on new element:', error.message);
+        }
+      }, 100);
+      
+      flipbookInitialized = true;
+    } catch (error) {
+      console.error('❌ Error initializing Turn.js on new element:', error.message);
+      flipbookInitialized = false;
+    }
+  }
+  
   // Update navigation button states
   function updateNavigationButtons(currentPage) {
     if (!flipbookInitialized) {
@@ -122,6 +192,34 @@ $(function() {
       }
     } catch (error) {
       console.log('⚠️ Error updating navigation buttons:', error.message);
+    }
+  }
+  
+  // Update navigation button states for specific element
+  function updateNavigationButtonsForElement($element, currentPage) {
+    if (!flipbookInitialized) {
+      return; // Don't try to access Turn.js if not initialized
+    }
+    
+    try {
+      const totalPages = $element.turn("pages");
+      const $prevBtn = $("#prevPage");
+      const $nextBtn = $("#nextPage");
+      
+      // Disable/enable buttons based on current page
+      if (currentPage <= 1) {
+        $prevBtn.prop("disabled", true).addClass("disabled");
+      } else {
+        $prevBtn.prop("disabled", false).removeClass("disabled");
+      }
+      
+      if (currentPage >= totalPages) {
+        $nextBtn.prop("disabled", true).addClass("disabled");
+      } else {
+        $nextBtn.prop("disabled", false).removeClass("disabled");
+      }
+    } catch (error) {
+      console.log('⚠️ Error updating navigation buttons for element:', error.message);
     }
   }
 
@@ -325,11 +423,6 @@ $(function() {
         $book.turn('stop');
         // Properly destroy the Turn.js instance
         $book.turn('destroy');
-        // Remove all Turn.js data and events
-        $book.removeData('turn');
-        $book.off('.turn');
-        // Clear any Turn.js internal state
-        $book.removeClass('turn-page-wrapper');
         flipbookInitialized = false;
       } catch (error) {
         console.log('⚠️ Error destroying flipbook:', error.message);
@@ -337,36 +430,41 @@ $(function() {
       }
     }
     
-    // Clear the book content completely and reset all attributes
-    $book.empty().removeClass().addClass('flipbook').removeAttr('style');
-    console.log('🧹 Cleared book content and reset attributes');
+    // Remove the book from DOM and re-add it to force complete reset
+    const $parent = $book.parent();
+    $book.detach();
     
-    // Wait a moment to ensure DOM is cleared
+    // Clear all content and reset
+    $book.empty().removeClass().addClass('flipbook').removeAttr('style');
+    
+    // Re-add to DOM
+    $parent.append($book);
+    
+    console.log('🔄 Detached and re-attached flipbook element');
+    
+    // Add cover page
+    addCoverPage();
+    
+    // Add content pages with proper distribution
+    if (journalData.journal_sections) {
+      console.log('📖 Processing', journalData.journal_sections.length, 'journal sections');
+      journalData.journal_sections.forEach((section, index) => {
+        console.log(`📖 Processing section ${index + 1}:`, section.title);
+        addContentPagesWithDistribution(section);
+      });
+    }
+    
+    const totalPages = $book.children().length;
+    console.log(`📄 Total pages created: ${totalPages}`);
+    console.log('📄 Page elements:', $book.children().map((i, el) => el.className).get());
+    
+    // Show flipbook and toolbar, then initialize turn.js
+    $book.show();
+    $toolbar.show();
+    
+    // Wait a moment before initializing Turn.js
     setTimeout(() => {
-      // Add cover page
-      addCoverPage();
-      
-      // Add content pages with proper distribution
-      if (journalData.journal_sections) {
-        console.log('📖 Processing', journalData.journal_sections.length, 'journal sections');
-        journalData.journal_sections.forEach((section, index) => {
-          console.log(`📖 Processing section ${index + 1}:`, section.title);
-          addContentPagesWithDistribution(section);
-        });
-      }
-      
-      const totalPages = $book.children().length;
-      console.log(`📄 Total pages created: ${totalPages}`);
-      console.log('📄 Page elements:', $book.children().map((i, el) => el.className).get());
-      
-      // Show flipbook and toolbar, then initialize turn.js
-      $book.show();
-      $toolbar.show();
-      
-      // Wait another moment before initializing Turn.js
-      setTimeout(() => {
-        initializeFlipbook();
-      }, 200);
+      initializeFlipbook();
     }, 100);
   }
   
@@ -399,6 +497,42 @@ $(function() {
     if (pages.length === 1) {
       console.log('📖 Adding empty page to ensure Turn.js compatibility');
       addContentPage({
+        ...section,
+        title: `${section.title} (continued)`,
+        content_items: []
+      }, []);
+    }
+  }
+  
+  // Add content pages with proper distribution logic to specific element
+  function addContentPagesWithDistributionToElement($element, section) {
+    console.log('📖 Adding content pages for section to element:', section.title);
+    
+    const PAGE_HEIGHT = 820; // Fixed page height
+    const contentItems = section.content_items || [];
+    
+    if (contentItems.length === 0) {
+      addContentPageToElement($element, section, []);
+      return;
+    }
+    
+    // Distribute content across pages
+    const pages = distributeContentAcrossPages(contentItems, PAGE_HEIGHT);
+    
+    pages.forEach((pageContent, index) => {
+      const pageSection = {
+        ...section,
+        title: index === 0 ? section.title : `${section.title} (continued)`,
+        content_items: pageContent
+      };
+      addContentPageToElement($element, pageSection, pageContent);
+    });
+    
+    // Ensure we have at least 2 content pages for Turn.js to work properly
+    // Turn.js needs a minimum number of pages to function correctly
+    if (pages.length === 1) {
+      console.log('📖 Adding empty page to ensure Turn.js compatibility');
+      addContentPageToElement($element, {
         ...section,
         title: `${section.title} (continued)`,
         content_items: []
@@ -488,6 +622,24 @@ $(function() {
     console.log('📄 Cover page added');
   }
   
+  // Add cover page to specific element
+  function addCoverPageToElement($element) {
+    console.log('📄 Adding cover page to element');
+    const coverHtml = `
+      <section class="page cover">
+        <div class="page-inner">
+          <div class="page-content">
+            <h1 class="cover-title">🦃 Maguire Family Thanksgiving</h1>
+            <p class="cover-subtitle">Our treasured memories in one book</p>
+            <div class="cover-decoration">❦</div>
+          </div>
+        </div>
+      </section>
+    `;
+    $element.append(coverHtml);
+    console.log('📄 Cover page added to element');
+  }
+  
   // Add content page
   function addContentPage(section, contentItems = null) {
     const items = contentItems || section.content_items || [];
@@ -509,6 +661,30 @@ $(function() {
     
     const newPageCount = $book.children().length;
     console.log(`📄 Page ${newPageCount} added successfully`);
+    console.log(`📄 Current total pages: ${newPageCount}`);
+  }
+  
+  // Add content page to specific element
+  function addContentPageToElement($element, section, contentItems = null) {
+    const items = contentItems || section.content_items || [];
+    const currentPageCount = $element.children().length;
+    console.log(`📄 Adding page ${currentPageCount + 1} for section to element: ${section.title}`);
+    console.log(`📄 Page will contain ${items.length} content items`);
+    console.log(`📄 Content items:`, items.map(item => ({ type: item.content_type, id: item.content_item_id })));
+    
+    const pageHtml = `
+      <section class="page">
+        <div class="page-inner">
+          <div class="page-content">
+            ${generateContentHtml(items)}
+          </div>
+        </div>
+      </section>
+    `;
+    $element.append(pageHtml);
+    
+    const newPageCount = $element.children().length;
+    console.log(`📄 Page ${newPageCount} added successfully to element`);
     console.log(`📄 Current total pages: ${newPageCount}`);
   }
   
