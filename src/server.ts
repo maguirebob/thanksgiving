@@ -737,14 +737,14 @@ app.use('/api', blogRoutes);
 app.use('/api/v1', eventRoutes);
 app.use('/api/carousel', carouselRoutes);
 // Add debugging middleware for journal routes
-app.use('/api/journal', (req, res, next) => {
+app.use('/api/journal', (req, _res, next) => {
   console.log('🌐 === SERVER DEBUG: Journal Route Hit ===');
   console.log('📊 Request method:', req.method);
   console.log('📊 Request path:', req.path);
   console.log('📊 Request URL:', req.url);
   console.log('📊 Request headers:', JSON.stringify(req.headers, null, 2));
   console.log('🔐 Session exists:', !!req.session);
-  console.log('🔐 Session user:', req.session?.user);
+  console.log('🔐 Session user ID:', req.session?.userId);
   console.log('📅 Timestamp:', new Date().toISOString());
   console.log('✅ Proceeding to journal routes');
   next();
