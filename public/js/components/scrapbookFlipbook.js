@@ -311,10 +311,12 @@ $(function() {
     console.log('🔄 Current year:', currentYear);
     console.log('🔄 Journal data:', journalData);
     
-    // Reset flipbook state
+    // Reset flipbook state completely
     if (flipbookInitialized) {
       console.log('🗑️ Destroying existing flipbook');
       try {
+        // Stop any animations first
+        $book.turn('stop');
         // Properly destroy the Turn.js instance
         $book.turn('destroy');
         flipbookInitialized = false;
@@ -328,26 +330,33 @@ $(function() {
     $book.empty().removeClass().addClass('flipbook').removeAttr('style');
     console.log('🧹 Cleared book content and reset attributes');
     
-    // Add cover page
-    addCoverPage();
-    
-    // Add content pages with proper distribution
-    if (journalData.journal_sections) {
-      console.log('📖 Processing', journalData.journal_sections.length, 'journal sections');
-      journalData.journal_sections.forEach((section, index) => {
-        console.log(`📖 Processing section ${index + 1}:`, section.title);
-        addContentPagesWithDistribution(section);
-      });
-    }
-    
-    const totalPages = $book.children().length;
-    console.log(`📄 Total pages created: ${totalPages}`);
-    console.log('📄 Page elements:', $book.children().map((i, el) => el.className).get());
-    
-    // Show flipbook and toolbar, then initialize turn.js
-    $book.show();
-    $toolbar.show();
-    initializeFlipbook();
+    // Wait a moment to ensure DOM is cleared
+    setTimeout(() => {
+      // Add cover page
+      addCoverPage();
+      
+      // Add content pages with proper distribution
+      if (journalData.journal_sections) {
+        console.log('📖 Processing', journalData.journal_sections.length, 'journal sections');
+        journalData.journal_sections.forEach((section, index) => {
+          console.log(`📖 Processing section ${index + 1}:`, section.title);
+          addContentPagesWithDistribution(section);
+        });
+      }
+      
+      const totalPages = $book.children().length;
+      console.log(`📄 Total pages created: ${totalPages}`);
+      console.log('📄 Page elements:', $book.children().map((i, el) => el.className).get());
+      
+      // Show flipbook and toolbar, then initialize turn.js
+      $book.show();
+      $toolbar.show();
+      
+      // Wait another moment before initializing Turn.js
+      setTimeout(() => {
+        initializeFlipbook();
+      }, 200);
+    }, 100);
   }
   
   // Add content pages with proper distribution logic

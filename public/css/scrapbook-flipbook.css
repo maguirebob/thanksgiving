@@ -130,8 +130,8 @@ body {
     0 6px 16px rgba(0,0,0,0.35);
   border-radius: 6px;
   position: relative;
-  height: 700px; /* Fixed height for Turn.js compatibility */
-  overflow: hidden; /* Prevent content from overflowing */
+  min-height: 700px; /* Minimum height for consistency */
+  height: auto; /* Allow content to determine height */
 }
 
 .page-inner {
@@ -139,9 +139,8 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* Changed from center to flex-start */
+  justify-content: center;
   align-items: center;
-  overflow-y: auto; /* Allow scrolling if content exceeds page height */
   position: relative;
   box-sizing: border-box;
 }
