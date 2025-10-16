@@ -2,6 +2,12 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.23] - 2025-10-16
+
+- Fix TypeScript build error in journal section creation
+- Removed problematic layout_config field from Prisma create operation
+- Build now passes successfully
+- Should resolve the 500 error in journal section creation
 ## [2.13.22] - 2025-10-16
 
 - Add journal section creation test

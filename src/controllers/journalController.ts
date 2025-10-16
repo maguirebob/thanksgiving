@@ -23,10 +23,10 @@ export const createJournalSection = async (req: Request, res: Response): Promise
     console.log('✅ Step 1: Inside try block - function is executing');
     
     // Step 1: Parse request data (no database yet)
-    const event_id = req.body.event_id;
-    const year = req.body.year;
-    const title = req.body.title;
-    const description = req.body.description;
+    const event_id: number = parseInt(req.body.event_id);
+    const year: number = parseInt(req.body.year);
+    const title: string | null = req.body.title || null;
+    const description: string | null = req.body.description || null;
     
     console.log('✅ Step 2: Parsed request data successfully');
     console.log('   event_id:', event_id, '(type:', typeof event_id, ')');
@@ -96,8 +96,7 @@ export const createJournalSection = async (req: Request, res: Response): Promise
       year,
       section_order: nextSectionOrder,
       title: title || null,
-      description: description || null,
-      layout_config: null
+      description: description || null
     };
     console.log('📋 Create data:', JSON.stringify(createData, null, 2));
 
