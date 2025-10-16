@@ -268,15 +268,20 @@ $(function() {
   function generateFlipbookPages() {
     console.log('🔄 Regenerating flipbook pages...');
     
-    // Destroy existing flipbook if it exists
-    if (flipbookInitialized && $book.turn) {
-      console.log('🗑️ Destroying existing flipbook');
-      $book.turn('destroy');
+    // Reset flipbook state
+    if (flipbookInitialized) {
+      console.log('🗑️ Resetting flipbook state');
+      // Stop any ongoing animations
+      try {
+        $book.turn('stop');
+      } catch (error) {
+        console.log('⚠️ Error stopping flipbook:', error.message);
+      }
       flipbookInitialized = false;
     }
     
-    // Clear the book content
-    $book.empty();
+    // Clear the book content completely
+    $book.empty().removeClass().addClass('flipbook');
     
     // Add cover page
     addCoverPage();
