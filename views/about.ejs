@@ -75,6 +75,24 @@
                                 <small class="text-muted"><%= dbMessage %></small>
                             </div>
                         <% } %>
+                        <% if (typeof dbDetails !== 'undefined' && dbDetails && dbDetails.versionInfo) { %>
+                            <% if (!dbDetails.versionInfo.hasSchemaDefinition) { %>
+                                <div class="mt-2">
+                                    <small class="text-danger">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        No schema definition for version <%= dbDetails.versionInfo.currentVersion %>
+                                    </small>
+                                </div>
+                            <% } %>
+                            <% if (dbDetails.versionInfo.versionMismatch) { %>
+                                <div class="mt-2">
+                                    <small class="text-warning">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Version <%= dbDetails.versionInfo.currentVersion %> newer than schema definition <%= dbDetails.versionInfo.latestSchemaVersion %>
+                                    </small>
+                                </div>
+                            <% } %>
+                        <% } %>
                     </div>
                 </div>
             </div>

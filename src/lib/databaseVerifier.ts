@@ -1,4 +1,11 @@
 import prisma from './prisma';
+import { 
+  getCurrentVersion, 
+  getSchemaVersion, 
+  hasSchemaDefinition,
+  getLatestSchemaVersion,
+  type SchemaVersion 
+} from './schemaVersions';
 
 export interface DatabaseVerificationResult {
   isValid: boolean;
@@ -9,9 +16,21 @@ export interface DatabaseVerificationResult {
     columns: Record<string, string[]>;
   };
   timestamp: string;
+  versionInfo: {
+    currentVersion: string;
+    hasSchemaDefinition: boolean;
+    schemaVersion: SchemaVersion | null;
+    latestSchemaVersion: string;
+    versionMismatch: boolean;
+  };
 }
 
 export const verifyDatabaseStructure = async (): Promise<DatabaseVerificationResult> => {
+  const currentVersion = getCurrentVersion();
+  const schemaVersion = getSchemaVersion(currentVersion);
+  const hasDefinition = hasSchemaDefinition(currentVersion);
+  const latestSchemaVersion = getLatestSchemaVersion();
+  
   const result: DatabaseVerificationResult = {
     isValid: true,
     errors: [],
@@ -20,11 +39,40 @@ export const verifyDatabaseStructure = async (): Promise<DatabaseVerificationRes
       tables: [],
       columns: {}
     },
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    versionInfo: {
+      currentVersion,
+      hasSchemaDefinition: hasDefinition,
+      schemaVersion,
+      latestSchemaVersion,
+      versionMismatch: currentVersion !== latestSchemaVersion
+    }
   };
 
   try {
     console.log('🔍 Starting database structure verification...');
+    console.log('📊 Version info:', {
+      current: currentVersion,
+      hasDefinition,
+      latest: latestSchemaVersion
+    });
+
+    // Check if current version has schema definition
+    if (!hasDefinition) {
+      result.errors.push(`No schema definition found for version ${currentVersion}. Please add schema definition to schemaVersions.ts`);
+      result.isValid = false;
+    }
+
+    // Check if we're using an outdated schema definition
+    if (currentVersion !== latestSchemaVersion) {
+      result.warnings.push(`Current version ${currentVersion} is newer than latest schema definition ${latestSchemaVersion}. Consider updating schemaVersions.ts`);
+    }
+
+    // If no schema definition, we can't verify structure
+    if (!schemaVersion) {
+      console.log('❌ No schema definition available for verification');
+      return result;
+    }
 
     // Get all tables
     const tables = await prisma.$queryRaw<Array<{ table_name: string }>>`
@@ -50,77 +98,41 @@ export const verifyDatabaseStructure = async (): Promise<DatabaseVerificationRes
       result.schema.columns[table] = columns.map(c => c.column_name);
     }
 
-    // Verify JournalSections table structure
-    if (result.schema.tables.includes('JournalSections')) {
-      const journalSectionsColumns = result.schema.columns['JournalSections'];
-      if (journalSectionsColumns) {
-        const expectedColumns = ['section_id', 'event_id', 'year', 'section_order', 'title', 'description', 'created_at', 'updated_at'];
-        
-        for (const expectedCol of expectedColumns) {
-          if (!journalSectionsColumns.includes(expectedCol)) {
-            result.errors.push(`JournalSections table missing column: ${expectedCol}`);
-            result.isValid = false;
-          }
-        }
+    // Verify required tables exist
+    for (const requiredTable of schemaVersion.requiredTables) {
+      if (!result.schema.tables.includes(requiredTable)) {
+        result.errors.push(`Required table '${requiredTable}' does not exist`);
+        result.isValid = false;
       }
-    } else {
-      result.errors.push('JournalSections table does not exist');
-      result.isValid = false;
     }
 
-    // Verify JournalContentItems table structure
-    if (result.schema.tables.includes('JournalContentItems')) {
-      const contentItemsColumns = result.schema.columns['JournalContentItems'];
-      if (contentItemsColumns) {
-        const expectedColumns = [
-          'content_item_id', 
-          'journal_section_id', 
-          'content_type', 
-          'content_id', 
-          'custom_text', 
-          'heading_level', 
-          'display_order', 
-          'is_visible', 
-          'created_at', 
-          'updated_at'
-        ];
-        
-        for (const expectedCol of expectedColumns) {
-          if (!contentItemsColumns.includes(expectedCol)) {
-            result.errors.push(`JournalContentItems table missing column: ${expectedCol}`);
-            result.isValid = false;
-          }
-        }
-
-        // Check for optional columns that might be missing
-        const optionalColumns = ['manual_page_break', 'page_break_position'];
-        for (const optionalCol of optionalColumns) {
-          if (!contentItemsColumns.includes(optionalCol)) {
-            result.warnings.push(`JournalContentItems table missing optional column: ${optionalCol}`);
+    // Verify required columns for each table
+    for (const [tableName, requiredColumns] of Object.entries(schemaVersion.requiredColumns)) {
+      if (result.schema.tables.includes(tableName)) {
+        const actualColumns = result.schema.columns[tableName];
+        if (actualColumns) {
+          for (const requiredCol of requiredColumns) {
+            if (!actualColumns.includes(requiredCol)) {
+              result.errors.push(`${tableName} table missing required column: ${requiredCol}`);
+              result.isValid = false;
+            }
           }
         }
       }
-    } else {
-      result.errors.push('JournalContentItems table does not exist');
-      result.isValid = false;
     }
 
-    // Verify Events table structure
-    if (result.schema.tables.includes('Events')) {
-      const eventsColumns = result.schema.columns['Events'];
-      if (eventsColumns) {
-        const expectedColumns = ['event_id', 'event_name', 'event_date', 'created_at', 'updated_at'];
-        
-        for (const expectedCol of expectedColumns) {
-          if (!eventsColumns.includes(expectedCol)) {
-            result.errors.push(`Events table missing column: ${expectedCol}`);
-            result.isValid = false;
+    // Check for optional columns
+    for (const [tableName, optionalColumns] of Object.entries(schemaVersion.optionalColumns)) {
+      if (result.schema.tables.includes(tableName)) {
+        const actualColumns = result.schema.columns[tableName];
+        if (actualColumns) {
+          for (const optionalCol of optionalColumns) {
+            if (!actualColumns.includes(optionalCol)) {
+              result.warnings.push(`${tableName} table missing optional column: ${optionalCol}`);
+            }
           }
         }
       }
-    } else {
-      result.errors.push('Events table does not exist');
-      result.isValid = false;
     }
 
     // Check for old table names that should have been migrated
