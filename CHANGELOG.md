@@ -2,6 +2,12 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.26] - 2025-10-16
+
+- Create gradual test with Prisma event lookup
+- Tests prisma.event.findUnique operation
+- Should identify if the issue is with event lookup or journal section operations
+- Stops before journal section operations
 ## [2.13.25] - 2025-10-16
 
 - Restore full function with comprehensive debugging
