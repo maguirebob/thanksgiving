@@ -2,6 +2,12 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.25] - 2025-10-16
+
+- Restore full function with comprehensive debugging
+- Ultra-simple test confirmed function setup works
+- Now testing all database operations with step-by-step debugging
+- Should either work completely or show exact error location
 ## [2.13.24] - 2025-10-16
 
 - Create final ultra-simple test

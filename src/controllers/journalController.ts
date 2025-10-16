@@ -16,31 +16,127 @@ import {
 // Journal Sections CRUD Operations
 
 export const createJournalSection = async (req: Request, res: Response): Promise<void> => {
-  console.log('🔍 === FINAL SIMPLE TEST START ===');
+  console.log('🔍 === DATABASE TEST START ===');
   console.log('📊 Request body:', JSON.stringify(req.body, null, 2));
   
   try {
-    console.log('✅ Inside try block - function is executing');
+    console.log('✅ Step 1: Inside try block - function is executing');
     
-    // Just return success with mock data - no database operations
-    res.status(201).json({
-      success: true,
-      data: { 
-        journal_section: {
-          section_id: 555,
-          event_id: req.body.event_id || 39,
-          year: req.body.year || 2025,
-          section_order: 1,
-          title: req.body.title || 'Final Simple Test',
-          description: req.body.description || 'Final Simple Description'
+    // Parse request data
+    const event_id: number = parseInt(req.body.event_id);
+    const year: number = parseInt(req.body.year);
+    const title: string | null = req.body.title || null;
+    const description: string | null = req.body.description || null;
+    
+    console.log('✅ Step 2: Parsed request data');
+    console.log('   event_id:', event_id, '(type:', typeof event_id, ')');
+    console.log('   year:', year, '(type:', typeof year, ')');
+
+    // Validate required fields
+    if (!event_id || !year) {
+      console.log('❌ Validation failed: Missing required fields');
+      res.status(400).json({
+        success: false,
+        message: 'Event ID and year are required'
+      });
+      return;
+    }
+
+    console.log('✅ Step 3: Validation passed');
+
+    // Test Prisma event lookup
+    console.log('🔍 Step 4: Testing Prisma event lookup...');
+    const event = await prisma.event.findUnique({
+      where: { event_id }
+    });
+
+    if (!event) {
+      console.log('❌ Event not found for event_id:', event_id);
+      res.status(404).json({
+        success: false,
+        message: 'Event not found'
+      });
+      return;
+    }
+
+    console.log('✅ Step 5: Event found:', {
+      event_id: event.event_id,
+      event_name: event.event_name
+    });
+
+    // Test journal section query
+    console.log('🔍 Step 6: Testing journal section query...');
+    const existingSections = await prisma.journalSection.findMany({
+      where: {
+        event_id,
+        year
+      },
+      select: {
+        section_order: true
+      },
+      orderBy: {
+        section_order: 'desc'
+      }
+    });
+
+    console.log('✅ Step 7: Journal section query successful');
+    console.log('📊 Existing sections found:', existingSections.length);
+
+    // Calculate next section_order
+    const nextSectionOrder = existingSections.length > 0 
+      ? (existingSections[0]?.section_order || 0) + 1 
+      : 1;
+
+    console.log('✅ Step 8: Calculated next section_order:', nextSectionOrder);
+
+    // Test journal section creation
+    console.log('🔍 Step 9: Testing journal section creation...');
+    const createData = {
+      event_id,
+      year,
+      section_order: nextSectionOrder,
+      title: title || null,
+      description: description || null
+    };
+    console.log('📋 Create data:', JSON.stringify(createData, null, 2));
+
+    const journalSection = await prisma.journalSection.create({
+      data: createData,
+      include: {
+        content_items: {
+          orderBy: { display_order: 'asc' }
         }
       }
     });
+
+    console.log('✅ Step 10: Journal section created successfully:', {
+      section_id: journalSection.section_id,
+      event_id: journalSection.event_id,
+      year: journalSection.year,
+      section_order: journalSection.section_order,
+      title: journalSection.title
+    });
+
+    res.status(201).json({
+      success: true,
+      data: { journal_section: journalSection }
+    });
     
-    console.log('🎉 === FINAL SIMPLE TEST END - SUCCESS ===');
+    console.log('🎉 === DATABASE TEST END - SUCCESS ===');
   } catch (error) {
-    console.log('❌ === FINAL SIMPLE TEST END - ERROR ===');
-    console.error('💥 Error in final simple test:', error);
+    console.log('❌ === DATABASE TEST END - ERROR ===');
+    console.error('💥 Error in database test:', error);
+    console.error('🔍 Error details:');
+    console.error('   Error name:', error instanceof Error ? error.name : 'Unknown');
+    console.error('   Error message:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('   Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    
+    // Log additional error details for Prisma errors
+    if (error && typeof error === 'object' && 'code' in error) {
+      console.error('   Prisma error code:', (error as any).code);
+      console.error('   Prisma error meta:', (error as any).meta);
+    }
+    
     res.status(500).json({
       success: false,
       message: 'Internal server error'
