@@ -56,6 +56,10 @@ $(function() {
       }
     });
     
+    // Force turn to page 1 to ensure we start from the beginning
+    console.log('🔄 Forcing turn to page 1');
+    $book.turn('page', 1);
+    
     // Add keyboard navigation
     addKeyboardNavigation();
     
