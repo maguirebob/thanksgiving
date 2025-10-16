@@ -6,6 +6,7 @@ $(function() {
   const $toolbar = $(".scrapbook-toolbar");
   let currentYear = null;
   let journalData = null;
+  let flipbookInstances = {}; // Store Turn.js instances by year
   let flipbookInitialized = false;
   
   console.log('📚 Book element:', $book.length);
@@ -97,9 +98,9 @@ $(function() {
     }
   }
   
-  // Initialize Turn.js on specific element
-  function initializeFlipbookOnElement($element) {
-    console.log('🔄 Initializing Turn.js on new element...');
+  // Initialize Turn.js on specific container
+  function initializeFlipbookOnContainer($container, year) {
+    console.log(`🔄 Initializing Turn.js on container for year ${year}...`);
     
     // Check if we're in fullscreen mode
     const isFullscreen = $('.scrapbook-shell').hasClass('fullscreen');
@@ -115,10 +116,10 @@ $(function() {
       height = Math.min(window.innerHeight * 0.8, 1000);
     }
     
-    console.log(`🔄 Turn.js dimensions for new element: ${width}x${height}`);
+    console.log(`🔄 Turn.js dimensions for year ${year}: ${width}x${height}`);
     
     try {
-      $element.turn({
+      $container.turn({
         width: width,
         height: height,
         center: true,
@@ -129,11 +130,11 @@ $(function() {
         display: 'single',
         when: {
           turning: function(event, page, view) {
-            console.log('Turning to page:', page);
+            console.log(`Turning to page ${page} in year ${year}`);
           },
           turned: function(event, page, view) {
-            console.log('Turned to page:', page);
-            updateNavigationButtonsForElement($element, page);
+            console.log(`Turned to page ${page} in year ${year}`);
+            updateNavigationButtonsForContainer($container, page);
           }
         }
       });
@@ -141,29 +142,27 @@ $(function() {
       // Wait a moment for Turn.js to fully initialize
       setTimeout(() => {
         try {
-          const totalPages = $element.children().length;
-          console.log(`🔄 Total pages in new element DOM: ${totalPages}`);
-          console.log('🔄 Forcing turn to page 1 on new element');
-          $element.turn('page', 1);
+          const totalPages = $container.children().length;
+          console.log(`🔄 Total pages in year ${year} DOM: ${totalPages}`);
+          console.log(`🔄 Forcing turn to page 1 in year ${year}`);
+          $container.turn('page', 1);
           
-          const turnPages = $element.turn('pages');
-          console.log(`🔄 New element Turn.js reports ${turnPages} pages`);
+          const turnPages = $container.turn('pages');
+          console.log(`🔄 Year ${year} Turn.js reports ${turnPages} pages`);
           
-          const currentPage = $element.turn('page');
-          console.log(`🔄 New element Turn.js current page: ${currentPage}`);
+          const currentPage = $container.turn('page');
+          console.log(`🔄 Year ${year} Turn.js current page: ${currentPage}`);
           
-          updateNavigationButtonsForElement($element, currentPage);
+          updateNavigationButtonsForContainer($container, currentPage);
           
-          console.log('✅ Turn.js initialization complete on new element');
+          console.log(`✅ Turn.js initialization complete for year ${year}`);
         } catch (error) {
-          console.log('⚠️ Error accessing Turn.js methods on new element:', error.message);
+          console.log(`⚠️ Error accessing Turn.js methods for year ${year}:`, error.message);
         }
       }, 100);
       
-      flipbookInitialized = true;
     } catch (error) {
-      console.error('❌ Error initializing Turn.js on new element:', error.message);
-      flipbookInitialized = false;
+      console.error(`❌ Error initializing Turn.js for year ${year}:`, error.message);
     }
   }
   
@@ -195,14 +194,14 @@ $(function() {
     }
   }
   
-  // Update navigation button states for specific element
-  function updateNavigationButtonsForElement($element, currentPage) {
+  // Update navigation button states for specific container
+  function updateNavigationButtonsForContainer($container, currentPage) {
     if (!flipbookInitialized) {
       return; // Don't try to access Turn.js if not initialized
     }
     
     try {
-      const totalPages = $element.turn("pages");
+      const totalPages = $container.turn("pages");
       const $prevBtn = $("#prevPage");
       const $nextBtn = $("#nextPage");
       
@@ -219,7 +218,7 @@ $(function() {
         $nextBtn.prop("disabled", false).removeClass("disabled");
       }
     } catch (error) {
-      console.log('⚠️ Error updating navigation buttons for element:', error.message);
+      console.log('⚠️ Error updating navigation buttons for container:', error.message);
     }
   }
 
@@ -304,25 +303,30 @@ $(function() {
   function addKeyboardNavigation() {
     $(document).on('keydown', function(e) {
       // Only handle arrow keys when the flipbook is visible
-      if (!$book.is(':visible') || !flipbookInitialized) {
+      if (!flipbookInitialized || !currentYear) {
+        return;
+      }
+      
+      const $currentContainer = flipbookInstances[currentYear]?.$container;
+      if (!$currentContainer || !$currentContainer.is(':visible')) {
         return;
       }
       
       try {
-        const currentPage = $book.turn('page');
-        const totalPages = $book.turn('pages');
+        const currentPage = $currentContainer.turn('page');
+        const totalPages = $currentContainer.turn('pages');
         
         switch(e.keyCode) {
           case 37: // Left arrow key
             e.preventDefault();
             if (currentPage > 1) {
-              $book.turn('previous');
+              $currentContainer.turn('previous');
             }
             break;
           case 39: // Right arrow key
             e.preventDefault();
             if (currentPage < totalPages) {
-              $book.turn('next');
+              $currentContainer.turn('next');
             }
             break;
         }
@@ -411,61 +415,60 @@ $(function() {
   
   // Generate flipbook pages from journal data
   function generateFlipbookPages() {
-    console.log('🔄 Regenerating flipbook pages...');
-    console.log('🔄 Current year:', currentYear);
+    console.log('🔄 Generating flipbook pages for year:', currentYear);
     console.log('🔄 Journal data:', journalData);
     
-    // Reset flipbook state completely
-    if (flipbookInitialized) {
-      console.log('🗑️ Destroying existing flipbook');
-      try {
-        // Stop any animations first
-        $book.turn('stop');
-        // Properly destroy the Turn.js instance
-        $book.turn('destroy');
-        flipbookInitialized = false;
-      } catch (error) {
-        console.log('⚠️ Error destroying flipbook:', error.message);
-        flipbookInitialized = false;
+    // Hide all existing flipbook instances
+    Object.keys(flipbookInstances).forEach(year => {
+      if (flipbookInstances[year].$container) {
+        flipbookInstances[year].$container.hide();
       }
+    });
+    
+    // Check if we already have an instance for this year
+    if (flipbookInstances[currentYear]) {
+      console.log('📚 Using existing flipbook instance for year:', currentYear);
+      flipbookInstances[currentYear].$container.show();
+      $toolbar.show();
+      flipbookInitialized = true;
+      return;
     }
     
-    // Remove the book from DOM and re-add it to force complete reset
-    const $parent = $book.parent();
-    $book.detach();
+    console.log('📚 Creating new flipbook instance for year:', currentYear);
     
-    // Clear all content and reset
-    $book.empty().removeClass().addClass('flipbook').removeAttr('style');
-    
-    // Re-add to DOM
-    $parent.append($book);
-    
-    console.log('🔄 Detached and re-attached flipbook element');
+    // Create a new container for this year
+    const $yearContainer = $(`<div id="flipbook-${currentYear}" class="flipbook-year-container"></div>`);
+    $book.append($yearContainer);
     
     // Add cover page
-    addCoverPage();
+    addCoverPageToContainer($yearContainer);
     
     // Add content pages with proper distribution
     if (journalData.journal_sections) {
       console.log('📖 Processing', journalData.journal_sections.length, 'journal sections');
       journalData.journal_sections.forEach((section, index) => {
         console.log(`📖 Processing section ${index + 1}:`, section.title);
-        addContentPagesWithDistribution(section);
+        addContentPagesWithDistributionToContainer($yearContainer, section);
       });
     }
     
-    const totalPages = $book.children().length;
-    console.log(`📄 Total pages created: ${totalPages}`);
-    console.log('📄 Page elements:', $book.children().map((i, el) => el.className).get());
+    const totalPages = $yearContainer.children().length;
+    console.log(`📄 Total pages created for ${currentYear}: ${totalPages}`);
+    console.log('📄 Page elements:', $yearContainer.children().map((i, el) => el.className).get());
     
-    // Show flipbook and toolbar, then initialize turn.js
-    $book.show();
+    // Initialize Turn.js on this container
+    initializeFlipbookOnContainer($yearContainer, currentYear);
+    
+    // Store the instance
+    flipbookInstances[currentYear] = {
+      $container: $yearContainer,
+      initialized: true
+    };
+    
+    // Show the container and toolbar
+    $yearContainer.show();
     $toolbar.show();
-    
-    // Wait a moment before initializing Turn.js
-    setTimeout(() => {
-      initializeFlipbook();
-    }, 100);
+    flipbookInitialized = true;
   }
   
   // Add content pages with proper distribution logic
@@ -497,6 +500,42 @@ $(function() {
     if (pages.length === 1) {
       console.log('📖 Adding empty page to ensure Turn.js compatibility');
       addContentPage({
+        ...section,
+        title: `${section.title} (continued)`,
+        content_items: []
+      }, []);
+    }
+  }
+  
+  // Add content pages with proper distribution logic to specific container
+  function addContentPagesWithDistributionToContainer($container, section) {
+    console.log('📖 Adding content pages for section to container:', section.title);
+    
+    const PAGE_HEIGHT = 820; // Fixed page height
+    const contentItems = section.content_items || [];
+    
+    if (contentItems.length === 0) {
+      addContentPageToContainer($container, section, []);
+      return;
+    }
+    
+    // Distribute content across pages
+    const pages = distributeContentAcrossPages(contentItems, PAGE_HEIGHT);
+    
+    pages.forEach((pageContent, index) => {
+      const pageSection = {
+        ...section,
+        title: index === 0 ? section.title : `${section.title} (continued)`,
+        content_items: pageContent
+      };
+      addContentPageToContainer($container, pageSection, pageContent);
+    });
+    
+    // Ensure we have at least 2 content pages for Turn.js to work properly
+    // Turn.js needs a minimum number of pages to function correctly
+    if (pages.length === 1) {
+      console.log('📖 Adding empty page to ensure Turn.js compatibility');
+      addContentPageToContainer($container, {
         ...section,
         title: `${section.title} (continued)`,
         content_items: []
@@ -622,6 +661,24 @@ $(function() {
     console.log('📄 Cover page added');
   }
   
+  // Add cover page to specific container
+  function addCoverPageToContainer($container) {
+    console.log('📄 Adding cover page to container');
+    const coverHtml = `
+      <section class="page cover">
+        <div class="page-inner">
+          <div class="page-content">
+            <h1 class="cover-title">🦃 Maguire Family Thanksgiving</h1>
+            <p class="cover-subtitle">Our treasured memories in one book</p>
+            <div class="cover-decoration">❦</div>
+          </div>
+        </div>
+      </section>
+    `;
+    $container.append(coverHtml);
+    console.log('📄 Cover page added to container');
+  }
+  
   // Add cover page to specific element
   function addCoverPageToElement($element) {
     console.log('📄 Adding cover page to element');
@@ -661,6 +718,30 @@ $(function() {
     
     const newPageCount = $book.children().length;
     console.log(`📄 Page ${newPageCount} added successfully`);
+    console.log(`📄 Current total pages: ${newPageCount}`);
+  }
+  
+  // Add content page to specific container
+  function addContentPageToContainer($container, section, contentItems = null) {
+    const items = contentItems || section.content_items || [];
+    const currentPageCount = $container.children().length;
+    console.log(`📄 Adding page ${currentPageCount + 1} for section to container: ${section.title}`);
+    console.log(`📄 Page will contain ${items.length} content items`);
+    console.log(`📄 Content items:`, items.map(item => ({ type: item.content_type, id: item.content_item_id })));
+    
+    const pageHtml = `
+      <section class="page">
+        <div class="page-inner">
+          <div class="page-content">
+            ${generateContentHtml(items)}
+          </div>
+        </div>
+      </section>
+    `;
+    $container.append(pageHtml);
+    
+    const newPageCount = $container.children().length;
+    console.log(`📄 Page ${newPageCount} added successfully to container`);
     console.log(`📄 Current total pages: ${newPageCount}`);
   }
   
@@ -824,7 +905,10 @@ $(function() {
   $("#prevPage").click(() => {
     if (!$("#prevPage").prop("disabled") && flipbookInitialized) {
       try {
-        $book.turn("previous");
+        const $currentContainer = flipbookInstances[currentYear]?.$container;
+        if ($currentContainer) {
+          $currentContainer.turn("previous");
+        }
       } catch (error) {
         console.log('⚠️ Error turning to previous page:', error.message);
       }
@@ -834,7 +918,10 @@ $(function() {
   $("#nextPage").click(() => {
     if (!$("#nextPage").prop("disabled") && flipbookInitialized) {
       try {
-        $book.turn("next");
+        const $currentContainer = flipbookInstances[currentYear]?.$container;
+        if ($currentContainer) {
+          $currentContainer.turn("next");
+        }
       } catch (error) {
         console.log('⚠️ Error turning to next page:', error.message);
       }
