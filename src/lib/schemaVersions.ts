@@ -255,8 +255,130 @@ export const SCHEMA_VERSIONS: Record<string, SchemaVersion> = {
     },
     migrationStatus: 'complete',
     notes: 'Initial schema verification system - JournalPages renamed to JournalSections'
+  },
+  '2.13.30': {
+    version: '2.13.30',
+    requiredTables: [
+      'events',
+      'JournalSections', 
+      'JournalContentItems',
+      'Users',
+      'BlogPosts',
+      'Photos',
+      'Recipes',
+      'Sessions'
+    ],
+    requiredColumns: {
+      'events': [
+        'event_id',
+        'event_name', 
+        'event_type',
+        'event_location',
+        'event_date',
+        'event_description',
+        'menu_title',
+        'menu_image_filename',
+        'created_at',
+        'updated_at',
+        'menu_image_s3_url'
+      ],
+      'JournalSections': [
+        'section_id',
+        'event_id',
+        'year',
+        'section_order',
+        'title',
+        'description',
+        'created_at',
+        'updated_at'
+      ],
+      'JournalContentItems': [
+        'content_item_id',
+        'journal_section_id',
+        'content_type',
+        'content_id',
+        'custom_text',
+        'heading_level',
+        'display_order',
+        'is_visible',
+        'manual_page_break',
+        'page_break_position',
+        'created_at',
+        'updated_at'
+      ],
+      'Users': [
+        'user_id',
+        'username',
+        'email',
+        'password_hash',
+        'role',
+        'first_name',
+        'last_name',
+        'created_at',
+        'updated_at'
+      ],
+      'BlogPosts': [
+        'blog_post_id',
+        'event_id',
+        'user_id',
+        'title',
+        'content',
+        'excerpt',
+        'featured_image',
+        'tags',
+        'status',
+        'published_at',
+        'created_at',
+        'updated_at',
+        'images'
+      ],
+      'Photos': [
+        'photo_id',
+        'event_id',
+        'filename',
+        'original_filename',
+        'description',
+        'caption',
+        'taken_date',
+        'file_size',
+        'mime_type',
+        'file_data',
+        'created_at',
+        'updated_at',
+        's3_url',
+        'photo_type'
+      ],
+      'Recipes': [
+        'recipe_id',
+        'event_id',
+        'user_id',
+        'title',
+        'description',
+        'ingredients',
+        'instructions',
+        'prep_time',
+        'cook_time',
+        'servings',
+        'difficulty_level',
+        'category',
+        'image_filename',
+        'is_featured',
+        'created_at',
+        'updated_at',
+        'image_s3_url'
+      ],
+      'Sessions': [
+        'session_id',
+        'user_id',
+        'expires',
+        'data',
+        'created_at'
+      ]
+    },
+    optionalColumns: {},
+    migrationStatus: 'complete',
+    notes: 'Added manual_page_break and page_break_position columns to JournalContentItems as required fields'
   }
-};
 
 export const getCurrentVersion = (): string => {
   try {
