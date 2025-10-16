@@ -650,6 +650,133 @@ The application uses Prisma with the following models:
 - [Architecture Documentation](docs/Thanksgiving%20Website%20Architecture.md) - Detailed system architecture
 - [Test Documentation](tests/README.md) - Testing guide and conventions
 
+## 🤝 Development Workflow & Rules
+
+### Core Development Rules
+
+1. **Always Use Versioning Function**
+   - Use `npm run version:patch` for bug fixes
+   - Use `npm run version:minor` for new features  
+   - Use `npm run version:major` for breaking changes
+   - **NEVER** manually edit version numbers
+
+2. **Server Restart Protocol**
+   - **ALWAYS** stop and start the server after making changes
+   - Use `pkill -f "ts-node-dev" && npm run dev` to ensure clean restart
+   - This prevents caching issues and ensures changes are loaded
+
+3. **Environment Management Rules**
+   - **NEVER** make changes directly in test or production
+   - **ALWAYS** work in dev branch first
+   - **ALWAYS** backup database before any destructive operations
+   - Follow strict dev → test → main promotion workflow
+
+4. **Database Change Rules**
+   - **ALWAYS** backup before schema changes
+   - **ALWAYS** test migrations locally first
+   - **ALWAYS** backup test environment before changes
+   - **ALWAYS** backup production before any changes
+
+5. **Journal Scrapbook Development**
+   - Journal editor and viewer are core features
+   - Always test drag-and-drop functionality
+   - Always test image display in both editor and viewer
+   - Always test page break functionality
+   - Always test delete functionality for content items
+
+### Development Best Practices
+
+1. **Testing Protocol**
+   - Run smoke tests after major changes
+   - Test journal editor functionality thoroughly
+   - Verify image display across all content types
+   - Test responsive design on different screen sizes
+
+2. **Code Quality**
+   - Fix TypeScript errors immediately
+   - Use proper error handling
+   - Add debugging logs when needed
+   - Clean up temporary files after debugging
+
+3. **Git Workflow**
+   - Commit frequently with descriptive messages
+   - Use semantic versioning for all releases
+   - Tag releases properly
+   - Push to remote after versioning
+
+### GitHub Issue Management
+
+**CRITICAL: Always add issues to the kanban board!**
+
+When creating GitHub issues, follow this process to ensure they appear in the kanban board:
+
+#### Creating Issues with Kanban Integration
+
+1. **Create the issue:**
+   ```bash
+   gh issue create --title "Your Issue Title" --body "Issue description" --label "bug"
+   ```
+
+2. **Add to Thanksgiving Website Backlog project:**
+   ```bash
+   gh project item-add 1 --owner maguirebob --url https://github.com/maguirebob/thanksgiving/issues/[ISSUE_NUMBER]
+   ```
+
+#### Complete Issue Creation Process
+
+**Step 1: Create Issue**
+```bash
+gh issue create --title "Bug Title" --body "## Bug Description
+Detailed description here...
+
+## Steps to Reproduce
+1. Step one
+2. Step two
+
+## Expected Behavior
+What should happen
+
+## Priority
+High/Medium/Low" --label "bug"
+```
+
+**Step 2: Get Issue Number**
+The command will output: `https://github.com/maguirebob/thanksgiving/issues/XX`
+
+**Step 3: Add to Kanban**
+```bash
+gh project item-add 1 --owner maguirebob --url https://github.com/maguirebob/thanksgiving/issues/XX
+```
+
+#### Available Labels
+- `bug` - For bugs and issues
+- `documentation` - For documentation tasks
+- `enhancement` - For new features
+- `help wanted` - For community help needed
+
+#### Project Information
+- **Project Name:** Thanksgiving Website Backlog
+- **Project ID:** 1
+- **Owner:** maguirebob
+- **Repository:** thanksgiving
+
+#### Verification Commands
+```bash
+# List all open issues
+gh issue list --state open
+
+# View specific issue
+gh issue view [NUMBER]
+
+# List projects
+gh project list
+
+# Check if issue is in project
+gh project item-list 1
+```
+
+**⚠️ IMPORTANT:** Issues created without adding to the project will NOT appear in the kanban board!
+
 ## 🎯 Next Steps
 
 The application is production-ready! Consider:

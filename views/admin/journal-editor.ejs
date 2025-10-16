@@ -16,7 +16,7 @@
         </div>
       </div>
 
-      <!-- Year and Page Selection -->
+      <!-- Year and Section Selection -->
       <div class="card mb-4">
         <div class="card-body">
           <div class="row">
@@ -30,21 +30,32 @@
               </select>
             </div>
             <div class="col-md-6">
-              <label for="pageSelect" class="form-label">Page</label>
-              <select class="form-select" id="pageSelect" disabled>
-                <option value="">Select Page</option>
+              <label for="sectionSelect" class="form-label">Section</label>
+              <select class="form-select" id="sectionSelect" disabled>
+                <option value="">Select Section</option>
               </select>
             </div>
           </div>
+          
+          <!-- Current Event Display -->
+          <div class="row mt-3" id="currentEventDisplay" style="display: none;">
+            <div class="col-12">
+              <div class="alert alert-info">
+                <strong>Current Event:</strong> <span id="currentEventName">-</span> 
+                <span class="text-muted">(ID: <span id="currentEventId">-</span>)</span>
+              </div>
+            </div>
+          </div>
+          
           <div class="row mt-3">
             <div class="col-md-6">
-              <button type="button" class="btn btn-outline-primary" id="createPageBtn" disabled>
-                <i class="fas fa-plus me-1"></i>Create New Page
+              <button type="button" class="btn btn-outline-primary" id="createSectionBtn" disabled>
+                <i class="fas fa-plus me-1"></i>Create New Section
               </button>
             </div>
             <div class="col-md-6">
-              <button type="button" class="btn btn-outline-danger" id="deletePageBtn" disabled>
-                <i class="fas fa-trash me-1"></i>Delete Page
+              <button type="button" class="btn btn-outline-danger" id="deleteSectionBtn" disabled>
+                <i class="fas fa-trash me-1"></i>Delete Section
               </button>
             </div>
           </div>
@@ -88,28 +99,28 @@
               <div class="tab-content mt-3" id="contentTabContent">
                 <!-- Menus Panel -->
                 <div class="tab-pane fade show active" id="menus" role="tabpanel">
-                  <div id="menusList" class="content-list">
+                  <div id="menus" class="content-list">
                     <div class="text-muted text-center py-3">Select a year to load content</div>
                   </div>
                 </div>
 
                 <!-- Photos Panel -->
                 <div class="tab-pane fade" id="photos" role="tabpanel">
-                  <div id="photosList" class="content-list">
+                  <div id="photos" class="content-list">
                     <div class="text-muted text-center py-3">Select a year to load content</div>
                   </div>
                 </div>
 
                 <!-- Page Photos Panel -->
                 <div class="tab-pane fade" id="page-photos" role="tabpanel">
-                  <div id="pagePhotosList" class="content-list">
+                  <div id="pagePhotos" class="content-list">
                     <div class="text-muted text-center py-3">Select a year to load content</div>
                   </div>
                 </div>
 
                 <!-- Blogs Panel -->
                 <div class="tab-pane fade" id="blogs" role="tabpanel">
-                  <div id="blogsList" class="content-list">
+                  <div id="blogs" class="content-list">
                     <div class="text-muted text-center py-3">Select a year to load content</div>
                   </div>
                 </div>
@@ -140,21 +151,21 @@
               </div>
             </div>
             <div class="card-body">
-              <!-- Page Title and Description -->
+              <!-- Section Title and Description -->
               <div class="mb-3">
-                <label for="pageTitle" class="form-label">Page Title</label>
-                <input type="text" class="form-control" id="pageTitle" placeholder="Enter page title">
+                <label for="sectionTitle" class="form-label">Section Title</label>
+                <input type="text" class="form-control" id="sectionTitle" placeholder="Enter section title">
               </div>
               <div class="mb-3">
-                <label for="pageDescription" class="form-label">Page Description</label>
-                <textarea class="form-control" id="pageDescription" rows="2" placeholder="Enter page description"></textarea>
+                <label for="sectionDescription" class="form-label">Section Description</label>
+                <textarea class="form-control" id="sectionDescription" rows="2" placeholder="Enter section description"></textarea>
               </div>
 
               <!-- Content Items Container -->
-              <div id="journalContentContainer" class="journal-content-container">
+              <div id="contentItems" class="journal-content-container">
                 <div class="text-muted text-center py-5">
                   <i class="fas fa-plus-circle fa-3x mb-3"></i>
-                  <p>Drag content from the left panel to build your journal page</p>
+                  <p>Drag content from the right panel to build your journal section</p>
                 </div>
               </div>
             </div>
@@ -255,6 +266,139 @@
 }
 
 .content-item {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.content-item:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.content-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.content-type-badge {
+  background: var(--accent-orange);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.display-order {
+  background: #6c757d;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+
+.page-break-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.page-break-indicator .badge {
+  font-size: 0.7rem;
+}
+
+.content-item-card {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  cursor: grab;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.content-item-card:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+.content-item-card:active {
+  cursor: grabbing;
+}
+
+.content-item-image {
+  width: 100%;
+  height: 80px;
+  overflow: hidden;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+}
+
+.content-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.no-image {
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
+.content-item-info h6 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.content-item-info p {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.menu-image, .photo-image, .page-photo-image, .blog-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+}
+
+.blog-text-content {
+  margin: 0.5rem 0;
+  line-height: 1.6;
+  color: #333;
+}
+
+.text-content {
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border-left: 4px solid var(--accent-orange);
+}
+
+.heading-content {
+  color: var(--accent-orange);
+  margin: 0;
+}
+
+.menu-content, .photo-content, .page-photo-content, .blog-content {
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.content-item {
   background: var(--white);
   border: 1px solid var(--border-gray);
   border-radius: 8px;
@@ -339,8 +483,9 @@
 </style>
 
 <script>
-  // Make event ID available to JavaScript
-  window.currentEventId = <%= currentEventId %>;
-  console.log('Journal Editor - Current Event ID:', window.currentEventId);
+  // Make events data available to JavaScript
+  window.events = <%- JSON.stringify(events) %>;
+  window.currentEventId = null; // Will be set dynamically based on year selection
+  console.log('Journal Editor - Available Events:', window.events);
 </script>
 <script src="/js/components/journalEditor.js"></script>

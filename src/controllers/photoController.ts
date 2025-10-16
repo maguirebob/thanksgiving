@@ -70,6 +70,7 @@ export const getEventPhotos = async (req: Request, res: Response): Promise<void>
           description: true,
           caption: true,
           taken_date: true,
+          photo_type: true,
           file_size: true,
           mime_type: true,
           s3_url: true,
@@ -138,8 +139,17 @@ export const uploadEventPhoto = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    const { description, caption } = req.body;
-    console.log('Parsed data:', { eventId, description, caption });
+    const { description, caption, photo_type } = req.body;
+    console.log('Parsed data:', { eventId, description, caption, photo_type });
+
+    // Validate photo_type if provided
+    if (photo_type && !['individual', 'page'].includes(photo_type)) {
+      res.status(400).json({
+        success: false,
+        message: 'Photo type must be either "individual" or "page"'
+      });
+      return;
+    }
 
     // Validate event exists
     console.log('Checking if event exists...');
@@ -211,6 +221,7 @@ export const uploadEventPhoto = async (req: Request, res: Response): Promise<voi
         original_filename: req.file.originalname,
         description: description || null,
         caption: caption || null,
+        photo_type: photo_type || 'individual', // Default to 'individual' if not provided
         file_size: req.file.size,
         mime_type: req.file.mimetype,
         s3_url: (req.file as any).location, // S3 URL from multer-s3
@@ -222,6 +233,7 @@ export const uploadEventPhoto = async (req: Request, res: Response): Promise<voi
         original_filename: true,
         description: true,
         caption: true,
+        photo_type: true,
         taken_date: true,
         file_size: true,
         mime_type: true,
@@ -293,6 +305,7 @@ export const getPhoto = async (req: Request, res: Response): Promise<void> => {
         description: true,
         caption: true,
         taken_date: true,
+        photo_type: true,
         file_size: true,
         mime_type: true,
         created_at: true,
@@ -341,7 +354,16 @@ export const updatePhoto = async (req: Request, res: Response): Promise<void> =>
       });
       return;
     }
-    const { description, caption, taken_date } = req.body;
+    const { description, caption, taken_date, photo_type } = req.body;
+
+    // Validate photo_type if provided
+    if (photo_type !== undefined && !['individual', 'page'].includes(photo_type)) {
+      res.status(400).json({
+        success: false,
+        message: 'Photo type must be either "individual" or "page"'
+      });
+      return;
+    }
 
     // Check if photo exists
     const existingPhoto = await prisma.photo.findUnique({
@@ -362,7 +384,8 @@ export const updatePhoto = async (req: Request, res: Response): Promise<void> =>
       data: {
         description: description !== undefined ? description : existingPhoto.description,
         caption: caption !== undefined ? caption : existingPhoto.caption,
-        taken_date: taken_date !== undefined ? new Date(taken_date) : existingPhoto.taken_date
+        taken_date: taken_date !== undefined ? new Date(taken_date) : existingPhoto.taken_date,
+        photo_type: photo_type !== undefined ? photo_type : existingPhoto.photo_type
       },
       select: {
         photo_id: true,
@@ -371,6 +394,7 @@ export const updatePhoto = async (req: Request, res: Response): Promise<void> =>
         description: true,
         caption: true,
         taken_date: true,
+        photo_type: true,
         file_size: true,
         mime_type: true,
         created_at: true,

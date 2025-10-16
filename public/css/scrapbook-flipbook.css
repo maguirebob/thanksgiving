@@ -1,0 +1,638 @@
+/* Scrapbook Flipbook Styles - Based on turn.js integration */
+
+:root {
+  --leather: #5a3921;
+  --leather-dark: #3c2413;
+  --paper: #f5e9d2;
+  --ink: #3b2b1b;
+  --bronze: #b9803a;
+  --gold: #f4d28d;
+  --shadow: rgba(0, 0, 0, 0.4);
+  --parchment: #f9f2e5;
+  --parchment-dark: #e6d6b9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  /* Background creates depth and contrast behind the parchment page */
+  background-color: #3a2a1a; /* dark brown felt base */
+  background-image: url('https://www.transparenttextures.com/patterns/fabric-of-squares.png');
+  background-size: 200px;
+  background-repeat: repeat;
+  font-family: "Georgia", "Times New Roman", serif;
+  color: var(--ink);
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.scrapbook-shell {
+  margin: 2rem auto;
+  text-align: center;
+  max-width: 1500px;
+  padding: 0 1rem;
+}
+
+.scrapbook-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding: 1rem 2rem;
+  background: 
+    url('/images/textures/parchment.png') center/cover,
+    linear-gradient(135deg, #f5f0e8, #e8ddd4);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  border: 1px solid #d3b98c;
+}
+
+.toolbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.fullscreen-btn {
+  background: var(--gold) !important;
+  color: var(--ink) !important;
+  font-size: 18px !important;
+  width: 45px !important;
+  height: 45px !important;
+}
+
+.fullscreen-btn:hover {
+  background: var(--bronze) !important;
+  color: white !important;
+}
+
+.nav-button {
+  background: var(--bronze);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.nav-button:hover {
+  background: var(--gold);
+  transform: scale(1.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.nav-button:active {
+  transform: scale(0.95);
+}
+
+.nav-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.scrapbook-title {
+  color: var(--ink);
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  letter-spacing: 1px;
+}
+
+.flipbook {
+  box-shadow:
+    0 30px 60px rgba(0,0,0,0.5),
+    0 0 0 2px rgba(0,0,0,0.1);
+  background:
+    radial-gradient(120% 100% at 50% 50%, #f7efe2 0%, #eee1cd 70%, #e7d6bd 100%);
+  border-radius: 8px;
+  padding: 0;
+  overflow: hidden;
+  margin: 0 auto;
+  position: relative;
+}
+
+.page {
+  background:
+    url('/images/textures/parchment.png') center/cover,
+    linear-gradient(to bottom right, var(--parchment), var(--parchment-dark));
+  box-shadow:
+    inset 0 0 50px rgba(0,0,0,0.25),
+    0 6px 16px rgba(0,0,0,0.35);
+  border-radius: 6px;
+  position: relative;
+  min-height: 700px; /* Increased height for better image display */
+  height: auto; /* Allow content to determine height */
+}
+
+.page-inner {
+  padding: 1rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.page-content {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+  animation: fadeIn 1.5s ease both;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* White background for text content only */
+.blog-content {
+  background: rgba(255,255,255,0.85);
+  border: 1px solid #d3b98c;
+  box-shadow:
+    inset 0 0 40px rgba(255,255,255,0.4),
+    0 8px 20px rgba(0,0,0,0.2);
+  padding: 2rem;
+  margin: 1rem;
+  border-radius: 8px;
+}
+
+.blog-content p {
+  margin-bottom: 1rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Cover page styling */
+.cover {
+  background:
+    url('/images/textures/leather-grain.png') center/cover,
+    radial-gradient(circle at 30% 30%, #704428, var(--leather-dark));
+  background-blend-mode: overlay;
+  border: 10px solid #3a2413;
+  box-shadow:
+    inset 0 0 40px rgba(0,0,0,0.6),
+    0 10px 40px rgba(0,0,0,0.5);
+  color: #fef6e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-shadow: 0 0 10px rgba(0,0,0,0.7);
+}
+
+.cover .page-content {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.cover-title {
+  color: #f4d28d;
+  text-shadow:
+    0 1px 0 #3a2413,
+    0 2px 4px rgba(0,0,0,0.7),
+    0 0 12px rgba(255,200,80,0.4);
+  letter-spacing: 0.05em;
+  text-transform: none;
+  font-family: "Georgia", serif;
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  display: block;
+  width: 100%;
+}
+
+.cover .cover-subtitle {
+  color: #f8e6b8 !important; /* Lighter gold color with !important to override .page p */
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  opacity: 1.0; /* Full opacity for better readability */
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3); /* Add subtle shadow for contrast */
+  display: block;
+  width: 100%;
+}
+
+.cover-decoration {
+  font-size: 3rem;
+  color: #f4d28d;
+  opacity: 0.7;
+}
+
+/* Year navigation styling */
+.journal-nav {
+  margin-bottom: 2rem;
+  padding: 1rem 2rem;
+  background: 
+    url('/images/textures/parchment.png') center/cover,
+    linear-gradient(135deg, #f5f0e8, #e8ddd4);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  border: 1px solid #d3b98c;
+}
+
+.year-selector {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.year-btn {
+  padding: 0.75rem 1.5rem;
+  border: 2px solid var(--bronze);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 25px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  font-family: "Georgia", serif;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  cursor: pointer;
+}
+
+.year-btn:hover, .year-btn.active {
+  background: var(--bronze);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.scrapbook-loading {
+  color: var(--ink);
+  font-family: "Georgia", serif;
+  font-size: 1.1rem;
+}
+
+.scrapbook-subtitle {
+  color: #8b7355; /* Lighter brown color for better readability */
+  font-family: "Georgia", serif;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2); /* Add subtle shadow for contrast */
+}
+
+/* Content styling within pages */
+.page h2, .page h3 {
+  color: #5a3b19;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+  font-family: "Georgia", serif;
+  margin-bottom: 1rem;
+}
+
+.page p {
+  color: var(--ink);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+/* Blog images styling */
+.blog-images-container {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+
+.blog-images-container .blog-image {
+  flex: 1;
+  min-width: 48%;
+  max-width: 48%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+/* Ensure menu images fit properly in normal mode only */
+.menu-image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin: 0.5rem auto;
+}
+
+/* Photo container for multiple photos */
+.photo-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  height: 100%;
+}
+
+.photo-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.photo-image {
+  width: 100%;
+  height: auto;
+  max-height: 100%; /* Changed from 350px to responsive */
+  object-fit: contain; /* Changed from cover to contain */
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+/* Fullscreen photo container adjustments */
+.scrapbook-shell.fullscreen .photo-container {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+  padding: 0.75rem;
+  height: 100%;
+}
+
+.scrapbook-shell.fullscreen .photo-image {
+  max-height: 400px;
+  width: 100%;
+  height: auto;
+}
+
+/* Fullscreen blog images adjustments */
+.scrapbook-shell.fullscreen .blog-images-container {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 0.5rem 0;
+  max-width: 100%;
+}
+
+.scrapbook-shell.fullscreen .blog-images-container .blog-image {
+  flex: 1;
+  min-width: 48%;
+  max-width: 48%;
+  height: auto;
+  max-height: 60vh; /* Larger than before but not too large */
+  object-fit: contain; /* Ensure images fit within bounds */
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.scrapbook-shell.fullscreen .blog-content {
+  max-width: 100%;
+  overflow: hidden;
+  padding: 0.5rem;
+}
+
+.page-photo-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+}
+
+.page-photo-image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+/* No content message styling */
+.no-content-message {
+  text-align: center;
+  padding: 2rem;
+  color: var(--ink);
+  font-family: "Georgia", serif;
+}
+
+.no-content-message h4 {
+  color: #5a3b19;
+  margin-bottom: 1rem;
+}
+
+.no-content-message p {
+  color: var(--ink);
+  margin-bottom: 1.5rem;
+  opacity: 0.8;
+}
+
+/* Fullscreen styles - uses native fullscreen API */
+.scrapbook-shell.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  background: #3a2a1a; /* Match the dark brown felt background */
+  background-image: url('https://www.transparenttextures.com/patterns/fabric-of-squares.png');
+  background-size: 200px;
+  background-repeat: repeat;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.scrapbook-shell.fullscreen .journal-nav {
+  display: none; /* Hide year selector */
+}
+
+.scrapbook-shell.fullscreen .scrapbook-toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin: 0;
+  margin-bottom: 0; /* Remove bottom margin */
+  border-radius: 0;
+  z-index: 10000;
+  background: rgba(245, 240, 232, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 0.25rem 1rem; /* Reduced padding to eliminate white space */
+  height: auto; /* Let content determine height */
+}
+
+.scrapbook-shell.fullscreen .flipbook {
+  position: fixed !important;
+  top: 50% !important; /* Center vertically */
+  left: 50% !important; /* Center horizontally */
+  transform: translate(-50%, -50%) !important; /* Perfect centering */
+  width: 100vw !important; /* Use full viewport width */
+  height: 95vh !important; /* Use most of viewport height */
+  margin: 0 !important;
+  box-shadow: none !important;
+  max-width: 100vw !important; /* Ensure it doesn't exceed viewport */
+  max-height: 95vh !important; /* Ensure it doesn't exceed viewport */
+  overflow: hidden !important; /* Hide any overflow from flipbook */
+  bottom: 0; /* Ensure it doesn't extend beyond bottom */
+}
+
+.scrapbook-shell.fullscreen .flipbook > div {
+  overflow: hidden; /* Hide overflow from turn.js generated elements */
+}
+
+/* Hide turn.js specific elements that might cause black boxes */
+.scrapbook-shell.fullscreen .turn-page-wrapper {
+  overflow: hidden;
+}
+
+.scrapbook-shell.fullscreen .turn-page-shadow {
+  display: none; /* Hide shadow elements that might extend beyond bounds */
+}
+
+/* Additional turn.js element hiding */
+.scrapbook-shell.fullscreen .turn-page {
+  overflow: hidden !important;
+}
+
+.scrapbook-shell.fullscreen .turn-page-wrapper,
+.scrapbook-shell.fullscreen .turn-page-shadow,
+.scrapbook-shell.fullscreen .turn-page {
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+}
+
+.scrapbook-shell.fullscreen .page {
+  height: calc(100vh - 50px); /* Match flipbook height */
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Hide page overflow */
+}
+
+.scrapbook-shell.fullscreen .page-inner {
+  padding: 0.5rem; /* Reduced padding to give more space */
+  height: calc(100% - 1rem); /* Adjusted for reduced padding */
+}
+
+/* Menu content specific styling */
+.menu-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0.5rem;
+  box-sizing: border-box;
+}
+
+.menu-content .menu-image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Page photo specific styling */
+.page-photo-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0.5rem;
+  box-sizing: border-box;
+}
+
+.page-photo-content .page-photo-image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+/* Ensure page photos fit properly in fullscreen */
+.scrapbook-shell.fullscreen .page-photo-image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.scrapbook-shell.fullscreen .page-content {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .scrapbook-shell {
+    margin: 1rem auto;
+    padding: 0 0.5rem;
+  }
+  
+  .scrapbook-toolbar {
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .scrapbook-title {
+    font-size: 1.2rem;
+  }
+  
+  .nav-button {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+  
+  .page-inner {
+    padding: 1.5rem;
+  }
+  
+  .page-content {
+    padding: 1.5rem;
+    margin: 0.5rem;
+  }
+  
+  .cover-title {
+    font-size: 2rem;
+  }
+  
+  .year-selector {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .blog-images-container {
+    flex-direction: column;
+  }
+  
+  .blog-images-container .blog-image {
+    min-width: 100%;
+    max-width: 100%;
+  }
+}
