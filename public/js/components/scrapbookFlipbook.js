@@ -69,6 +69,13 @@ $(function() {
           // Verify the page count that Turn.js sees
           const turnPages = $book.turn('pages');
           console.log(`🔄 Turn.js reports ${turnPages} pages`);
+          
+          // Check current page
+          const currentPage = $book.turn('page');
+          console.log(`🔄 Turn.js current page: ${currentPage}`);
+          
+          // Update navigation buttons
+          updateNavigationButtons(currentPage);
         } catch (error) {
           console.log('⚠️ Error accessing Turn.js methods:', error.message);
         }
@@ -301,6 +308,8 @@ $(function() {
   // Generate flipbook pages from journal data
   function generateFlipbookPages() {
     console.log('🔄 Regenerating flipbook pages...');
+    console.log('🔄 Current year:', currentYear);
+    console.log('🔄 Journal data:', journalData);
     
     // Reset flipbook state
     if (flipbookInitialized) {
@@ -317,16 +326,23 @@ $(function() {
     
     // Clear the book content completely and reset all attributes
     $book.empty().removeClass().addClass('flipbook').removeAttr('style');
+    console.log('🧹 Cleared book content and reset attributes');
     
     // Add cover page
     addCoverPage();
     
     // Add content pages with proper distribution
     if (journalData.journal_sections) {
-      journalData.journal_sections.forEach(section => {
+      console.log('📖 Processing', journalData.journal_sections.length, 'journal sections');
+      journalData.journal_sections.forEach((section, index) => {
+        console.log(`📖 Processing section ${index + 1}:`, section.title);
         addContentPagesWithDistribution(section);
       });
     }
+    
+    const totalPages = $book.children().length;
+    console.log(`📄 Total pages created: ${totalPages}`);
+    console.log('📄 Page elements:', $book.children().map((i, el) => el.className).get());
     
     // Show flipbook and toolbar, then initialize turn.js
     $book.show();
@@ -458,6 +474,7 @@ $(function() {
     const currentPageCount = $book.children().length;
     console.log(`📄 Adding page ${currentPageCount + 1} for section: ${section.title}`);
     console.log(`📄 Page will contain ${items.length} content items`);
+    console.log(`📄 Content items:`, items.map(item => ({ type: item.content_type, id: item.content_item_id })));
     
     const pageHtml = `
       <section class="page">
@@ -472,6 +489,7 @@ $(function() {
     
     const newPageCount = $book.children().length;
     console.log(`📄 Page ${newPageCount} added successfully`);
+    console.log(`📄 Current total pages: ${newPageCount}`);
   }
   
   // Generate content HTML for a section
