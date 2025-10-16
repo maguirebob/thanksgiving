@@ -70,7 +70,7 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://code.jquery.com"],
       scriptSrcAttr: ["'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
@@ -244,7 +244,7 @@ app.get('/health', (_req, res) => {
       status: 'OK', 
       timestamp: new Date().toISOString(),
       environment: process.env['NODE_ENV'] || 'unknown',
-      version: '2.12.74'
+      version: '2.13.30'
     });
   } catch (error) {
     logger.error('Health check error:', error);
@@ -261,7 +261,7 @@ app.get('/api/v1/version/display', (_req, res) => {
   res.json({
     success: true,
     data: {
-      version: '2.12.74',
+      version: '2.13.30',
       environment: config.getConfig().nodeEnv,
       buildDate: new Date().toISOString()
     }
@@ -488,15 +488,33 @@ app.get('/api/setup-database', async (_req, res) => {
 });
 
 // About page route
-app.get('/about', requireAuth, (_req, res) => {
-  const packageJson = require('../package.json');
-  res.render('about', {
-    title: 'About - Thanksgiving Menu Collection',
-    version: packageJson.version,
-    environment: config.getConfig().nodeEnv,
-    buildDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
-    dbStatus: 'Connected'
-  });
+app.get('/about', requireAuth, async (_req, res) => {
+  try {
+    const packageJson = require('../package.json');
+    const { getDatabaseStatus } = await import('./lib/databaseVerifier');
+    const dbStatus = await getDatabaseStatus();
+    
+    res.render('about', {
+      title: 'About - Thanksgiving Menu Collection',
+      version: packageJson.version,
+      environment: config.getConfig().nodeEnv,
+      buildDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+      dbStatus: dbStatus.status,
+      dbMessage: dbStatus.message,
+      dbDetails: dbStatus.details
+    });
+  } catch (error) {
+    logger.error('Error loading about page:', error);
+    res.render('about', {
+      title: 'About - Thanksgiving Menu Collection',
+      version: 'unknown',
+      environment: config.getConfig().nodeEnv,
+      buildDate: new Date().toISOString().split('T')[0],
+      dbStatus: 'error',
+      dbMessage: 'Failed to verify database structure',
+      dbDetails: null
+    });
+  }
 });
 
 // Carousel page route (accessible to all authenticated users)
@@ -736,7 +754,19 @@ app.use('/api', photoRoutes);
 app.use('/api', blogRoutes);
 app.use('/api/v1', eventRoutes);
 app.use('/api/carousel', carouselRoutes);
-app.use('/api/journal', journalRoutes);
+// Add debugging middleware for journal routes
+app.use('/api/journal', (req, _res, next) => {
+  console.log('🌐 === SERVER DEBUG: Journal Route Hit ===');
+  console.log('📊 Request method:', req.method);
+  console.log('📊 Request path:', req.path);
+  console.log('📊 Request URL:', req.url);
+  console.log('📊 Request headers:', JSON.stringify(req.headers, null, 2));
+  console.log('🔐 Session exists:', !!req.session);
+  console.log('🔐 Session user ID:', req.session?.userId);
+  console.log('📅 Timestamp:', new Date().toISOString());
+  console.log('✅ Proceeding to journal routes');
+  next();
+}, journalRoutes);
 app.use('/api/photos', photoTypeRoutes);
 
 // Error handling middleware
@@ -752,6 +782,9 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 app.use((_req, res) => {
   res.status(404).json({ error: 'Not Found' });
 });
+
+// Export app for testing
+export { app };
 
 const PORT = config.getPort();
 

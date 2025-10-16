@@ -1,6 +1,6 @@
 {
   "name": "thanksgiving-website-ts",
-  "version": "2.12.74",
+  "version": "2.13.30",
   "description": "Thanksgiving Menu Website - TypeScript Version",
   "main": "dist/server.js",
   "scripts": {
@@ -30,8 +30,12 @@
     "version:check": "ts-node scripts/version-manager.ts",
     "db:migrate": "prisma migrate deploy",
     "deploy:railway": "bash scripts/railway-deploy.sh",
+    "deploy:railway:production": "bash scripts/railway-deploy-production.sh",
+    "backup:production": "bash scripts/backup-production.sh",
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:status": "prisma migrate status",
+    "validate:migrations": "ts-node scripts/validate-migrations.ts",
+    "verify:schema": "npx prisma db execute --stdin <<< \"SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;\"",
     "db:push": "prisma db push",
     "db:seed": "ts-node scripts/insert-sample-data.ts",
     "upload:images": "ts-node scripts/upload-images-to-railway.ts",

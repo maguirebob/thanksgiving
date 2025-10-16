@@ -306,3 +306,6 @@ describe('Photo Type Controller', () => {
     });
   });
 });
+
+
+

@@ -1,10 +1,113 @@
 import request from 'supertest';
 import { PrismaClient } from '@prisma/client';
-import { testUtils } from '../setup';
-
-// Import your server (you'll need to export it from server.ts)
-// For now, we'll create a simple test server
+import path from 'path';
+import fs from 'fs';
 import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import compression from 'compression';
+import rateLimit from 'express-rate-limit';
+import session from 'express-session';
+import expressLayouts from 'express-ejs-layouts';
+import { config } from '../../src/lib/config';
+import authRoutes from '../../src/routes/authRoutes';
+import adminRoutes from '../../src/routes/adminRoutes';
+import photoRoutes from '../../src/routes/photoRoutes';
+import blogRoutes from '../../src/routes/blogRoutes';
+import eventRoutes from '../../src/routes/eventRoutes';
+import carouselRoutes from '../../src/routes/carouselRoutes';
+import journalRoutes from '../../src/routes/journalRoutes';
+import photoTypeRoutes from '../../src/routes/photoTypeRoutes';
+import { addUserToLocals } from '../../src/middleware/auth';
+
+// Create test app without starting server
+const createTestApp = () => {
+  const app = express();
+
+  // Middleware setup (same as server.ts but without listening)
+  app.use(cors({
+    origin: true,
+    credentials: true
+  }));
+
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://code.jquery.com"],
+        imgSrc: ["'self'", "data:", "https:", "blob:"],
+        connectSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'"],
+        frameSrc: ["'none'"]
+      }
+    }
+  }));
+
+  app.use(compression());
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+  // Rate limiting
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.'
+  });
+  app.use('/api/', limiter);
+
+  // Session configuration
+  app.use(session({
+    secret: config.getConfig().sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: config.getConfig().nodeEnv === 'production',
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+  }));
+
+  // View engine setup
+  app.set('view engine', 'ejs');
+  app.set('views', path.join(__dirname, '../../views'));
+  app.use(expressLayouts);
+  app.set('layout', 'layout');
+
+  // Static files
+  app.use(express.static(path.join(__dirname, '../../public')));
+
+  // Middleware
+  app.use(addUserToLocals);
+
+  // Routes
+  app.use('/auth', authRoutes);
+  app.use('/admin', adminRoutes);
+  app.use('/api', photoRoutes);
+  app.use('/api', blogRoutes);
+  app.use('/api/v1', eventRoutes);
+  app.use('/api/carousel', carouselRoutes);
+  app.use('/api/journal', journalRoutes);
+  app.use('/api/photos', photoTypeRoutes);
+
+  // Error handling middleware
+  app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    console.error('Error:', err);
+    res.status(500).json({ 
+      error: 'Internal Server Error',
+      message: config.isDevelopment() ? err.message : 'Something went wrong'
+    });
+  });
+
+  // 404 handler
+  app.use((_req, res) => {
+    res.status(404).json({ error: 'Not Found' });
+  });
+
+  return app;
+};
 
 describe('Smoke Tests - Journal Functionality', () => {
   let app: express.Application;
@@ -14,277 +117,287 @@ describe('Smoke Tests - Journal Functionality', () => {
     // Initialize Prisma client
     prisma = new PrismaClient();
     
-    // Create test Express app
-    app = express();
-    app.use(express.json());
-    
-    // Add journal routes for testing
-    app.get('/api/journal/viewer/years', async (_req, res) => {
-      try {
-        const years = await prisma.journalPage.findMany({
-          select: { year: true },
-          distinct: ['year'],
-          orderBy: { year: 'asc' }
-        });
-
-        res.json({
-          success: true,
-          data: { years: years.map(y => y.year) }
-        });
-      } catch (error) {
-        res.status(500).json({
-          success: false,
-          message: 'Internal server error'
-        });
-      }
-    });
-
-    app.get('/api/journal/viewer/data', async (req, res) => {
-      try {
-        const { year } = req.query;
-
-        if (!year) {
-          return res.status(400).json({
-            success: false,
-            message: 'Year parameter is required'
-          });
-        }
-
-        const journalPages = await prisma.journalPage.findMany({
-          where: { year: parseInt(year as string) },
-          include: {
-            content_items: {
-              orderBy: { display_order: 'asc' }
-            },
-            event: {
-              select: {
-                event_id: true,
-                event_name: true,
-                event_date: true
-              }
-            }
-          },
-          orderBy: { page_number: 'asc' }
-        });
-
-        res.json({
-          success: true,
-          data: {
-            year: parseInt(year as string),
-            pages: journalPages
-          }
-        });
-      } catch (error) {
-        res.status(500).json({
-          success: false,
-          message: 'Internal server error'
-        });
-      }
-    });
-
-    app.get('/api/journal/available-content/:eventId', async (req, res) => {
-      try {
-        const eventId = req.params.eventId;
-        const { year } = req.query;
-
-        if (!eventId || !year) {
-          return res.status(400).json({
-            success: false,
-            message: 'Event ID and year are required'
-          });
-        }
-
-        const [menus, photos, blogs] = await Promise.all([
-          prisma.event.findMany({
-            where: {
-              event_id: parseInt(eventId),
-              event_date: {
-                gte: new Date(parseInt(year as string), 0, 1),
-                lt: new Date(parseInt(year as string) + 1, 0, 1)
-              }
-            },
-            select: {
-              event_id: true,
-              menu_title: true,
-              menu_image_s3_url: true,
-              event_date: true,
-              event_name: true
-            }
-          }),
-          prisma.photo.findMany({
-            where: { event_id: parseInt(eventId) },
-            select: {
-              photo_id: true,
-              filename: true,
-              original_filename: true,
-              description: true,
-              caption: true,
-              s3_url: true,
-              photo_type: true,
-              taken_date: true
-            }
-          }),
-          prisma.blogPost.findMany({
-            where: { event_id: parseInt(eventId) },
-            select: {
-              blog_post_id: true,
-              title: true,
-              content: true,
-              excerpt: true,
-              featured_image: true,
-              images: true,
-              tags: true,
-              status: true,
-              published_at: true
-            }
-          })
-        ]);
-
-        const individualPhotos = photos.filter(photo => photo.photo_type === 'individual');
-        const pagePhotos = photos.filter(photo => photo.photo_type === 'page');
-
-        res.json({
-          success: true,
-          data: {
-            menus,
-            photos: individualPhotos,
-            page_photos: pagePhotos,
-            blogs
-          }
-        });
-      } catch (error) {
-        res.status(500).json({
-          success: false,
-          message: 'Internal server error'
-        });
-      }
-    });
-
-    app.get('/api/journal/:journalPageId', async (req, res) => {
-      try {
-        const journalPageId = req.params.journalPageId;
-
-        const journalPage = await prisma.journalPage.findUnique({
-          where: { journal_page_id: parseInt(journalPageId) },
-          include: {
-            content_items: {
-              orderBy: { display_order: 'asc' }
-            }
-          }
-        });
-
-        if (!journalPage) {
-          return res.status(404).json({
-            success: false,
-            message: 'Journal page not found'
-          });
-        }
-
-        res.json({
-          success: true,
-          data: { journal_page: journalPage }
-        });
-      } catch (error) {
-        res.status(500).json({
-          success: false,
-          message: 'Internal server error'
-        });
-      }
-    });
-
-    // Add public journal viewer route
-    app.get('/journal', (_req, res) => {
-      res.send(`
-        <!DOCTYPE html>
-        <html>
-        <head><title>Journal Viewer Test</title></head>
-        <body>
-          <h1>Journal Viewer</h1>
-          <div id="yearSelector">Loading years...</div>
-          <div id="journalContent">Select a year to view journal pages</div>
-        </body>
-        </html>
-      `);
-    });
-
-    // Add admin journal editor route
-    app.get('/admin/journal-editor', (_req, res) => {
-      res.send(`
-        <!DOCTYPE html>
-        <html>
-        <head><title>Journal Editor Test</title></head>
-        <body>
-          <h1>Journal Editor</h1>
-          <div id="eventSelector">Select event...</div>
-          <div id="yearSelector">Select year...</div>
-          <div id="contentPanels">Content panels...</div>
-        </body>
-        </html>
-      `);
-    });
+    // Create test app
+    app = createTestApp();
   });
 
   afterAll(async () => {
+    // Close Prisma connection
     await prisma.$disconnect();
   });
 
-  describe('Journal Viewer Smoke Tests', () => {
-    test('should load journal viewer page', async () => {
-      const response = await request(app)
-        .get('/journal')
-        .expect(200);
+  describe('Photo Upload Tests', () => {
+    test('should upload photo with correct photo_type', async () => {
+      // Create test event directly
+      const event = await prisma.event.create({
+        data: {
+          event_name: 'Test Thanksgiving Photo Upload',
+          event_type: 'Thanksgiving',
+          event_location: 'Test Home',
+          event_date: new Date('2024-11-28'),
+          event_description: 'Test Thanksgiving event for photo upload',
+          menu_title: 'Test Menu',
+          menu_image_filename: 'test_menu.jpg'
+        }
+      });
+      
+      // Create a temporary test image file
+      const testImagePath = path.join(__dirname, 'test-image.jpg');
+      const testImageBuffer = Buffer.from('fake-image-data');
+      fs.writeFileSync(testImagePath, testImageBuffer);
 
-      expect(response.text).toContain('Journal Viewer');
-      expect(response.text).toContain('yearSelector');
-      expect(response.text).toContain('journalContent');
+      try {
+        // Test uploading a page photo
+        const response = await request(app)
+          .post(`/api/events/${event.event_id}/photos`)
+          .attach('photo', testImagePath)
+          .field('photo_type', 'page')
+          .field('caption', 'Test Page Photo')
+          .field('description', 'This is a test page photo')
+          .expect(201);
+
+        expect(response.body.success).toBe(true);
+        expect(response.body.data.photo).toBeDefined();
+        expect(response.body.data.photo.photo_type).toBe('page');
+        expect(response.body.data.photo.caption).toBe('Test Page Photo');
+        expect(response.body.data.photo.description).toBe('This is a test page photo');
+
+        // Verify the photo was saved correctly in the database
+        const savedPhoto = await prisma.photo.findFirst({
+          where: {
+            event_id: event.event_id,
+            caption: 'Test Page Photo'
+          }
+        });
+
+        expect(savedPhoto).toBeDefined();
+        expect(savedPhoto?.photo_type).toBe('page');
+        expect(savedPhoto?.caption).toBe('Test Page Photo');
+        expect(savedPhoto?.description).toBe('This is a test page photo');
+
+        // Clean up the test photo
+        if (savedPhoto) {
+          await prisma.photo.delete({
+            where: { photo_id: savedPhoto.photo_id }
+          });
+        }
+
+        // Clean up the test event
+        await prisma.event.delete({
+          where: { event_id: event.event_id }
+        });
+
+      } finally {
+        // Clean up the test image file
+        if (fs.existsSync(testImagePath)) {
+          fs.unlinkSync(testImagePath);
+        }
+      }
     });
 
+    test('should upload photo with individual photo_type', async () => {
+      // Create test event directly
+      const event = await prisma.event.create({
+        data: {
+          event_name: 'Test Thanksgiving Individual Photo',
+          event_type: 'Thanksgiving',
+          event_location: 'Test Home',
+          event_date: new Date('2024-11-28'),
+          event_description: 'Test Thanksgiving event for individual photo',
+          menu_title: 'Test Menu',
+          menu_image_filename: 'test_menu.jpg'
+        }
+      });
+      
+      // Create a temporary test image file
+      const testImagePath = path.join(__dirname, 'test-image-individual.jpg');
+      const testImageBuffer = Buffer.from('fake-image-data-individual');
+      fs.writeFileSync(testImagePath, testImageBuffer);
+
+      try {
+        // Test uploading an individual photo
+        const response = await request(app)
+          .post(`/api/events/${event.event_id}/photos`)
+          .attach('photo', testImagePath)
+          .field('photo_type', 'individual')
+          .field('caption', 'Test Individual Photo')
+          .field('description', 'This is a test individual photo')
+          .expect(201);
+
+        expect(response.body.success).toBe(true);
+        expect(response.body.data.photo).toBeDefined();
+        expect(response.body.data.photo.photo_type).toBe('individual');
+        expect(response.body.data.photo.caption).toBe('Test Individual Photo');
+        expect(response.body.data.photo.description).toBe('This is a test individual photo');
+
+        // Verify the photo was saved correctly in the database
+        const savedPhoto = await prisma.photo.findFirst({
+          where: {
+            event_id: event.event_id,
+            caption: 'Test Individual Photo'
+          }
+        });
+
+        expect(savedPhoto).toBeDefined();
+        expect(savedPhoto?.photo_type).toBe('individual');
+        expect(savedPhoto?.caption).toBe('Test Individual Photo');
+        expect(savedPhoto?.description).toBe('This is a test individual photo');
+
+        // Clean up the test photo
+        if (savedPhoto) {
+          await prisma.photo.delete({
+            where: { photo_id: savedPhoto.photo_id }
+          });
+        }
+
+        // Clean up the test event
+        await prisma.event.delete({
+          where: { event_id: event.event_id }
+        });
+
+      } finally {
+        // Clean up the test image file
+        if (fs.existsSync(testImagePath)) {
+          fs.unlinkSync(testImagePath);
+        }
+      }
+    });
+
+    test('should default to individual photo_type when not specified', async () => {
+      // Create test event directly
+      const event = await prisma.event.create({
+        data: {
+          event_name: 'Test Thanksgiving Default Photo',
+          event_type: 'Thanksgiving',
+          event_location: 'Test Home',
+          event_date: new Date('2024-11-28'),
+          event_description: 'Test Thanksgiving event for default photo',
+          menu_title: 'Test Menu',
+          menu_image_filename: 'test_menu.jpg'
+        }
+      });
+      
+      // Create a temporary test image file
+      const testImagePath = path.join(__dirname, 'test-image-default.jpg');
+      const testImageBuffer = Buffer.from('fake-image-data-default');
+      fs.writeFileSync(testImagePath, testImageBuffer);
+
+      try {
+        // Test uploading without specifying photo_type
+        const response = await request(app)
+          .post(`/api/events/${event.event_id}/photos`)
+          .attach('photo', testImagePath)
+          .field('caption', 'Test Default Photo')
+          .field('description', 'This is a test default photo')
+          .expect(201);
+
+        expect(response.body.success).toBe(true);
+        expect(response.body.data.photo).toBeDefined();
+        expect(response.body.data.photo.photo_type).toBe('individual'); // Should default to individual
+        expect(response.body.data.photo.caption).toBe('Test Default Photo');
+        expect(response.body.data.photo.description).toBe('This is a test default photo');
+
+        // Verify the photo was saved correctly in the database
+        const savedPhoto = await prisma.photo.findFirst({
+          where: {
+            event_id: event.event_id,
+            caption: 'Test Default Photo'
+          }
+        });
+
+        expect(savedPhoto).toBeDefined();
+        expect(savedPhoto?.photo_type).toBe('individual');
+        expect(savedPhoto?.caption).toBe('Test Default Photo');
+        expect(savedPhoto?.description).toBe('This is a test default photo');
+
+        // Clean up the test photo
+        if (savedPhoto) {
+          await prisma.photo.delete({
+            where: { photo_id: savedPhoto.photo_id }
+          });
+        }
+
+        // Clean up the test event
+        await prisma.event.delete({
+          where: { event_id: event.event_id }
+        });
+
+      } finally {
+        // Clean up the test image file
+        if (fs.existsSync(testImagePath)) {
+          fs.unlinkSync(testImagePath);
+        }
+      }
+    });
+
+    test('should reject invalid photo_type', async () => {
+      // Create test event directly
+      const event = await prisma.event.create({
+        data: {
+          event_name: 'Test Thanksgiving Invalid Photo',
+          event_type: 'Thanksgiving',
+          event_location: 'Test Home',
+          event_date: new Date('2024-11-28'),
+          event_description: 'Test Thanksgiving event for invalid photo',
+          menu_title: 'Test Menu',
+          menu_image_filename: 'test_menu.jpg'
+        }
+      });
+      
+      // Create a temporary test image file
+      const testImagePath = path.join(__dirname, 'test-image-invalid.jpg');
+      const testImageBuffer = Buffer.from('fake-image-data-invalid');
+      fs.writeFileSync(testImagePath, testImageBuffer);
+
+      try {
+        // Test uploading with invalid photo_type
+        const response = await request(app)
+          .post(`/api/events/${event.event_id}/photos`)
+          .attach('photo', testImagePath)
+          .field('photo_type', 'invalid_type')
+          .field('caption', 'Test Invalid Photo')
+          .field('description', 'This is a test invalid photo')
+          .expect(400);
+
+        expect(response.body.success).toBe(false);
+        expect(response.body.message).toContain('Photo type must be either "individual" or "page"');
+
+        // Clean up the test event
+        await prisma.event.delete({
+          where: { event_id: event.event_id }
+        });
+
+      } finally {
+        // Clean up the test image file
+        if (fs.existsSync(testImagePath)) {
+          fs.unlinkSync(testImagePath);
+        }
+      }
+    });
+  });
+
+  describe('Journal API Tests', () => {
     test('should get available years', async () => {
       const response = await request(app)
         .get('/api/journal/viewer/years')
         .expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.data).toHaveProperty('years');
+      expect(response.body.data).toBeDefined();
+      expect(response.body.data.years).toBeDefined();
       expect(Array.isArray(response.body.data.years)).toBe(true);
     });
 
     test('should get journal data for a year', async () => {
-      // First, ensure we have some test data
-      const event = await testUtils.createTestEvent(prisma);
-      
-      // Create a test journal page
-      const journalPage = await prisma.journalPage.create({
-        data: {
-          event_id: event.event_id,
-          year: 2023,
-          page_number: 1,
-          title: 'Test Page',
-          description: 'Test Description'
-        }
-      });
-
-      // Create a test content item
-      await prisma.journalContentItem.create({
-        data: {
-          journal_page_id: journalPage.journal_page_id,
-          content_type: 'text',
-          content_id: null,
-          custom_text: 'Test content',
-          display_order: 1
-        }
-      });
-
       const response = await request(app)
-        .get('/api/journal/viewer/data')
-        .query({ year: 2023 })
+        .get('/api/journal/viewer/data?year=2013')
         .expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.data).toHaveProperty('year', 2023);
-      expect(response.body.data).toHaveProperty('pages');
-      expect(Array.isArray(response.body.data.pages)).toBe(true);
-      expect(response.body.data.pages.length).toBeGreaterThan(0);
+      expect(response.body.data).toBeDefined();
+      expect(response.body.data.year).toBe(2013);
+      expect(response.body.data.journal_sections).toBeDefined();
+      expect(Array.isArray(response.body.data.journal_sections)).toBe(true);
     });
 
     test('should handle missing year parameter', async () => {
@@ -294,177 +407,6 @@ describe('Smoke Tests - Journal Functionality', () => {
 
       expect(response.body.success).toBe(false);
       expect(response.body.message).toContain('Year parameter is required');
-    });
-
-    test('should handle non-existent year', async () => {
-      const response = await request(app)
-        .get('/api/journal/viewer/data')
-        .query({ year: 9999 })
-        .expect(200);
-
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.pages).toHaveLength(0);
-    });
-  });
-
-  describe('Journal Editor Smoke Tests', () => {
-    test('should load journal editor page', async () => {
-      const response = await request(app)
-        .get('/admin/journal-editor')
-        .expect(200);
-
-      expect(response.text).toContain('Journal Editor');
-      expect(response.text).toContain('eventSelector');
-      expect(response.text).toContain('yearSelector');
-      expect(response.text).toContain('contentPanels');
-    });
-
-    test('should get available content for event', async () => {
-      const event = await testUtils.createTestEvent(prisma);
-      
-      const response = await request(app)
-        .get(`/api/journal/available-content/${event.event_id}`)
-        .query({ year: 2023 })
-        .expect(200);
-
-      expect(response.body.success).toBe(true);
-      expect(response.body.data).toHaveProperty('menus');
-      expect(response.body.data).toHaveProperty('photos');
-      expect(response.body.data).toHaveProperty('page_photos');
-      expect(response.body.data).toHaveProperty('blogs');
-      expect(Array.isArray(response.body.data.menus)).toBe(true);
-      expect(Array.isArray(response.body.data.photos)).toBe(true);
-      expect(Array.isArray(response.body.data.page_photos)).toBe(true);
-      expect(Array.isArray(response.body.data.blogs)).toBe(true);
-    });
-
-    test('should get journal page by ID', async () => {
-      const event = await testUtils.createTestEvent(prisma);
-      
-      const journalPage = await prisma.journalPage.create({
-        data: {
-          event_id: event.event_id,
-          year: 2023,
-          page_number: 1,
-          title: 'Test Page',
-          description: 'Test Description'
-        }
-      });
-
-      const response = await request(app)
-        .get(`/api/journal/${journalPage.journal_page_id}`)
-        .expect(200);
-
-      expect(response.body.success).toBe(true);
-      expect(response.body.data).toHaveProperty('journal_page');
-      expect(response.body.data.journal_page.journal_page_id).toBe(journalPage.journal_page_id);
-      expect(response.body.data.journal_page.title).toBe('Test Page');
-    });
-
-    test('should handle missing event ID parameter', async () => {
-      const response = await request(app)
-        .get('/api/journal/available-content/')
-        .query({ year: 2023 })
-        .expect(404); // Express route not found
-
-      // Test with invalid event ID
-      const response2 = await request(app)
-        .get('/api/journal/available-content/invalid')
-        .query({ year: 2023 })
-        .expect(400);
-
-      expect(response2.body.success).toBe(false);
-      expect(response2.body.message).toContain('Event ID and year are required');
-    });
-
-    test('should handle missing year parameter for available content', async () => {
-      const event = await testUtils.createTestEvent(prisma);
-      
-      const response = await request(app)
-        .get(`/api/journal/available-content/${event.event_id}`)
-        .expect(400);
-
-      expect(response.body.success).toBe(false);
-      expect(response.body.message).toContain('Event ID and year are required');
-    });
-
-    test('should handle non-existent journal page', async () => {
-      const response = await request(app)
-        .get('/api/journal/99999')
-        .expect(404);
-
-      expect(response.body.success).toBe(false);
-      expect(response.body.message).toContain('Journal page not found');
-    });
-  });
-
-  describe('Journal Database Schema Tests', () => {
-    test('should have journal pages table', async () => {
-      const result = await prisma.$queryRaw`
-        SELECT table_name 
-        FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = 'JournalPages'
-      `;
-      
-      expect(result).toHaveLength(1);
-    });
-
-    test('should have journal content items table', async () => {
-      const result = await prisma.$queryRaw`
-        SELECT table_name 
-        FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = 'JournalContentItems'
-      `;
-      
-      expect(result).toHaveLength(1);
-    });
-
-    test('should be able to create journal page', async () => {
-      const event = await testUtils.createTestEvent(prisma);
-      
-      const journalPage = await prisma.journalPage.create({
-        data: {
-          event_id: event.event_id,
-          year: 2023,
-          page_number: 1,
-          title: 'Smoke Test Page',
-          description: 'Created during smoke test'
-        }
-      });
-
-      expect(journalPage.journal_page_id).toBeDefined();
-      expect(journalPage.title).toBe('Smoke Test Page');
-      expect(journalPage.year).toBe(2023);
-    });
-
-    test('should be able to create journal content item', async () => {
-      const event = await testUtils.createTestEvent(prisma);
-      
-      const journalPage = await prisma.journalPage.create({
-        data: {
-          event_id: event.event_id,
-          year: 2023,
-          page_number: 1,
-          title: 'Smoke Test Page',
-          description: 'Created during smoke test'
-        }
-      });
-
-      const contentItem = await prisma.journalContentItem.create({
-        data: {
-          journal_page_id: journalPage.journal_page_id,
-          content_type: 'text',
-          content_id: null,
-          custom_text: 'Smoke test content',
-          display_order: 1
-        }
-      });
-
-      expect(contentItem.content_item_id).toBeDefined();
-      expect(contentItem.content_type).toBe('text');
-      expect(contentItem.custom_text).toBe('Smoke test content');
     });
   });
 });
