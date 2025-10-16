@@ -322,6 +322,17 @@ $(function() {
       };
       addContentPage(pageSection, pageContent);
     });
+    
+    // Ensure we have at least 2 content pages for Turn.js to work properly
+    // Turn.js needs a minimum number of pages to function correctly
+    if (pages.length === 1) {
+      console.log('📖 Adding empty page to ensure Turn.js compatibility');
+      addContentPage({
+        ...section,
+        title: `${section.title} (continued)`,
+        content_items: []
+      }, []);
+    }
   }
   
   // Distribute content across pages based on height constraints
