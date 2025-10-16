@@ -278,14 +278,17 @@ $(function() {
       // Stop any ongoing animations
       try {
         $book.turn('stop');
+        // Remove all Turn.js data and events
+        $book.removeData('turn');
+        $book.off('.turn');
       } catch (error) {
         console.log('⚠️ Error stopping flipbook:', error.message);
       }
       flipbookInitialized = false;
     }
     
-    // Clear the book content completely
-    $book.empty().removeClass().addClass('flipbook');
+    // Clear the book content completely and reset all attributes
+    $book.empty().removeClass().addClass('flipbook').removeAttr('style');
     
     // Add cover page
     addCoverPage();
