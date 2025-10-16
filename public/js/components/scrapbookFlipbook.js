@@ -225,6 +225,10 @@ $(function() {
   
   // Select a year and load journal data
   function selectYear(year) {
+    console.log(`📅 Switching to year: ${year}`);
+    console.log(`📅 Previous year was: ${currentYear}`);
+    console.log(`📅 Flipbook initialized: ${flipbookInitialized}`);
+    
     currentYear = year;
     
     // Update active year button
@@ -262,6 +266,16 @@ $(function() {
   
   // Generate flipbook pages from journal data
   function generateFlipbookPages() {
+    console.log('🔄 Regenerating flipbook pages...');
+    
+    // Destroy existing flipbook if it exists
+    if (flipbookInitialized && $book.turn) {
+      console.log('🗑️ Destroying existing flipbook');
+      $book.turn('destroy');
+      flipbookInitialized = false;
+    }
+    
+    // Clear the book content
     $book.empty();
     
     // Add cover page
