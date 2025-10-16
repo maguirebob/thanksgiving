@@ -89,37 +89,20 @@ export const createJournalSection = async (req: Request, res: Response): Promise
 
     console.log('✅ Step 8: Calculated next section_order:', nextSectionOrder);
 
-    // Test journal section creation
-    console.log('🔍 Step 9: Testing journal section creation...');
-    const createData = {
-      event_id,
-      year,
-      section_order: nextSectionOrder,
-      title: title || null,
-      description: description || null
-    };
-    console.log('📋 Create data:', JSON.stringify(createData, null, 2));
-
-    const journalSection = await prisma.journalSection.create({
-      data: createData,
-      include: {
-        content_items: {
-          orderBy: { display_order: 'asc' }
-        }
-      }
-    });
-
-    console.log('✅ Step 10: Journal section created successfully:', {
-      section_id: journalSection.section_id,
-      event_id: journalSection.event_id,
-      year: journalSection.year,
-      section_order: journalSection.section_order,
-      title: journalSection.title
-    });
-
+    // For now, just return success with mock data (no create yet)
+    console.log('✅ Step 9: Returning success with mock data');
     res.status(201).json({
       success: true,
-      data: { journal_section: journalSection }
+      data: { 
+        journal_section: {
+          section_id: 333,
+          event_id: event_id,
+          year: year,
+          section_order: nextSectionOrder,
+          title: title || 'Query Test Section',
+          description: description || 'Query Test Description'
+        }
+      }
     });
     
     console.log('🎉 === GRADUAL TEST END - SUCCESS ===');
