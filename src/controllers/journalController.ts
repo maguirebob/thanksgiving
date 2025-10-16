@@ -109,12 +109,7 @@ export const createJournalSection = async (req: Request, res: Response): Promise
     console.log('📋 Create data:', JSON.stringify(createData, null, 2));
 
     const journalSection = await prisma.journalSection.create({
-      data: createData,
-      include: {
-        content_items: {
-          orderBy: { display_order: 'asc' }
-        }
-      }
+      data: createData
     });
 
     console.log('✅ Step 10: Journal section created successfully:', {
