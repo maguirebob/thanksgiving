@@ -2,6 +2,12 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.24] - 2025-10-16
+
+- Create final ultra-simple test
+- Removed all complex logic to isolate the issue
+- Just logs and returns mock data
+- Should show if function is being called at all
 ## [2.13.23] - 2025-10-16
 
 - Fix TypeScript build error in journal section creation
