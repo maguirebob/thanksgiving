@@ -82,6 +82,14 @@ class JournalViewer {
         this.currentYear = year;
         this.currentPageIndex = 0;
         
+        // Clear existing content immediately to prevent display issues
+        const journalContent = document.getElementById('journalContent');
+        journalContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading journal...</p></div>';
+        
+        // Reset all state
+        this.journalData = null;
+        this.pages = [];
+        
         // Update active year button
         document.querySelectorAll('.year-btn').forEach(btn => {
             btn.classList.remove('active');
@@ -344,7 +352,8 @@ class JournalViewer {
     renderCurrentPage() {
         const journalContent = document.getElementById('journalContent');
         
-        if (this.pages.length === 0) {
+        // Ensure we have valid state
+        if (!this.pages || this.pages.length === 0) {
             journalContent.innerHTML = `
                 <div class="no-content">
                     <i class="fas fa-book-open fa-3x mb-3" style="color: var(--scrapbook-text-light);"></i>
@@ -353,6 +362,12 @@ class JournalViewer {
                 </div>
             `;
             return;
+        }
+        
+        // Ensure currentPageIndex is within bounds
+        if (this.currentPageIndex < 0 || this.currentPageIndex >= this.pages.length) {
+            console.warn(`⚠️ Page index ${this.currentPageIndex} out of bounds, resetting to 0`);
+            this.currentPageIndex = 0;
         }
         
         const currentPage = this.pages[this.currentPageIndex];
