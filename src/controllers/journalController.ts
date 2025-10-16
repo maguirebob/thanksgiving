@@ -16,7 +16,7 @@ import {
 // Journal Sections CRUD Operations
 
 export const createJournalSection = async (req: Request, res: Response): Promise<void> => {
-  console.log('🔍 === DATABASE TEST START ===');
+  console.log('🔍 === GRADUAL TEST START ===');
   console.log('📊 Request body:', JSON.stringify(req.body, null, 2));
   
   try {
@@ -64,78 +64,30 @@ export const createJournalSection = async (req: Request, res: Response): Promise
       event_name: event.event_name
     });
 
-    // Test journal section query
-    console.log('🔍 Step 6: Testing journal section query...');
-    const existingSections = await prisma.journalSection.findMany({
-      where: {
-        event_id,
-        year
-      },
-      select: {
-        section_order: true
-      },
-      orderBy: {
-        section_order: 'desc'
-      }
-    });
-
-    console.log('✅ Step 7: Journal section query successful');
-    console.log('📊 Existing sections found:', existingSections.length);
-
-    // Calculate next section_order
-    const nextSectionOrder = existingSections.length > 0 
-      ? (existingSections[0]?.section_order || 0) + 1 
-      : 1;
-
-    console.log('✅ Step 8: Calculated next section_order:', nextSectionOrder);
-
-    // Test journal section creation
-    console.log('🔍 Step 9: Testing journal section creation...');
-    const createData = {
-      event_id,
-      year,
-      section_order: nextSectionOrder,
-      title: title || null,
-      description: description || null
-    };
-    console.log('📋 Create data:', JSON.stringify(createData, null, 2));
-
-    const journalSection = await prisma.journalSection.create({
-      data: createData,
-      include: {
-        content_items: {
-          orderBy: { display_order: 'asc' }
+    // For now, just return success with mock data (no journal section operations yet)
+    console.log('✅ Step 6: Returning success with mock data');
+    res.status(201).json({
+      success: true,
+      data: { 
+        journal_section: {
+          section_id: 444,
+          event_id: event_id,
+          year: year,
+          section_order: 1,
+          title: title || 'Gradual Test Section',
+          description: description || 'Gradual Test Description'
         }
       }
     });
-
-    console.log('✅ Step 10: Journal section created successfully:', {
-      section_id: journalSection.section_id,
-      event_id: journalSection.event_id,
-      year: journalSection.year,
-      section_order: journalSection.section_order,
-      title: journalSection.title
-    });
-
-    res.status(201).json({
-      success: true,
-      data: { journal_section: journalSection }
-    });
     
-    console.log('🎉 === DATABASE TEST END - SUCCESS ===');
+    console.log('🎉 === GRADUAL TEST END - SUCCESS ===');
   } catch (error) {
-    console.log('❌ === DATABASE TEST END - ERROR ===');
-    console.error('💥 Error in database test:', error);
+    console.log('❌ === GRADUAL TEST END - ERROR ===');
+    console.error('💥 Error in gradual test:', error);
     console.error('🔍 Error details:');
     console.error('   Error name:', error instanceof Error ? error.name : 'Unknown');
     console.error('   Error message:', error instanceof Error ? error.message : 'Unknown error');
     console.error('   Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-    
-    // Log additional error details for Prisma errors
-    if (error && typeof error === 'object' && 'code' in error) {
-      console.error('   Prisma error code:', (error as any).code);
-      console.error('   Prisma error meta:', (error as any).meta);
-    }
     
     res.status(500).json({
       success: false,
