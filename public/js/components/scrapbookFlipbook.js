@@ -36,59 +36,79 @@ $(function() {
       height = Math.min(window.innerHeight * 0.8, 1000); // Reduced height to test image scaling
     }
     
-    $book.turn({
-      width: width,
-      height: height,
-      center: true, // Center the flipbook
-      gradients: true,
-      duration: 900,
-      acceleration: true,
-      elevation: 150,
-      display: 'single', // Show only one page at a time
-      when: {
-        turning: function(event, page, view) {
-          console.log('Turning to page:', page);
-        },
-        turned: function(event, page, view) {
-          console.log('Turned to page:', page);
-          updateNavigationButtons(page);
+    try {
+      $book.turn({
+        width: width,
+        height: height,
+        center: true, // Center the flipbook
+        gradients: true,
+        duration: 900,
+        acceleration: true,
+        elevation: 150,
+        display: 'single', // Show only one page at a time
+        when: {
+          turning: function(event, page, view) {
+            console.log('Turning to page:', page);
+          },
+          turned: function(event, page, view) {
+            console.log('Turned to page:', page);
+            updateNavigationButtons(page);
+          }
         }
-      }
-    });
-    
-    // Force turn to page 1 to ensure we start from the beginning
-    const totalPages = $book.children().length;
-    console.log(`🔄 Total pages in DOM: ${totalPages}`);
-    console.log('🔄 Forcing turn to page 1');
-    $book.turn('page', 1);
-    
-    // Verify the page count that Turn.js sees
-    const turnPages = $book.turn('pages');
-    console.log(`🔄 Turn.js reports ${turnPages} pages`);
-    
-    // Add keyboard navigation
-    addKeyboardNavigation();
-    
-    flipbookInitialized = true;
+      });
+      
+      // Wait a moment for Turn.js to fully initialize before calling methods
+      setTimeout(() => {
+        try {
+          // Force turn to page 1 to ensure we start from the beginning
+          const totalPages = $book.children().length;
+          console.log(`🔄 Total pages in DOM: ${totalPages}`);
+          console.log('🔄 Forcing turn to page 1');
+          $book.turn('page', 1);
+          
+          // Verify the page count that Turn.js sees
+          const turnPages = $book.turn('pages');
+          console.log(`🔄 Turn.js reports ${turnPages} pages`);
+        } catch (error) {
+          console.log('⚠️ Error accessing Turn.js methods:', error.message);
+        }
+      }, 100);
+      
+      // Add keyboard navigation
+      addKeyboardNavigation();
+      
+      flipbookInitialized = true;
+    } catch (error) {
+      console.error('❌ Error initializing Turn.js:', error.message);
+      flipbookInitialized = false;
+    }
   }
   
   // Update navigation button states
   function updateNavigationButtons(currentPage) {
-    const totalPages = $book.turn("pages");
-    const $prevBtn = $("#prevPage");
-    const $nextBtn = $("#nextPage");
-    
-    // Disable/enable buttons based on current page
-    if (currentPage <= 1) {
-      $prevBtn.prop("disabled", true).addClass("disabled");
-    } else {
-      $prevBtn.prop("disabled", false).removeClass("disabled");
+    if (!flipbookInitialized) {
+      return; // Don't try to access Turn.js if not initialized
     }
     
-    if (currentPage >= totalPages) {
-      $nextBtn.prop("disabled", true).addClass("disabled");
-    } else {
-      $nextBtn.prop("disabled", false).removeClass("disabled");
+    try {
+      const totalPages = $book.turn("pages");
+      const $prevBtn = $("#prevPage");
+      const $nextBtn = $("#nextPage");
+      
+      // Disable/enable buttons based on current page
+      if (currentPage <= 1) {
+        $prevBtn.prop("disabled", true).addClass("disabled");
+      } else {
+        $prevBtn.prop("disabled", false).removeClass("disabled");
+      }
+      
+      if (currentPage >= totalPages) {
+        $nextBtn.prop("disabled", true).addClass("disabled");
+      } else {
+        $nextBtn.prop("disabled", false).removeClass("disabled");
+      }
+    } catch (error) {
+      console.log('⚠️ Error updating navigation buttons:', error.message);
     }
   }
 
@@ -177,22 +197,26 @@ $(function() {
         return;
       }
       
-      const currentPage = $book.turn('page');
-      const totalPages = $book.turn('pages');
-      
-      switch(e.keyCode) {
-        case 37: // Left arrow key
-          e.preventDefault();
-          if (currentPage > 1) {
-            $book.turn('previous');
-          }
-          break;
-        case 39: // Right arrow key
-          e.preventDefault();
-          if (currentPage < totalPages) {
-            $book.turn('next');
-          }
-          break;
+      try {
+        const currentPage = $book.turn('page');
+        const totalPages = $book.turn('pages');
+        
+        switch(e.keyCode) {
+          case 37: // Left arrow key
+            e.preventDefault();
+            if (currentPage > 1) {
+              $book.turn('previous');
+            }
+            break;
+          case 39: // Right arrow key
+            e.preventDefault();
+            if (currentPage < totalPages) {
+              $book.turn('next');
+            }
+            break;
+        }
+      } catch (error) {
+        console.log('⚠️ Error in keyboard navigation:', error.message);
       }
     });
   }
@@ -280,18 +304,15 @@ $(function() {
     
     // Reset flipbook state
     if (flipbookInitialized) {
-      console.log('🗑️ Resetting flipbook state');
-      // Stop any ongoing animations and reset to page 1
+      console.log('🗑️ Destroying existing flipbook');
       try {
-        $book.turn('stop');
-        $book.turn('page', 1); // Reset to page 1 before destroying
-        // Remove all Turn.js data and events
-        $book.removeData('turn');
-        $book.off('.turn');
+        // Properly destroy the Turn.js instance
+        $book.turn('destroy');
+        flipbookInitialized = false;
       } catch (error) {
-        console.log('⚠️ Error stopping flipbook:', error.message);
+        console.log('⚠️ Error destroying flipbook:', error.message);
+        flipbookInitialized = false;
       }
-      flipbookInitialized = false;
     }
     
     // Clear the book content completely and reset all attributes
@@ -587,14 +608,22 @@ $(function() {
   
   // Navigation button event handlers
   $("#prevPage").click(() => {
-    if (!$("#prevPage").prop("disabled")) {
-      $book.turn("previous");
+    if (!$("#prevPage").prop("disabled") && flipbookInitialized) {
+      try {
+        $book.turn("previous");
+      } catch (error) {
+        console.log('⚠️ Error turning to previous page:', error.message);
+      }
     }
   });
   
   $("#nextPage").click(() => {
-    if (!$("#nextPage").prop("disabled")) {
-      $book.turn("next");
+    if (!$("#nextPage").prop("disabled") && flipbookInitialized) {
+      try {
+        $book.turn("next");
+      } catch (error) {
+        console.log('⚠️ Error turning to next page:', error.message);
+      }
     }
   });
 
@@ -634,22 +663,26 @@ $(function() {
   
   // Handle window resize
   $(window).on("resize", function() {
-    if ($book.turn("pages")) {
-      // Check if we're in fullscreen mode
-      const isFullscreen = $('.scrapbook-shell').hasClass('fullscreen');
-      
-      let width, height;
-      if (isFullscreen) {
-        // Slightly smaller dimensions to ensure content fits within viewport
-        width = Math.min(window.innerWidth * 0.95, 2200);
-        height = Math.min(window.innerHeight * 0.90, 1600);
-      } else {
-        // Much larger normal size to prevent any content cutoff
-        width = Math.min(window.innerWidth * 0.9, 1250);
-        height = Math.min(window.innerHeight * 0.8, 1000); // Reduced height to test image scaling
+    if (flipbookInitialized) {
+      try {
+        // Check if we're in fullscreen mode
+        const isFullscreen = $('.scrapbook-shell').hasClass('fullscreen');
+        
+        let width, height;
+        if (isFullscreen) {
+          // Slightly smaller dimensions to ensure content fits within viewport
+          width = Math.min(window.innerWidth * 0.95, 2200);
+          height = Math.min(window.innerHeight * 0.90, 1600);
+        } else {
+          // Much larger normal size to prevent any content cutoff
+          width = Math.min(window.innerWidth * 0.9, 1250);
+          height = Math.min(window.innerHeight * 0.8, 1000); // Reduced height to test image scaling
+        }
+        
+        $book.turn("size", width, height);
+      } catch (error) {
+        console.log('⚠️ Error resizing flipbook:', error.message);
       }
-      
-      $book.turn("size", width, height);
     }
   });
   
