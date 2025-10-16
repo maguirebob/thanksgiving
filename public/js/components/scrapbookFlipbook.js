@@ -18,9 +18,11 @@ $(function() {
   
   // Initialize the flipbook with turn.js
   function initializeFlipbook() {
-    if (flipbookInitialized) {
-      return; // Already initialized
-    }
+    console.log('🔄 Initializing Turn.js flipbook...');
+    console.log('🔄 Flipbook already initialized:', flipbookInitialized);
+    
+    // Always reinitialize to ensure clean state
+    flipbookInitialized = false;
     
     // Check if we're in fullscreen mode
     const isFullscreen = $('.scrapbook-shell').hasClass('fullscreen');
@@ -35,6 +37,8 @@ $(function() {
       width = Math.min(window.innerWidth * 0.9, 1250);
       height = Math.min(window.innerHeight * 0.8, 1000); // Reduced height to test image scaling
     }
+    
+    console.log(`🔄 Turn.js dimensions: ${width}x${height}`);
     
     try {
       $book.turn({
@@ -76,6 +80,8 @@ $(function() {
           
           // Update navigation buttons
           updateNavigationButtons(currentPage);
+          
+          console.log('✅ Turn.js initialization complete');
         } catch (error) {
           console.log('⚠️ Error accessing Turn.js methods:', error.message);
         }
@@ -319,6 +325,11 @@ $(function() {
         $book.turn('stop');
         // Properly destroy the Turn.js instance
         $book.turn('destroy');
+        // Remove all Turn.js data and events
+        $book.removeData('turn');
+        $book.off('.turn');
+        // Clear any Turn.js internal state
+        $book.removeClass('turn-page-wrapper');
         flipbookInitialized = false;
       } catch (error) {
         console.log('⚠️ Error destroying flipbook:', error.message);
