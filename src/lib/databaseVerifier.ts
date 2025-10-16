@@ -63,10 +63,7 @@ export const verifyDatabaseStructure = async (): Promise<DatabaseVerificationRes
       result.isValid = false;
     }
 
-    // Check if we're using an outdated schema definition
-    if (currentVersion !== latestSchemaVersion) {
-      result.warnings.push(`Current version ${currentVersion} is newer than latest schema definition ${latestSchemaVersion}. Consider updating schemaVersions.ts`);
-    }
+    // Version mismatch warning removed - not useful
 
     // If no schema definition, we can't verify structure
     if (!schemaVersion) {
