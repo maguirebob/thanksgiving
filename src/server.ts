@@ -488,15 +488,33 @@ app.get('/api/setup-database', async (_req, res) => {
 });
 
 // About page route
-app.get('/about', requireAuth, (_req, res) => {
-  const packageJson = require('../package.json');
-  res.render('about', {
-    title: 'About - Thanksgiving Menu Collection',
-    version: packageJson.version,
-    environment: config.getConfig().nodeEnv,
-    buildDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
-    dbStatus: 'Connected'
-  });
+app.get('/about', requireAuth, async (_req, res) => {
+  try {
+    const packageJson = require('../package.json');
+    const { getDatabaseStatus } = await import('./lib/databaseVerifier');
+    const dbStatus = await getDatabaseStatus();
+    
+    res.render('about', {
+      title: 'About - Thanksgiving Menu Collection',
+      version: packageJson.version,
+      environment: config.getConfig().nodeEnv,
+      buildDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+      dbStatus: dbStatus.status,
+      dbMessage: dbStatus.message,
+      dbDetails: dbStatus.details
+    });
+  } catch (error) {
+    logger.error('Error loading about page:', error);
+    res.render('about', {
+      title: 'About - Thanksgiving Menu Collection',
+      version: 'unknown',
+      environment: config.getConfig().nodeEnv,
+      buildDate: new Date().toISOString().split('T')[0],
+      dbStatus: 'error',
+      dbMessage: 'Failed to verify database structure',
+      dbDetails: null
+    });
+  }
 });
 
 // Carousel page route (accessible to all authenticated users)
