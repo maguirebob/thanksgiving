@@ -281,9 +281,10 @@ $(function() {
     // Reset flipbook state
     if (flipbookInitialized) {
       console.log('🗑️ Resetting flipbook state');
-      // Stop any ongoing animations
+      // Stop any ongoing animations and reset to page 1
       try {
         $book.turn('stop');
+        $book.turn('page', 1); // Reset to page 1 before destroying
         // Remove all Turn.js data and events
         $book.removeData('turn');
         $book.off('.turn');
