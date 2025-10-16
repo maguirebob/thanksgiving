@@ -57,8 +57,14 @@ $(function() {
     });
     
     // Force turn to page 1 to ensure we start from the beginning
+    const totalPages = $book.children().length;
+    console.log(`🔄 Total pages in DOM: ${totalPages}`);
     console.log('🔄 Forcing turn to page 1');
     $book.turn('page', 1);
+    
+    // Verify the page count that Turn.js sees
+    const turnPages = $book.turn('pages');
+    console.log(`🔄 Turn.js reports ${turnPages} pages`);
     
     // Add keyboard navigation
     addKeyboardNavigation();
@@ -408,6 +414,7 @@ $(function() {
   
   // Add cover page
   function addCoverPage() {
+    console.log('📄 Adding cover page');
     const coverHtml = `
       <section class="page cover">
         <div class="page-inner">
@@ -420,11 +427,16 @@ $(function() {
       </section>
     `;
     $book.append(coverHtml);
+    console.log('📄 Cover page added');
   }
   
   // Add content page
   function addContentPage(section, contentItems = null) {
     const items = contentItems || section.content_items || [];
+    const currentPageCount = $book.children().length;
+    console.log(`📄 Adding page ${currentPageCount + 1} for section: ${section.title}`);
+    console.log(`📄 Page will contain ${items.length} content items`);
+    
     const pageHtml = `
       <section class="page">
         <div class="page-inner">
@@ -435,6 +447,9 @@ $(function() {
       </section>
     `;
     $book.append(pageHtml);
+    
+    const newPageCount = $book.children().length;
+    console.log(`📄 Page ${newPageCount} added successfully`);
   }
   
   // Generate content HTML for a section
