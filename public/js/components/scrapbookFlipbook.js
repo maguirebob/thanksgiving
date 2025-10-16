@@ -303,30 +303,25 @@ $(function() {
   function addKeyboardNavigation() {
     $(document).on('keydown', function(e) {
       // Only handle arrow keys when the flipbook is visible
-      if (!flipbookInitialized || !currentYear) {
-        return;
-      }
-      
-      const $currentContainer = flipbookInstances[currentYear]?.$container;
-      if (!$currentContainer || !$currentContainer.is(':visible')) {
+      if (!$book.is(':visible') || !flipbookInitialized) {
         return;
       }
       
       try {
-        const currentPage = $currentContainer.turn('page');
-        const totalPages = $currentContainer.turn('pages');
+        const currentPage = $book.turn('page');
+        const totalPages = $book.turn('pages');
         
         switch(e.keyCode) {
           case 37: // Left arrow key
             e.preventDefault();
             if (currentPage > 1) {
-              $currentContainer.turn('previous');
+              $book.turn('previous');
             }
             break;
           case 39: // Right arrow key
             e.preventDefault();
             if (currentPage < totalPages) {
-              $currentContainer.turn('next');
+              $book.turn('next');
             }
             break;
         }
@@ -413,22 +408,39 @@ $(function() {
       });
   }
   
+  // Restore flipbook content for a specific year
+  function restoreFlipbookContent(year) {
+    console.log('🔄 Restoring flipbook content for year:', year);
+    
+    // Destroy current Turn.js instance if it exists
+    if (flipbookInitialized) {
+      try {
+        $book.turn('destroy');
+        flipbookInitialized = false;
+      } catch (error) {
+        console.log('⚠️ Error destroying flipbook:', error.message);
+      }
+    }
+    
+    // Restore the content
+    $book.html(flipbookInstances[year].content);
+    
+    // Reinitialize Turn.js
+    initializeFlipbook();
+    
+    console.log('✅ Flipbook content restored for year:', year);
+  }
+  
   // Generate flipbook pages from journal data
   function generateFlipbookPages() {
     console.log('🔄 Generating flipbook pages for year:', currentYear);
     console.log('🔄 Journal data:', journalData);
     
-    // Hide all existing flipbook instances
-    Object.keys(flipbookInstances).forEach(year => {
-      if (flipbookInstances[year].$container) {
-        flipbookInstances[year].$container.hide();
-      }
-    });
-    
     // Check if we already have an instance for this year
     if (flipbookInstances[currentYear]) {
       console.log('📚 Using existing flipbook instance for year:', currentYear);
-      flipbookInstances[currentYear].$container.show();
+      // Restore the content for this year
+      restoreFlipbookContent(currentYear);
       $toolbar.show();
       flipbookInitialized = true;
       return;
@@ -436,37 +448,38 @@ $(function() {
     
     console.log('📚 Creating new flipbook instance for year:', currentYear);
     
-    // Create a new container for this year
-    const $yearContainer = $(`<div id="flipbook-${currentYear}" class="flipbook-year-container"></div>`);
-    $book.append($yearContainer);
+    // Clear the main book element
+    $book.empty().removeClass().addClass('flipbook').removeAttr('style');
     
     // Add cover page
-    addCoverPageToContainer($yearContainer);
+    addCoverPage();
     
     // Add content pages with proper distribution
     if (journalData.journal_sections) {
       console.log('📖 Processing', journalData.journal_sections.length, 'journal sections');
       journalData.journal_sections.forEach((section, index) => {
         console.log(`📖 Processing section ${index + 1}:`, section.title);
-        addContentPagesWithDistributionToContainer($yearContainer, section);
+        addContentPagesWithDistribution(section);
       });
     }
     
-    const totalPages = $yearContainer.children().length;
+    const totalPages = $book.children().length;
     console.log(`📄 Total pages created for ${currentYear}: ${totalPages}`);
-    console.log('📄 Page elements:', $yearContainer.children().map((i, el) => el.className).get());
+    console.log('📄 Page elements:', $book.children().map((i, el) => el.className).get());
     
-    // Initialize Turn.js on this container
-    initializeFlipbookOnContainer($yearContainer, currentYear);
-    
-    // Store the instance
+    // Store the content for this year
     flipbookInstances[currentYear] = {
-      $container: $yearContainer,
-      initialized: true
+      content: $book.html(),
+      initialized: false
     };
     
-    // Show the container and toolbar
-    $yearContainer.show();
+    // Initialize Turn.js on the main book element
+    initializeFlipbook();
+    
+    // Mark as initialized
+    flipbookInstances[currentYear].initialized = true;
+    
+    // Show the toolbar
     $toolbar.show();
     flipbookInitialized = true;
   }
@@ -905,10 +918,7 @@ $(function() {
   $("#prevPage").click(() => {
     if (!$("#prevPage").prop("disabled") && flipbookInitialized) {
       try {
-        const $currentContainer = flipbookInstances[currentYear]?.$container;
-        if ($currentContainer) {
-          $currentContainer.turn("previous");
-        }
+        $book.turn("previous");
       } catch (error) {
         console.log('⚠️ Error turning to previous page:', error.message);
       }
@@ -918,10 +928,7 @@ $(function() {
   $("#nextPage").click(() => {
     if (!$("#nextPage").prop("disabled") && flipbookInitialized) {
       try {
-        const $currentContainer = flipbookInstances[currentYear]?.$container;
-        if ($currentContainer) {
-          $currentContainer.turn("next");
-        }
+        $book.turn("next");
       } catch (error) {
         console.log('⚠️ Error turning to next page:', error.message);
       }
