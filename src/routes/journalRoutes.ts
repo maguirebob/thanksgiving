@@ -30,7 +30,15 @@ router.use((req, res, next) => {
 });
 
 // Journal Sections Routes (Editor - requires auth)
-router.post('/', createJournalSection);
+router.post('/', (req, res, next) => {
+  console.log('🔍 === ROUTE DEBUG: POST /api/journal ===');
+  console.log('📊 Request body:', JSON.stringify(req.body, null, 2));
+  console.log('🔐 Session user:', req.session?.user);
+  console.log('🌍 Environment:', process.env['NODE_ENV']);
+  console.log('📅 Timestamp:', new Date().toISOString());
+  console.log('✅ Route handler reached - calling createJournalSection');
+  return createJournalSection(req, res, next);
+});
 router.get('/', getJournalSections);
 router.get('/:sectionId', getJournalSection);
 router.put('/:sectionId', updateJournalSection);
