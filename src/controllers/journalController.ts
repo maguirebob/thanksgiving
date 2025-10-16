@@ -64,20 +64,62 @@ export const createJournalSection = async (req: Request, res: Response): Promise
       event_name: event.event_name
     });
 
-    // For now, just return success with mock data (no journal section operations yet)
-    console.log('✅ Step 6: Returning success with mock data');
-    res.status(201).json({
-      success: true,
-      data: { 
-        journal_section: {
-          section_id: 444,
-          event_id: event_id,
-          year: year,
-          section_order: 1,
-          title: title || 'Gradual Test Section',
-          description: description || 'Gradual Test Description'
+    // Test journal section query
+    console.log('🔍 Step 6: Testing journal section query...');
+    const existingSections = await prisma.journalSection.findMany({
+      where: {
+        event_id,
+        year
+      },
+      select: {
+        section_order: true
+      },
+      orderBy: {
+        section_order: 'desc'
+      }
+    });
+
+    console.log('✅ Step 7: Journal section query successful');
+    console.log('📊 Existing sections found:', existingSections.length);
+
+    // Calculate next section_order
+    const nextSectionOrder = existingSections.length > 0 
+      ? (existingSections[0]?.section_order || 0) + 1 
+      : 1;
+
+    console.log('✅ Step 8: Calculated next section_order:', nextSectionOrder);
+
+    // Test journal section creation
+    console.log('🔍 Step 9: Testing journal section creation...');
+    const createData = {
+      event_id,
+      year,
+      section_order: nextSectionOrder,
+      title: title || null,
+      description: description || null
+    };
+    console.log('📋 Create data:', JSON.stringify(createData, null, 2));
+
+    const journalSection = await prisma.journalSection.create({
+      data: createData,
+      include: {
+        content_items: {
+          orderBy: { display_order: 'asc' }
         }
       }
+    });
+
+    console.log('✅ Step 10: Journal section created successfully:', {
+      section_id: journalSection.section_id,
+      event_id: journalSection.event_id,
+      year: journalSection.year,
+      section_order: journalSection.section_order,
+      title: journalSection.title
+    });
+
+    res.status(201).json({
+      success: true,
+      data: { journal_section: journalSection }
     });
     
     console.log('🎉 === GRADUAL TEST END - SUCCESS ===');
