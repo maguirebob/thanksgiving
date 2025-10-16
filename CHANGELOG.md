@@ -2,6 +2,12 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.27] - 2025-10-16
+
+- Restore complete function with all database operations
+- Gradual test confirmed event lookup works
+- Now testing all journal section operations
+- Should either work completely or show exact error location
 ## [2.13.26] - 2025-10-16
 
 - Create gradual test with Prisma event lookup
