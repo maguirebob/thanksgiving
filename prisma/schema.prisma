@@ -173,3 +173,17 @@ enum ContentType {
   text
   heading
 }
+
+model ScrapbookContent {
+  id                Int      @id @default(autoincrement())
+  year              Int
+  content_type      String   @db.VarChar(20)
+  content_reference String   @db.VarChar(255)
+  display_order     Int
+  page_break_before Boolean  @default(false)
+  page_break_after  Boolean  @default(false)
+  created_at        DateTime @default(now())
+
+  @@unique([year, display_order])
+  @@map("ScrapbookContent")
+}
