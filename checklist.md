@@ -25,6 +25,7 @@ This checklist ensures proper versioning, testing, and deployment across all env
 - [ ] **Document database changes** - Include all new tables/columns in schema
 - [ ] **Commit schema changes** - `git add src/lib/schemaVersions.ts && git commit -m "feat: add schema definition for version X.X.X"`
 - [ ] **Push to dev** - `git push origin dev --tags`
+- [ ] **✅ VERSIONING COMPLETE** - Verify version was created and pushed before proceeding
 
 ## Backup Checklist
 - [ ] **Database backup** - Create backup of current database state
@@ -33,6 +34,7 @@ This checklist ensures proper versioning, testing, and deployment across all env
 - [ ] **Verify backup integrity** - Confirm backups are valid
 
 ## Move to Test Environment Checklist
+- [ ] **✅ PREREQUISITE: Versioning Complete** - Must complete versioning checklist first
 - [ ] **Switch to test branch** - `git checkout test`
 - [ ] **Pull latest test changes** - `git pull origin test`
 - [ ] **Merge dev to test** - `git merge dev`
@@ -143,6 +145,8 @@ git push origin main --tags
 5. **ALWAYS have rollback plan** - Be prepared to revert if needed
 6. **ALWAYS document changes** - Keep records of what was done
 7. **ALWAYS update schema definitions** - Keep schema versions current
+8. **⚠️ MANDATORY: Complete checklists in order** - Never skip versioning before moving to test/prod
+9. **⚠️ MANDATORY: Verify prerequisites** - Check that previous checklist sections are complete
 
 ## Common Mistakes to Avoid
 - ❌ Making changes directly in test or main branches
