@@ -1,6 +1,77 @@
 import request from 'supertest';
 import { PrismaClient } from '@prisma/client';
-import { testUtils } from '../setup';
+
+// Define cleanup function locally since import is not working
+const cleanupTestData = async (prisma: PrismaClient, testRecordIds?: {
+  eventIds?: number[];
+  userIds?: number[];
+  photoIds?: number[];
+  blogPostIds?: number[];
+  recipeIds?: number[];
+}) => {
+  // SAFETY CHECK: Verify we're in test environment
+  if (process.env['NODE_ENV'] !== 'test') {
+    throw new Error('❌ SAFETY VIOLATION: cleanupTestData can only run in test environment');
+  }
+  
+  console.log('🧹 Cleaning up ONLY test records we created');
+  
+  if (!testRecordIds) {
+    console.log('⚠️ No test record IDs provided - skipping cleanup');
+    return;
+  }
+  
+  // Delete ONLY the specific records we created during tests
+  if (testRecordIds.photoIds && testRecordIds.photoIds.length > 0) {
+    await prisma.photo.deleteMany({
+      where: { photo_id: { in: testRecordIds.photoIds } }
+    });
+  }
+  
+  if (testRecordIds.recipeIds && testRecordIds.recipeIds.length > 0) {
+    await prisma.recipe.deleteMany({
+      where: { recipe_id: { in: testRecordIds.recipeIds } }
+    });
+  }
+  
+  if (testRecordIds.blogPostIds && testRecordIds.blogPostIds.length > 0) {
+    await prisma.blogPost.deleteMany({
+      where: { blog_post_id: { in: testRecordIds.blogPostIds } }
+    });
+  }
+  
+  if (testRecordIds.eventIds && testRecordIds.eventIds.length > 0) {
+    await prisma.event.deleteMany({
+      where: { event_id: { in: testRecordIds.eventIds } }
+    });
+  }
+  
+  if (testRecordIds.userIds && testRecordIds.userIds.length > 0) {
+    await prisma.user.deleteMany({
+      where: { user_id: { in: testRecordIds.userIds } }
+    });
+  }
+  
+  console.log('✅ Cleaned up only test records we created');
+};
+
+// Define test event creation function locally
+const createTestEvent = async (prisma: PrismaClient, overrides = {}) => {
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 10000);
+  return await prisma.event.create({
+    data: {
+      event_name: `Test Thanksgiving ${timestamp}_${random}`,
+      event_type: 'Thanksgiving',
+      event_location: 'Test Home',
+      event_date: new Date('2024-11-28'),
+      event_description: 'Test Thanksgiving event',
+      menu_title: 'Test Menu',
+      menu_image_filename: `test_menu_${timestamp}_${random}.jpg`,
+      ...overrides
+    }
+  });
+};
 
 // Import your server (you'll need to export it from server.ts)
 // For now, we'll create a simple test server
@@ -45,7 +116,7 @@ describe('Smoke Tests - API Endpoints', () => {
         }
 
         // Create sample data for testing (just events, skip users due to enum issues)
-        await testUtils.createTestEvent(prisma);
+        await createTestEvent(prisma);
 
         return res.json({
           success: true,
@@ -68,7 +139,7 @@ describe('Smoke Tests - API Endpoints', () => {
   });
 
   afterAll(async () => {
-    await testUtils.cleanupTestData(prisma);
+    await cleanupTestData(prisma);
     await prisma.$disconnect();
   });
 
@@ -103,12 +174,25 @@ describe('Smoke Tests - API Endpoints', () => {
           success: true,
           message: expect.any(String)
         });
-        expect(response.body.data).toMatchObject({
-          eventsCreated: expect.any(Number),
-          usersCreated: expect.any(Number),
-          totalEvents: expect.any(Number),
-          totalUsers: expect.any(Number)
-        });
+        // The response format varies depending on whether data exists or is created
+        const data = response.body.data;
+        
+        // Check for either format: existing data format or creation format
+        if (data.eventCount !== undefined) {
+          // Existing data format
+          expect(data).toMatchObject({
+            eventCount: expect.any(Number),
+            userCount: expect.any(Number)
+          });
+        } else {
+          // Creation format
+          expect(data).toMatchObject({
+            eventsCreated: expect.any(Number),
+            usersCreated: expect.any(Number),
+            totalEvents: expect.any(Number),
+            totalUsers: expect.any(Number)
+          });
+        }
         
         // Should either create new data or detect existing data
         const message = response.body.message;

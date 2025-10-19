@@ -2,6 +2,26 @@
 
 This document outlines the established conventions, rules, and best practices for this project. These guidelines ensure consistency, maintainability, and proper workflow management.
 
+## 🚨 CRITICAL SAFETY RULES - NEVER VIOLATE
+
+### Database Safety Rules
+- **❌ NEVER run destructive DELETE operations** on any database (dev, test, or production)
+- **❌ NEVER use `deleteMany()` without WHERE clauses** - this deletes ALL records
+- **❌ NEVER run cleanup functions** that wipe entire tables
+- **✅ ONLY delete specific records** by ID or with precise WHERE conditions
+- **✅ ALWAYS track test record IDs** and only clean up those specific records
+- **✅ VERIFY database connection** before any destructive operations
+- **✅ USE test environment checks** to prevent accidental production data loss
+
+### Test Safety Rules
+- **❌ NEVER run tests against production databases**
+- **❌ NEVER assume test database exists** - verify connection first
+- **✅ ALWAYS use selective cleanup** - only delete records you created
+- **✅ ALWAYS track created record IDs** for safe cleanup
+- **✅ FAIL SAFELY** - if test database unavailable, skip tests don't fallback to dev/prod
+
+**VIOLATION OF THESE RULES CAN RESULT IN COMPLETE DATA LOSS**
+
 ## Git Workflow and Branch Management
 
 ### Branch Strategy
