@@ -361,6 +361,43 @@ router.delete('/content/:id', async (req, res) => {
 });
 
 /**
+ * Get available scrapbook years
+ * GET /api/scrapbook/available-years
+ */
+router.get('/available-years', async (req, res) => {
+  try {
+    const scrapbookFiles = await prisma.scrapbookFiles.findMany({
+      where: { status: 'generated' },
+      select: {
+        year: true,
+        filename: true,
+        generated_at: true,
+        file_size: true,
+        access_count: true,
+        last_accessed: true
+      },
+      orderBy: { year: 'desc' }
+    });
+
+    res.json({
+      success: true,
+      data: {
+        years: scrapbookFiles,
+        count: scrapbookFiles.length
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error getting available scrapbook years:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to get available scrapbook years',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
  * Serve scrapbook from S3
  * GET /api/scrapbook/serve/:year
  */
@@ -372,15 +409,43 @@ router.get('/serve/:year', async (req, res) => {
       return res.status(400).json({ error: 'Invalid year parameter' });
     }
 
-    const s3Service = (await import('../services/s3Service')).default;
-    
-    const s3Key = `scrapbooks/${year}.html`;
-    
-    // Generate a signed URL for the scrapbook
-    const signedUrl = await s3Service.getSignedUrl(s3Key, 3600); // 1 hour expiry
-    
-    // Redirect to the signed URL
-    res.redirect(signedUrl);
+    // Check if scrapbook exists in database
+    const scrapbookFile = await prisma.scrapbookFiles.findUnique({
+      where: { year: year }
+    });
+
+    if (!scrapbookFile || scrapbookFile.status !== 'generated') {
+      return res.status(404).json({ 
+        error: 'Scrapbook not found',
+        message: `No scrapbook available for year ${year}`
+      });
+    }
+
+    // Update access tracking
+    await prisma.scrapbookFiles.update({
+      where: { year: year },
+      data: {
+        last_accessed: new Date(),
+        access_count: { increment: 1 }
+      }
+    });
+
+    // If we have a local file, serve it directly
+    if (scrapbookFile.local_path) {
+      return res.sendFile(scrapbookFile.local_path);
+    }
+
+    // Otherwise, serve from S3
+    if (scrapbookFile.s3_key) {
+      const s3Service = (await import('../services/s3Service')).default;
+      const signedUrl = await s3Service.getSignedUrl(scrapbookFile.s3_key, 3600);
+      return res.redirect(signedUrl);
+    }
+
+    return res.status(404).json({ 
+      error: 'Scrapbook file not found',
+      message: 'Neither local nor S3 file available'
+    });
     
   } catch (error) {
     console.error('Error serving scrapbook:', error);

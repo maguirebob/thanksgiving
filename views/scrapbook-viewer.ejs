@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrapbooks - Thanksgiving Collection</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        .scrapbook-viewer {
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+        
+        .scrapbook-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+        }
+        
+        .scrapbook-header h1 {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .scrapbook-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 0;
+        }
+        
+        .year-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .year-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 3px solid transparent;
+        }
+        
+        .year-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            border-color: #FFD700;
+        }
+        
+        .year-card .year-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #8B4513;
+            margin-bottom: 0.5rem;
+            font-family: 'Playfair Display', Georgia, serif;
+        }
+        
+        .year-card .year-label {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        
+        .year-card .year-stats {
+            font-size: 0.9rem;
+            color: #888;
+            margin-bottom: 1rem;
+        }
+        
+        .year-card .view-btn {
+            background: #8B4513;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .year-card .view-btn:hover {
+            background: #A0522D;
+            transform: scale(1.05);
+        }
+        
+        .loading-spinner {
+            text-align: center;
+            color: white;
+            margin: 3rem 0;
+        }
+        
+        .no-scrapbooks {
+            text-align: center;
+            color: white;
+            margin: 3rem 0;
+        }
+        
+        .no-scrapbooks i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.7;
+        }
+        
+        .no-scrapbooks h3 {
+            margin-bottom: 1rem;
+        }
+        
+        .no-scrapbooks p {
+            opacity: 0.8;
+        }
+        
+        .error-message {
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            color: #dc3545;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            text-align: center;
+        }
+        
+        .admin-actions {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .admin-actions h5 {
+            color: white;
+            margin-bottom: 1rem;
+        }
+        
+        .admin-actions .btn {
+            margin: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="scrapbook-viewer">
+        <div class="container">
+            <!-- Header -->
+            <div class="scrapbook-header">
+                <h1><i class="fas fa-book-open me-3"></i>Thanksgiving Scrapbooks</h1>
+                <p>Browse through our collection of digital scrapbooks from years past</p>
+            </div>
+            
+            <!-- Admin Actions (if user is admin) -->
+            <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
+                <div class="admin-actions">
+                    <h5><i class="fas fa-tools me-2"></i>Admin Actions</h5>
+                    <a href="/admin/journal-editor" class="btn btn-warning">
+                        <i class="fas fa-edit me-2"></i>Create New Scrapbook
+                    </a>
+                    <button class="btn btn-info" onclick="refreshScrapbooks()">
+                        <i class="fas fa-sync me-2"></i>Refresh List
+                    </button>
+                </div>
+            <% } %>
+            
+            <!-- Loading Spinner -->
+            <div class="loading-spinner" id="loadingSpinner">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+                <p class="mt-2">Loading scrapbooks...</p>
+            </div>
+            
+            <!-- Error Message -->
+            <div class="error-message" id="errorMessage" style="display: none;">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <span id="errorText"></span>
+            </div>
+            
+            <!-- No Scrapbooks Message -->
+            <div class="no-scrapbooks" id="noScrapbooks" style="display: none;">
+                <i class="fas fa-book-open"></i>
+                <h3>No Scrapbooks Available</h3>
+                <p>No scrapbooks have been created yet. Check back later!</p>
+                <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
+                    <a href="/admin/journal-editor" class="btn btn-warning">
+                        <i class="fas fa-plus me-2"></i>Create First Scrapbook
+                    </a>
+                <% } %>
+            </div>
+            
+            <!-- Year Grid -->
+            <div class="year-grid" id="yearGrid">
+                <!-- Years will be loaded here dynamically -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Load available scrapbook years
+        async function loadScrapbooks() {
+            try {
+                const response = await fetch('/api/scrapbook/available-years');
+                const result = await response.json();
+                
+                document.getElementById('loadingSpinner').style.display = 'none';
+                
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to load scrapbooks');
+                }
+                
+                const years = result.data.years;
+                
+                if (years.length === 0) {
+                    document.getElementById('noScrapbooks').style.display = 'block';
+                    return;
+                }
+                
+                // Render year cards
+                const yearGrid = document.getElementById('yearGrid');
+                yearGrid.innerHTML = years.map(year => `
+                    <div class="year-card" onclick="openScrapbook(${year.year})">
+                        <div class="year-number">${year.year}</div>
+                        <div class="year-label">Thanksgiving Scrapbook</div>
+                        <div class="year-stats">
+                            <i class="fas fa-calendar me-1"></i>
+                            Created: ${new Date(year.generated_at).toLocaleDateString()}<br>
+                            <i class="fas fa-eye me-1"></i>
+                            Views: ${year.access_count || 0}
+                        </div>
+                        <button class="view-btn">
+                            <i class="fas fa-book-open me-2"></i>View Scrapbook
+                        </button>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error loading scrapbooks:', error);
+                document.getElementById('loadingSpinner').style.display = 'none';
+                document.getElementById('errorMessage').style.display = 'block';
+                document.getElementById('errorText').textContent = error.message;
+            }
+        }
+        
+        // Open scrapbook for a specific year
+        function openScrapbook(year) {
+            // Open the local scrapbook file directly
+            window.open(`/scrapbooks/${year}.html`, '_blank');
+        }
+        
+        // Refresh scrapbooks list
+        function refreshScrapbooks() {
+            document.getElementById('loadingSpinner').style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('noScrapbooks').style.display = 'none';
+            document.getElementById('yearGrid').innerHTML = '';
+            loadScrapbooks();
+        }
+        
+        // Load scrapbooks when page loads
+        document.addEventListener('DOMContentLoaded', loadScrapbooks);
+    </script>
+</body>
+</html>

@@ -85,6 +85,13 @@ npm run version:patch "Short description" "Detailed explanation" "Additional con
 - **Backup before migrations** in production environments
 - **Order operations carefully** - rename columns before updating constraints
 
+### Data Integrity Rules
+- **NO MANUAL DATABASE MANIPULATION** - Never manually insert/update/delete records unless explicitly requested by user
+- **Debug the root cause** - If records are missing, debug why the application didn't create them properly
+- **Fix the code, not the data** - Always fix the underlying code issue rather than manually patching data
+- **Use proper error handling** - Ensure all database operations have proper error handling and logging
+- **Validate before operations** - Always validate data before database operations
+
 ### Migration Safety Checklist
 1. **Backup database** before any migration
 2. **Test migration locally** with production-like data

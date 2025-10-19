@@ -187,3 +187,22 @@ model ScrapbookContent {
   @@unique([year, display_order])
   @@map("ScrapbookContent")
 }
+
+model ScrapbookFiles {
+  id            Int       @id @default(autoincrement())
+  year          Int       @unique
+  filename      String    @db.VarChar(255)
+  local_path    String?   @db.VarChar(500)
+  s3_url        String?   @db.VarChar(500)
+  s3_key        String?   @db.VarChar(500)
+  status        String    @default("generated") @db.VarChar(20)
+  file_size     Int?
+  generated_at  DateTime? @default(now())
+  last_accessed DateTime?
+  access_count  Int       @default(0)
+  error_message String?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  @@map("ScrapbookFiles")
+}

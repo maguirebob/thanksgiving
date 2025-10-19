@@ -70,9 +70,10 @@ export class ScrapbookHtmlGenerator {
     
     // Also upload to S3 as backup
     const s3Key = `scrapbooks/${filename}`;
+    let s3Url: string | null = null;
     console.log(`☁️ GENERATOR DEBUG: Uploading backup to S3: ${s3Key}`);
     try {
-      const s3Url = await s3Service.uploadFile(
+      s3Url = await s3Service.uploadFile(
         s3Key,
         htmlContent,
         'text/html',
@@ -85,6 +86,49 @@ export class ScrapbookHtmlGenerator {
       console.log(`🔗 GENERATOR DEBUG: S3 backup URL: ${s3Url}`);
     } catch (s3Error) {
       console.warn(`⚠️ GENERATOR DEBUG: S3 backup failed (non-critical):`, s3Error);
+    }
+    
+    // Record scrapbook file in database
+    console.log(`📊 GENERATOR DEBUG: Starting database record creation for year ${year}`);
+    const fileStats = await fs.promises.stat(localPath);
+    console.log(`📊 GENERATOR DEBUG: File stats: size=${fileStats.size}, path=${localPath}`);
+    
+    try {
+      console.log(`📊 GENERATOR DEBUG: Attempting database upsert for year ${year}`);
+      const result = await prisma.scrapbookFiles.upsert({
+        where: { year: year },
+        update: {
+          filename: filename,
+          local_path: localPath,
+          s3_url: s3Url,
+          s3_key: s3Key,
+          status: 'generated',
+          file_size: fileStats.size,
+          generated_at: new Date(),
+          updated_at: new Date()
+        },
+        create: {
+          year: year,
+          filename: filename,
+          local_path: localPath,
+          s3_url: s3Url,
+          s3_key: s3Key,
+          status: 'generated',
+          file_size: fileStats.size,
+          generated_at: new Date()
+        }
+      });
+      console.log(`📊 GENERATOR DEBUG: Database upsert successful:`, result);
+    } catch (dbError) {
+      console.error(`❌ GENERATOR DEBUG: Database upsert failed:`, dbError);
+      console.error(`❌ GENERATOR DEBUG: Error details:`, {
+        message: dbError instanceof Error ? dbError.message : 'Unknown error',
+        stack: dbError instanceof Error ? dbError.stack : undefined,
+        year: year,
+        filename: filename,
+        localPath: localPath
+      });
+      throw dbError; // Re-throw to fail the generation
     }
     
     console.log(`✅ GENERATOR DEBUG: Scrapbook generation completed successfully`);
