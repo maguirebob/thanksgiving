@@ -48,6 +48,8 @@ npm run version:patch "Short description" "Detailed explanation" "Additional con
 2. **Include descriptive commit messages** with the version bump
 3. **Update hardcoded version strings** in code when versioning
 4. **Use the versioning script** - never manually edit version numbers
+5. **Update schema definitions** - Always add schema definition for new versions in `src/lib/schemaVersions.ts`
+6. **Document database changes** - Include all new tables, columns, and migrations in schema definition
 
 ## Code Quality and Standards
 
