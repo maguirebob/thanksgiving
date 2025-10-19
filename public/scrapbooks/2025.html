@@ -17,6 +17,14 @@
           align-items: center;    
         }
         
+        .close-button {
+          background: #dc3545 !important; /* Red background for close button */
+        }
+        
+        .close-button:hover {
+          background: #c82333 !important; /* Darker red on hover */
+        }
+        
         .flipbook {
             width: 800px;
             height: 600px;
@@ -250,36 +258,15 @@
             <span class="rivet rivet-br"></span>
         </div>
         <!-- Section Header Page -->
-        <div class="page section-header">Thanksgiving Memories</div>
+        <div class="page section-header">Menu</div>
         <!-- Menu Page -->
         <div class="page menu-page">
-            <img src="../images/2024_Menu.jpeg" alt="Menu">
+            <img src="/api/v1/menu-images/57" alt="Menu">
         </div>
         <!-- Photo Grid Page -->
         <div class="page">
             <div class="photo-grid">
-                <img src="../photos/Grandma80s.jpg" alt="Thanksgiving Memory">
-                <img src="../photos/JoeOld.jpg" alt="Thanksgiving Memory">
-                <img src="../photos/JoewithMaeveJosie.jpg" alt="Thanksgiving Memory">
-                <img src="../photos/Maeve Announcement.jpg" alt="Thanksgiving Memory">
-                <img src="../photos/ParentsWedding.jpg" alt="Thanksgiving Memory">
-                <img src="../photos/Summer73Wakins.jpg" alt="Thanksgiving Memory">
-            </div>
-        </div>
-        
-        <!-- Page Photo Page -->
-        <div class="page page-photo">
-            <div class="page-photo-content">
-                <img src="../page_photos/IMG_6016.jpeg" alt="Thanksgiving Memory">
-            </div>
-        </div>
-        <!-- Section Header Page -->
-        <div class="page section-header">Blog Images</div>
-        <!-- Blog Images Page -->
-        <div class="page">
-            <div class="blog-images">
-                <img src="../blog_images/2013_Journal_P1.jpeg" alt="2013 Journal Page 1">
-                <img src="../blog_images/2013_Journal_P2.jpeg" alt="2013 Journal Page 2">
+                <img src="/api/photos/2f729c19-add4-495b-a4e4-17f46f2ddb73.jpg/preview" alt="Thanksgiving Memory">
             </div>
         </div>
         <!-- Back Cover -->
@@ -298,6 +285,7 @@
         <button id="prevBtn" class="nav-btn">← Previous</button>
         <button id="nextBtn" class="nav-btn">Next →</button>
         <button id="fullscreenBtn" class="nav-btn">Fullscreen</button>
+        <button class="nav-btn close-button" onclick="window.close()" title="Close Scrapbook">Close</button>
     </div>
     
     <script src="../js/jquery-3.7.1.min.js"></script>

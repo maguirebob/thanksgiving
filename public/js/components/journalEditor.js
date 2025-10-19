@@ -221,9 +221,27 @@ class JournalEditor {
         sections.forEach(section => {
             const option = document.createElement('option');
             option.value = section.section_id;
-            option.textContent = `Section ${section.section_order}${section.title ? ': ' + section.title : ''}`;
+            
+            // Add published status indicator
+            const publishedIcon = section.is_published ? ' 🌐' : ' 📝';
+            const publishedText = section.is_published ? ' (Published)' : ' (Draft)';
+            
+            option.textContent = `Section ${section.section_order}${section.title ? ': ' + section.title : ''}${publishedText}${publishedIcon}`;
             select.appendChild(option);
         });
+    }
+
+    updateSectionStatus(section) {
+        const statusElement = document.getElementById('sectionStatus');
+        if (!statusElement || !section) return;
+
+        if (section.is_published) {
+            statusElement.className = 'badge bg-success';
+            statusElement.innerHTML = '<i class="fas fa-globe me-1"></i>Published';
+        } else {
+            statusElement.className = 'badge bg-secondary';
+            statusElement.innerHTML = '<i class="fas fa-file-alt me-1"></i>Draft';
+        }
     }
 
     async loadSectionContent() {
@@ -244,6 +262,7 @@ class JournalEditor {
                 this.contentItems = section.content_items || [];
                 this.renderContentItems();
                 this.updateSectionInfo(section);
+                this.updateSectionStatus(section);
                 this.updateClearPageButton();
             } else {
                 console.error('Failed to load section content:', result.message);
@@ -737,6 +756,10 @@ class JournalEditor {
             const result = await response.json();
             if (result.success) {
                 alert('Section published successfully');
+                // Update the section status display
+                this.updateSectionStatus({ is_published: true });
+                // Reload sections to update the dropdown
+                await this.loadJournalSections();
             } else {
                 alert('Failed to publish section: ' + result.message);
             }
@@ -793,11 +816,6 @@ class JournalEditor {
             }
 
             alert(`Scrapbook generated successfully!\n\nYou can view it at: ${generateResult.url}`);
-            
-            // Optionally open the scrapbook in a new tab
-            if (confirm('Would you like to open the scrapbook now?')) {
-                window.open(generateResult.url, '_blank');
-            }
             
         } catch (error) {
             console.error('Error generating scrapbook:', error);

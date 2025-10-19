@@ -245,7 +245,7 @@ app.get('/health', (_req, res) => {
       status: 'OK', 
       timestamp: new Date().toISOString(),
       environment: process.env['NODE_ENV'] || 'unknown',
-      version: '2.13.32'
+      version: '3.0.0'
     });
   } catch (error) {
     logger.error('Health check error:', error);
@@ -262,7 +262,7 @@ app.get('/api/v1/version/display', (_req, res) => {
   res.json({
     success: true,
     data: {
-      version: '2.13.32',
+      version: '3.0.0',
       environment: config.getConfig().nodeEnv,
       buildDate: new Date().toISOString()
     }
@@ -727,18 +727,18 @@ app.get('/menu/:id', requireAuth, async (req, res) => {
   }
 });
 
-// Public Journal Viewer route
+// Public Scrapbook Viewer route
 app.get('/journal', async (_req, res) => {
   try {
-    res.render('journal-viewer', {
-      title: 'Thanksgiving Journal',
+    res.render('scrapbook-viewer', {
+      title: 'Thanksgiving Scrapbooks',
       layout: 'layout'
     });
   } catch (error) {
-    console.error('Error rendering journal viewer:', error);
+    console.error('Error rendering scrapbook viewer:', error);
     res.status(500).render('error', {
       title: 'Error',
-      message: 'Failed to load journal viewer.',
+      message: 'Failed to load scrapbook viewer.',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
