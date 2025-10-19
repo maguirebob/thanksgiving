@@ -51,7 +51,7 @@ router.post('/generate/:year', async (req, res) => {
     
     console.log(`✅ SCRAPBOOK DEBUG: HTML generation completed successfully`);
     
-    res.json({ 
+    return res.json({ 
       success: true, 
       message: `Scrapbook generated successfully for ${year}`,
       filename: filename,
@@ -60,7 +60,7 @@ router.post('/generate/:year', async (req, res) => {
     
   } catch (error) {
     console.error('❌ SCRAPBOOK DEBUG: Error generating scrapbook:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       error: 'Failed to generate scrapbook',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -263,7 +263,7 @@ router.post('/convert-from-journal/:year', async (req, res) => {
     
   } catch (error) {
     console.error('❌ SCRAPBOOK DEBUG: Error converting journal to scrapbook:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       success: false,
       error: 'Failed to convert journal content',
       details: error instanceof Error ? error.message : 'Unknown error'
@@ -288,11 +288,11 @@ router.get('/content/:year', async (req, res) => {
       orderBy: { display_order: 'asc' }
     });
 
-    res.json(content);
+    return res.json(content);
     
   } catch (error) {
     console.error('Error fetching scrapbook content:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       error: 'Failed to fetch scrapbook content',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -322,11 +322,11 @@ router.post('/content', async (req, res) => {
       }
     });
 
-    res.json(content);
+    return res.json(content);
     
   } catch (error) {
     console.error('Error creating scrapbook content:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       error: 'Failed to create scrapbook content',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -349,11 +349,11 @@ router.delete('/content/:id', async (req, res) => {
       where: { id }
     });
 
-    res.json({ success: true, message: 'Content item deleted successfully' });
+    return res.json({ success: true, message: 'Content item deleted successfully' });
     
   } catch (error) {
     console.error('Error deleting scrapbook content:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       error: 'Failed to delete scrapbook content',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -364,7 +364,7 @@ router.delete('/content/:id', async (req, res) => {
  * Get available scrapbook years
  * GET /api/scrapbook/available-years
  */
-router.get('/available-years', async (req, res) => {
+router.get('/available-years', async (_req, res) => {
   try {
     const scrapbookFiles = await prisma.scrapbookFiles.findMany({
       where: { status: 'generated' },
@@ -379,7 +379,7 @@ router.get('/available-years', async (req, res) => {
       orderBy: { year: 'desc' }
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         years: scrapbookFiles,
@@ -389,7 +389,7 @@ router.get('/available-years', async (req, res) => {
     
   } catch (error) {
     console.error('Error getting available scrapbook years:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       success: false,
       error: 'Failed to get available scrapbook years',
       details: error instanceof Error ? error.message : 'Unknown error'
