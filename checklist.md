@@ -55,6 +55,10 @@ This checklist ensures proper versioning, testing, and deployment across all env
 ## Move to Production Checklist
 - [ ] **All tests passed** - Confirm test environment testing is complete
 - [ ] **Documentation updated** - Update any relevant documentation
+- [ ] **BACKUP PRODUCTION DATABASE** - Create full backup of production database
+- [ ] **BACKUP PRODUCTION FILES** - Backup any critical production files
+- [ ] **Verify backup integrity** - Confirm production backups are valid and accessible
+- [ ] **Document backup location** - Note where production backups are stored
 - [ ] **Switch to main branch** - `git checkout main`
 - [ ] **Pull latest main changes** - `git pull origin main`
 - [ ] **Merge test to main** - `git merge test`
@@ -65,7 +69,6 @@ This checklist ensures proper versioning, testing, and deployment across all env
 ## Production Environment Testing Checklist
 - [ ] **Environment variables** - Verify production environment variables are correct
 - [ ] **Database migrations** - Run any new migrations in production
-- [ ] **Database backup** - Create backup before production changes
 - [ ] **Smoke tests** - Run smoke tests in production
 - [ ] **Manual testing** - Test key functionality manually
 - [ ] **API testing** - Verify all API endpoints work
