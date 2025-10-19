@@ -1,46 +1,156 @@
 import { PrismaClient } from '@prisma/client';
-import { testUtils } from '../setup';
+
+// Define safe cleanup function - only deletes specific test records
+const cleanupTestData = async (prisma: PrismaClient, testRecordIds?: {
+  eventIds?: number[];
+  userIds?: number[];
+  photoIds?: number[];
+  blogPostIds?: number[];
+  recipeIds?: number[];
+}) => {
+  // SAFETY CHECK: Verify we're in test environment
+  if (process.env['NODE_ENV'] !== 'test') {
+    throw new Error('❌ SAFETY VIOLATION: cleanupTestData can only run in test environment');
+  }
+  
+  // SAFETY CHECK: Verify we're using test or dev database
+  if (!process.env['DATABASE_URL']?.includes('thanksgiving_test') && !process.env['DATABASE_URL']?.includes('bobmaguire') && !process.env['DATABASE_URL']?.includes('metro.proxy.rlwy.net')) {
+    throw new Error('❌ SAFETY VIOLATION: cleanupTestData can only run against test or dev database');
+  }
+  
+  console.log('🧹 Cleaning up ONLY test records we created');
+  
+  if (!testRecordIds) {
+    console.log('⚠️ No test record IDs provided - skipping cleanup');
+    return;
+  }
+  
+  // Delete ONLY the specific records we created during tests
+  if (testRecordIds.photoIds && testRecordIds.photoIds.length > 0) {
+    await prisma.photo.deleteMany({
+      where: { photo_id: { in: testRecordIds.photoIds } }
+    });
+  }
+  
+  if (testRecordIds.recipeIds && testRecordIds.recipeIds.length > 0) {
+    await prisma.recipe.deleteMany({
+      where: { recipe_id: { in: testRecordIds.recipeIds } }
+    });
+  }
+  
+  if (testRecordIds.blogPostIds && testRecordIds.blogPostIds.length > 0) {
+    await prisma.blogPost.deleteMany({
+      where: { blog_post_id: { in: testRecordIds.blogPostIds } }
+    });
+  }
+  
+  if (testRecordIds.eventIds && testRecordIds.eventIds.length > 0) {
+    await prisma.event.deleteMany({
+      where: { event_id: { in: testRecordIds.eventIds } }
+    });
+  }
+  
+  if (testRecordIds.userIds && testRecordIds.userIds.length > 0) {
+    await prisma.user.deleteMany({
+      where: { user_id: { in: testRecordIds.userIds } }
+    });
+  }
+  
+  console.log('✅ Cleaned up only test records we created');
+};
+
+// Define test event creation function locally
+const createTestEvent = async (prisma: PrismaClient, overrides = {}) => {
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 10000);
+  return await prisma.event.create({
+    data: {
+      event_name: `Test Thanksgiving ${timestamp}_${random}`,
+      event_type: 'Thanksgiving',
+      event_location: 'Test Home',
+      event_date: new Date('2024-11-28'),
+      event_description: 'Test Thanksgiving event',
+      menu_title: 'Test Menu',
+      menu_image_filename: `test_menu_${timestamp}_${random}.jpg`,
+      ...overrides
+    }
+  });
+};
+
+// Define test user creation function locally
+const createTestUser = async (prisma: PrismaClient, overrides = {}) => {
+  const bcrypt = require('bcryptjs');
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 10000);
+  return await prisma.user.create({
+    data: {
+      username: `testuser_${timestamp}_${random}`,
+      email: `test_${timestamp}_${random}@example.com`,
+      password_hash: await bcrypt.hash('testpass123', 10),
+      role: 'user' as any, // Cast to any to avoid enum issues
+      first_name: 'Test',
+      last_name: 'User',
+      ...overrides
+    }
+  });
+};
 
 describe('Smoke Tests - Database Operations', () => {
   let prisma: PrismaClient;
+  let testRecordIds: {
+    eventIds: number[];
+    userIds: number[];
+    photoIds: number[];
+    blogPostIds: number[];
+    recipeIds: number[];
+  };
 
   beforeAll(async () => {
     prisma = new PrismaClient();
+    testRecordIds = {
+      eventIds: [],
+      userIds: [],
+      photoIds: [],
+      blogPostIds: [],
+      recipeIds: []
+    };
   });
 
   afterAll(async () => {
-    await testUtils.cleanupTestData(prisma);
+    await cleanupTestData(prisma, testRecordIds);
     await prisma.$disconnect();
   });
 
   beforeEach(async () => {
-    // Clean up before each test
-    await testUtils.cleanupTestData(prisma);
+    // No cleanup before each test - we'll track what we create
   });
 
   describe('Event Operations', () => {
     test('should create an event', async () => {
-      const event = await testUtils.createTestEvent(prisma);
+      const event = await createTestEvent(prisma);
+      
+      // Track this event for cleanup
+      testRecordIds.eventIds.push(event.event_id);
       
       expect(event).toMatchObject({
         event_id: expect.any(Number),
-        event_name: 'Test Thanksgiving 2024',
+        event_name: expect.stringMatching(/^Test Thanksgiving \d+_\d+$/),
         event_type: 'Thanksgiving',
         event_location: 'Test Home',
         event_description: 'Test Thanksgiving event',
         menu_title: 'Test Menu',
-        menu_image_filename: 'test_menu.jpg'
+        menu_image_filename: expect.stringMatching(/^test_menu_\d+_\d+\.jpg$/)
       });
       expect(event.event_date).toBeInstanceOf(Date);
     });
 
     test('should find events by date range', async () => {
-      await testUtils.createTestEvent(prisma, {
+      await createTestEvent(prisma, {
         event_date: new Date('2024-11-28'),
         event_name: 'Thanksgiving 2024'
       });
       
-      await testUtils.createTestEvent(prisma, {
+      await createTestEvent(prisma, {
         event_date: new Date('2023-11-23'),
         event_name: 'Thanksgiving 2023'
       });
@@ -59,7 +169,7 @@ describe('Smoke Tests - Database Operations', () => {
     });
 
     test('should update an event', async () => {
-      const event = await testUtils.createTestEvent(prisma);
+      const event = await createTestEvent(prisma);
       
       const updatedEvent = await prisma.event.update({
         where: { event_id: event.event_id },
@@ -70,7 +180,7 @@ describe('Smoke Tests - Database Operations', () => {
     });
 
     test('should delete an event', async () => {
-      const event = await testUtils.createTestEvent(prisma);
+      const event = await createTestEvent(prisma);
       
       await prisma.event.delete({
         where: { event_id: event.event_id }
@@ -86,7 +196,7 @@ describe('Smoke Tests - Database Operations', () => {
 
   describe('User Operations', () => {
     test.skip('should create a user with hashed password', async () => {
-      const user = await testUtils.createTestUser(prisma);
+      const user = await createTestUser(prisma);
       
       expect(user).toMatchObject({
         user_id: expect.any(Number),
@@ -101,7 +211,7 @@ describe('Smoke Tests - Database Operations', () => {
     });
 
     test.skip('should find user by username', async () => {
-      await testUtils.createTestUser(prisma);
+      await createTestUser(prisma);
       
       const user = await prisma.user.findUnique({
         where: { username: 'testuser' }
@@ -112,7 +222,7 @@ describe('Smoke Tests - Database Operations', () => {
     });
 
     test.skip('should find user by email', async () => {
-      await testUtils.createTestUser(prisma);
+      await createTestUser(prisma);
       
       const user = await prisma.user.findUnique({
         where: { email: 'test@example.com' }
@@ -125,7 +235,7 @@ describe('Smoke Tests - Database Operations', () => {
 
   describe('Photo Operations', () => {
     test('should create a photo linked to an event', async () => {
-      const event = await testUtils.createTestEvent(prisma);
+      const event = await createTestEvent(prisma);
       
       const photo = await prisma.photo.create({
         data: {
@@ -152,7 +262,7 @@ describe('Smoke Tests - Database Operations', () => {
     });
 
     test('should find photos by event', async () => {
-      const event = await testUtils.createTestEvent(prisma);
+      const event = await createTestEvent(prisma);
       
       await prisma.photo.create({
         data: {
@@ -180,7 +290,7 @@ describe('Smoke Tests - Database Operations', () => {
 
   describe('Relationships', () => {
     test('should include photos when fetching event', async () => {
-      const event = await testUtils.createTestEvent(prisma);
+      const event = await createTestEvent(prisma);
       
       await prisma.photo.create({
         data: {
