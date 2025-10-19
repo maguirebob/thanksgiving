@@ -2,6 +2,10 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [2.13.32] - 2025-10-19
+
+- Scrapbook system improvements
+- Fixed image loading issues, added close button, implemented S3 storage with local fallback, completed Phase 3 testing
 ## [2.13.29] - 2025-10-16
 
 - Test journal section creation operation

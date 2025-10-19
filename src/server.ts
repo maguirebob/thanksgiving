@@ -18,6 +18,7 @@ import eventRoutes from './routes/eventRoutes';
 import carouselRoutes from './routes/carouselRoutes';
 import journalRoutes from './routes/journalRoutes';
 import photoTypeRoutes from './routes/photoTypeRoutes';
+import scrapbookRoutes from './routes/scrapbookRoutes';
 import { addUserToLocals, requireAuth, requireAdmin } from './middleware/auth';
 
 const app = express();
@@ -244,7 +245,7 @@ app.get('/health', (_req, res) => {
       status: 'OK', 
       timestamp: new Date().toISOString(),
       environment: process.env['NODE_ENV'] || 'unknown',
-      version: '2.13.30'
+      version: '3.0.0'
     });
   } catch (error) {
     logger.error('Health check error:', error);
@@ -261,7 +262,7 @@ app.get('/api/v1/version/display', (_req, res) => {
   res.json({
     success: true,
     data: {
-      version: '2.13.30',
+      version: '3.0.0',
       environment: config.getConfig().nodeEnv,
       buildDate: new Date().toISOString()
     }
@@ -726,18 +727,18 @@ app.get('/menu/:id', requireAuth, async (req, res) => {
   }
 });
 
-// Public Journal Viewer route
+// Public Scrapbook Viewer route
 app.get('/journal', async (_req, res) => {
   try {
-    res.render('journal-viewer', {
-      title: 'Thanksgiving Journal',
+    res.render('scrapbook-viewer', {
+      title: 'Thanksgiving Scrapbooks',
       layout: 'layout'
     });
   } catch (error) {
-    console.error('Error rendering journal viewer:', error);
+    console.error('Error rendering scrapbook viewer:', error);
     res.status(500).render('error', {
       title: 'Error',
-      message: 'Failed to load journal viewer.',
+      message: 'Failed to load scrapbook viewer.',
       error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
@@ -768,6 +769,7 @@ app.use('/api/journal', (req, _res, next) => {
   next();
 }, journalRoutes);
 app.use('/api/photos', photoTypeRoutes);
+app.use('/api/scrapbook', scrapbookRoutes);
 
 // Error handling middleware
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

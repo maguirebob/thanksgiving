@@ -1173,3 +1173,27 @@
   40% { content: '..'; }
   60%, 100% { content: '...'; }
 }
+
+/* ========================================
+   LOADING STATES
+   ======================================== */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: var(--scrapbook-text-light);
+  font-family: var(--scrapbook-font-handwriting);
+}
+
+.loading-spinner i {
+  margin-bottom: 1rem;
+  color: var(--scrapbook-gold);
+}
+
+.loading-spinner p {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 400;
+}
