@@ -1,0 +1,199 @@
+/* Textures CSS - Leather and Parchment Effects */
+
+/* Leather Cover Styles */
+.leather-cover {
+  background: linear-gradient(135deg, #8B4513 0%, #A0522D 25%, #8B4513 50%, #654321 75%, #8B4513 100%);
+  background-size: 20px 20px;
+  position: relative;
+  box-shadow: 
+    inset 0 0 50px rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.leather-cover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    radial-gradient(circle at 80% 80%, rgba(0, 0, 0, 0.1) 1px, transparent 1px),
+    radial-gradient(circle at 40% 60%, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 15px 15px, 25px 25px, 30px 30px;
+  pointer-events: none;
+}
+
+.leather-cover::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 48%, rgba(0, 0, 0, 0.1) 49%, rgba(0, 0, 0, 0.1) 51%, transparent 52%);
+  background-size: 2px 2px;
+  pointer-events: none;
+}
+
+/* Parchment Page Styles */
+.parchment-page {
+  background: #F4E4BC;
+  background-image: 
+    linear-gradient(90deg, transparent 98%, rgba(139, 69, 19, 0.1) 100%),
+    linear-gradient(0deg, transparent 98%, rgba(139, 69, 19, 0.1) 100%);
+  background-size: 20px 20px;
+  position: relative;
+  box-shadow: 
+    inset 0 0 20px rgba(139, 69, 19, 0.1),
+    0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.parchment-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 10% 10%, rgba(139, 69, 19, 0.05) 1px, transparent 1px),
+    radial-gradient(circle at 90% 90%, rgba(139, 69, 19, 0.03) 1px, transparent 1px),
+    radial-gradient(circle at 50% 50%, rgba(139, 69, 19, 0.02) 1px, transparent 1px);
+  background-size: 50px 50px, 80px 80px, 120px 120px;
+  pointer-events: none;
+}
+
+.parchment-page::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 49%, rgba(139, 69, 19, 0.02) 50%, transparent 51%);
+  background-size: 3px 3px;
+  pointer-events: none;
+}
+
+/* Embossed Text Effects */
+.embossed-text {
+  text-shadow: 
+    1px 1px 0px rgba(255, 255, 255, 0.3),
+    2px 2px 4px rgba(0, 0, 0, 0.3),
+    0px 0px 8px rgba(0, 0, 0, 0.2);
+  color: #8B4513;
+  font-weight: bold;
+}
+
+/* Gold Text Effects */
+.gold-text {
+  background: linear-gradient(45deg, #FFD700, #FFA500, #FFD700);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 
+    1px 1px 2px rgba(0, 0, 0, 0.3),
+    0 0 10px rgba(255, 215, 0, 0.3);
+  font-weight: bold;
+}
+
+/* Decorative Text Effects */
+.decorative-text {
+  color: #8B4513;
+  text-shadow: 
+    1px 1px 0px rgba(255, 255, 255, 0.2),
+    2px 2px 4px rgba(0, 0, 0, 0.2);
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+/* Cover Decoration */
+.cover-decoration {
+  font-size: 2em;
+  color: #8B4513;
+  text-shadow: 
+    1px 1px 0px rgba(255, 255, 255, 0.3),
+    2px 2px 4px rgba(0, 0, 0, 0.3);
+  margin: 20px 0;
+}
+
+/* Title Decoration */
+.title-decoration {
+  font-size: 1.5em;
+  color: #8B4513;
+  text-shadow: 
+    1px 1px 0px rgba(255, 255, 255, 0.2),
+    2px 2px 4px rgba(0, 0, 0, 0.2);
+  margin: 15px 0;
+}
+
+/* Page Aging Effects */
+.page-aging {
+  position: relative;
+}
+
+.page-aging::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 5% 5%, rgba(139, 69, 19, 0.1) 2px, transparent 2px),
+    radial-gradient(circle at 95% 95%, rgba(139, 69, 19, 0.08) 2px, transparent 2px),
+    radial-gradient(circle at 20% 80%, rgba(139, 69, 19, 0.06) 1px, transparent 1px);
+  background-size: 100px 100px, 150px 150px, 200px 200px;
+  pointer-events: none;
+}
+
+/* Stitching Effects */
+.stitching {
+  position: relative;
+}
+
+.stitching::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 4px,
+      rgba(139, 69, 19, 0.3) 4px,
+      rgba(139, 69, 19, 0.3) 6px,
+      transparent 6px,
+      transparent 10px
+    );
+  background-size: 100% 10px;
+  pointer-events: none;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .embossed-text {
+    text-shadow: 
+      1px 1px 0px rgba(255, 255, 255, 0.2),
+      1px 1px 2px rgba(0, 0, 0, 0.2);
+  }
+  
+  .gold-text {
+    text-shadow: 
+      1px 1px 1px rgba(0, 0, 0, 0.2),
+      0 0 5px rgba(255, 215, 0, 0.2);
+  }
+  
+  .cover-decoration {
+    font-size: 1.5em;
+  }
+  
+  .title-decoration {
+    font-size: 1.2em;
+  }
+}

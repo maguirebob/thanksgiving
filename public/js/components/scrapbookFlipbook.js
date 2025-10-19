@@ -6,6 +6,7 @@ $(function() {
   const $toolbar = $(".scrapbook-toolbar");
   let currentYear = null;
   let journalData = null;
+  let flipbookInstances = {}; // Store Turn.js instances by year
   let flipbookInitialized = false;
   
   console.log('📚 Book element:', $book.length);
@@ -18,9 +19,11 @@ $(function() {
   
   // Initialize the flipbook with turn.js
   function initializeFlipbook() {
-    if (flipbookInitialized) {
-      return; // Already initialized
-    }
+    console.log('🔄 Initializing Turn.js flipbook...');
+    console.log('🔄 Flipbook already initialized:', flipbookInitialized);
+    
+    // Always reinitialize to ensure clean state
+    flipbookInitialized = false;
     
     // Check if we're in fullscreen mode
     const isFullscreen = $('.scrapbook-shell').hasClass('fullscreen');
@@ -36,49 +39,186 @@ $(function() {
       height = Math.min(window.innerHeight * 0.8, 1000); // Reduced height to test image scaling
     }
     
-    $book.turn({
-      width: width,
-      height: height,
-      center: true, // Center the flipbook
-      gradients: true,
-      duration: 900,
-      acceleration: true,
-      elevation: 150,
-      display: 'single', // Show only one page at a time
-      when: {
-        turning: function(event, page, view) {
-          console.log('Turning to page:', page);
-        },
-        turned: function(event, page, view) {
-          console.log('Turned to page:', page);
-          updateNavigationButtons(page);
+    console.log(`🔄 Turn.js dimensions: ${width}x${height}`);
+    
+    try {
+      $book.turn({
+        width: width,
+        height: height,
+        center: true, // Center the flipbook
+        gradients: true,
+        duration: 900,
+        acceleration: true,
+        elevation: 150,
+        display: 'single', // Show only one page at a time
+        when: {
+          turning: function(event, page, view) {
+            console.log('Turning to page:', page);
+          },
+          turned: function(event, page, view) {
+            console.log('Turned to page:', page);
+            updateNavigationButtons(page);
+          }
         }
-      }
-    });
+      });
+      
+      // Wait a moment for Turn.js to fully initialize before calling methods
+      setTimeout(() => {
+        try {
+          // Force turn to page 1 to ensure we start from the beginning
+          const totalPages = $book.children().length;
+          console.log(`🔄 Total pages in DOM: ${totalPages}`);
+          console.log('🔄 Forcing turn to page 1');
+          $book.turn('page', 1);
+          
+          // Verify the page count that Turn.js sees
+          const turnPages = $book.turn('pages');
+          console.log(`🔄 Turn.js reports ${turnPages} pages`);
+          
+          // Check current page
+          const currentPage = $book.turn('page');
+          console.log(`🔄 Turn.js current page: ${currentPage}`);
+          
+          // Update navigation buttons
+          updateNavigationButtons(currentPage);
+          
+          console.log('✅ Turn.js initialization complete');
+        } catch (error) {
+          console.log('⚠️ Error accessing Turn.js methods:', error.message);
+        }
+      }, 100);
+      
+      // Add keyboard navigation
+      addKeyboardNavigation();
+      
+      flipbookInitialized = true;
+    } catch (error) {
+      console.error('❌ Error initializing Turn.js:', error.message);
+      flipbookInitialized = false;
+    }
+  }
+  
+  // Initialize Turn.js on specific container
+  function initializeFlipbookOnContainer($container, year) {
+    console.log(`🔄 Initializing Turn.js on container for year ${year}...`);
     
-    // Add keyboard navigation
-    addKeyboardNavigation();
+    // Check if we're in fullscreen mode
+    const isFullscreen = $('.scrapbook-shell').hasClass('fullscreen');
     
-    flipbookInitialized = true;
+    let width, height;
+    if (isFullscreen) {
+      // Slightly smaller dimensions to ensure content fits within viewport
+      width = Math.min(window.innerWidth * 0.95, 2200);
+      height = Math.min(window.innerHeight * 0.90, 1600);
+    } else {
+      // Much larger normal size to prevent any content cutoff
+      width = Math.min(window.innerWidth * 0.9, 1250);
+      height = Math.min(window.innerHeight * 0.8, 1000);
+    }
+    
+    console.log(`🔄 Turn.js dimensions for year ${year}: ${width}x${height}`);
+    
+    try {
+      $container.turn({
+        width: width,
+        height: height,
+        center: true,
+        gradients: true,
+        duration: 900,
+        acceleration: true,
+        elevation: 150,
+        display: 'single',
+        when: {
+          turning: function(event, page, view) {
+            console.log(`Turning to page ${page} in year ${year}`);
+          },
+          turned: function(event, page, view) {
+            console.log(`Turned to page ${page} in year ${year}`);
+            updateNavigationButtonsForContainer($container, page);
+          }
+        }
+      });
+      
+      // Wait a moment for Turn.js to fully initialize
+      setTimeout(() => {
+        try {
+          const totalPages = $container.children().length;
+          console.log(`🔄 Total pages in year ${year} DOM: ${totalPages}`);
+          console.log(`🔄 Forcing turn to page 1 in year ${year}`);
+          $container.turn('page', 1);
+          
+          const turnPages = $container.turn('pages');
+          console.log(`🔄 Year ${year} Turn.js reports ${turnPages} pages`);
+          
+          const currentPage = $container.turn('page');
+          console.log(`🔄 Year ${year} Turn.js current page: ${currentPage}`);
+          
+          updateNavigationButtonsForContainer($container, currentPage);
+          
+          console.log(`✅ Turn.js initialization complete for year ${year}`);
+        } catch (error) {
+          console.log(`⚠️ Error accessing Turn.js methods for year ${year}:`, error.message);
+        }
+      }, 100);
+      
+    } catch (error) {
+      console.error(`❌ Error initializing Turn.js for year ${year}:`, error.message);
+    }
   }
   
   // Update navigation button states
   function updateNavigationButtons(currentPage) {
-    const totalPages = $book.turn("pages");
-    const $prevBtn = $("#prevPage");
-    const $nextBtn = $("#nextPage");
-    
-    // Disable/enable buttons based on current page
-    if (currentPage <= 1) {
-      $prevBtn.prop("disabled", true).addClass("disabled");
-    } else {
-      $prevBtn.prop("disabled", false).removeClass("disabled");
+    if (!flipbookInitialized) {
+      return; // Don't try to access Turn.js if not initialized
     }
     
-    if (currentPage >= totalPages) {
-      $nextBtn.prop("disabled", true).addClass("disabled");
-    } else {
-      $nextBtn.prop("disabled", false).removeClass("disabled");
+    try {
+      const totalPages = $book.turn("pages");
+      const $prevBtn = $("#prevPage");
+      const $nextBtn = $("#nextPage");
+      
+      // Disable/enable buttons based on current page
+      if (currentPage <= 1) {
+        $prevBtn.prop("disabled", true).addClass("disabled");
+      } else {
+        $prevBtn.prop("disabled", false).removeClass("disabled");
+      }
+      
+      if (currentPage >= totalPages) {
+        $nextBtn.prop("disabled", true).addClass("disabled");
+      } else {
+        $nextBtn.prop("disabled", false).removeClass("disabled");
+      }
+    } catch (error) {
+      console.log('⚠️ Error updating navigation buttons:', error.message);
+    }
+  }
+  
+  // Update navigation button states for specific container
+  function updateNavigationButtonsForContainer($container, currentPage) {
+    if (!flipbookInitialized) {
+      return; // Don't try to access Turn.js if not initialized
+    }
+    
+    try {
+      const totalPages = $container.turn("pages");
+      const $prevBtn = $("#prevPage");
+      const $nextBtn = $("#nextPage");
+      
+      // Disable/enable buttons based on current page
+      if (currentPage <= 1) {
+        $prevBtn.prop("disabled", true).addClass("disabled");
+      } else {
+        $prevBtn.prop("disabled", false).removeClass("disabled");
+      }
+      
+      if (currentPage >= totalPages) {
+        $nextBtn.prop("disabled", true).addClass("disabled");
+      } else {
+        $nextBtn.prop("disabled", false).removeClass("disabled");
+      }
+    } catch (error) {
+      console.log('⚠️ Error updating navigation buttons for container:', error.message);
     }
   }
 
@@ -167,22 +307,26 @@ $(function() {
         return;
       }
       
-      const currentPage = $book.turn('page');
-      const totalPages = $book.turn('pages');
-      
-      switch(e.keyCode) {
-        case 37: // Left arrow key
-          e.preventDefault();
-          if (currentPage > 1) {
-            $book.turn('previous');
-          }
-          break;
-        case 39: // Right arrow key
-          e.preventDefault();
-          if (currentPage < totalPages) {
-            $book.turn('next');
-          }
-          break;
+      try {
+        const currentPage = $book.turn('page');
+        const totalPages = $book.turn('pages');
+        
+        switch(e.keyCode) {
+          case 37: // Left arrow key
+            e.preventDefault();
+            if (currentPage > 1) {
+              $book.turn('previous');
+            }
+            break;
+          case 39: // Right arrow key
+            e.preventDefault();
+            if (currentPage < totalPages) {
+              $book.turn('next');
+            }
+            break;
+        }
+      } catch (error) {
+        console.log('⚠️ Error in keyboard navigation:', error.message);
       }
     });
   }
@@ -225,6 +369,10 @@ $(function() {
   
   // Select a year and load journal data
   function selectYear(year) {
+    console.log(`📅 Switching to year: ${year}`);
+    console.log(`📅 Previous year was: ${currentYear}`);
+    console.log(`📅 Flipbook initialized: ${flipbookInitialized}`);
+    
     currentYear = year;
     
     // Update active year button
@@ -260,24 +408,80 @@ $(function() {
       });
   }
   
+  // Restore flipbook content for a specific year
+  function restoreFlipbookContent(year) {
+    console.log('🔄 Restoring flipbook content for year:', year);
+    
+    // Destroy current Turn.js instance if it exists
+    if (flipbookInitialized) {
+      try {
+        $book.turn('destroy');
+        flipbookInitialized = false;
+      } catch (error) {
+        console.log('⚠️ Error destroying flipbook:', error.message);
+      }
+    }
+    
+    // Restore the content
+    $book.html(flipbookInstances[year].content);
+    
+    // Reinitialize Turn.js
+    initializeFlipbook();
+    
+    console.log('✅ Flipbook content restored for year:', year);
+  }
+  
   // Generate flipbook pages from journal data
   function generateFlipbookPages() {
-    $book.empty();
+    console.log('🔄 Generating flipbook pages for year:', currentYear);
+    console.log('🔄 Journal data:', journalData);
+    
+    // Check if we already have an instance for this year
+    if (flipbookInstances[currentYear]) {
+      console.log('📚 Using existing flipbook instance for year:', currentYear);
+      // Restore the content for this year
+      restoreFlipbookContent(currentYear);
+      $toolbar.show();
+      flipbookInitialized = true;
+      return;
+    }
+    
+    console.log('📚 Creating new flipbook instance for year:', currentYear);
+    
+    // Clear the main book element
+    $book.empty().removeClass().addClass('flipbook').removeAttr('style');
     
     // Add cover page
     addCoverPage();
     
     // Add content pages with proper distribution
     if (journalData.journal_sections) {
-      journalData.journal_sections.forEach(section => {
+      console.log('📖 Processing', journalData.journal_sections.length, 'journal sections');
+      journalData.journal_sections.forEach((section, index) => {
+        console.log(`📖 Processing section ${index + 1}:`, section.title);
         addContentPagesWithDistribution(section);
       });
     }
     
-    // Show flipbook and toolbar, then initialize turn.js
-    $book.show();
-    $toolbar.show();
+    const totalPages = $book.children().length;
+    console.log(`📄 Total pages created for ${currentYear}: ${totalPages}`);
+    console.log('📄 Page elements:', $book.children().map((i, el) => el.className).get());
+    
+    // Store the content for this year
+    flipbookInstances[currentYear] = {
+      content: $book.html(),
+      initialized: false
+    };
+    
+    // Initialize Turn.js on the main book element
     initializeFlipbook();
+    
+    // Mark as initialized
+    flipbookInstances[currentYear].initialized = true;
+    
+    // Show the toolbar
+    $toolbar.show();
+    flipbookInitialized = true;
   }
   
   // Add content pages with proper distribution logic
@@ -303,6 +507,89 @@ $(function() {
       };
       addContentPage(pageSection, pageContent);
     });
+    
+    // Ensure we have at least 2 content pages for Turn.js to work properly
+    // Turn.js needs a minimum number of pages to function correctly
+    if (pages.length === 1) {
+      console.log('📖 Adding empty page to ensure Turn.js compatibility');
+      addContentPage({
+        ...section,
+        title: `${section.title} (continued)`,
+        content_items: []
+      }, []);
+    }
+  }
+  
+  // Add content pages with proper distribution logic to specific container
+  function addContentPagesWithDistributionToContainer($container, section) {
+    console.log('📖 Adding content pages for section to container:', section.title);
+    
+    const PAGE_HEIGHT = 820; // Fixed page height
+    const contentItems = section.content_items || [];
+    
+    if (contentItems.length === 0) {
+      addContentPageToContainer($container, section, []);
+      return;
+    }
+    
+    // Distribute content across pages
+    const pages = distributeContentAcrossPages(contentItems, PAGE_HEIGHT);
+    
+    pages.forEach((pageContent, index) => {
+      const pageSection = {
+        ...section,
+        title: index === 0 ? section.title : `${section.title} (continued)`,
+        content_items: pageContent
+      };
+      addContentPageToContainer($container, pageSection, pageContent);
+    });
+    
+    // Ensure we have at least 2 content pages for Turn.js to work properly
+    // Turn.js needs a minimum number of pages to function correctly
+    if (pages.length === 1) {
+      console.log('📖 Adding empty page to ensure Turn.js compatibility');
+      addContentPageToContainer($container, {
+        ...section,
+        title: `${section.title} (continued)`,
+        content_items: []
+      }, []);
+    }
+  }
+  
+  // Add content pages with proper distribution logic to specific element
+  function addContentPagesWithDistributionToElement($element, section) {
+    console.log('📖 Adding content pages for section to element:', section.title);
+    
+    const PAGE_HEIGHT = 820; // Fixed page height
+    const contentItems = section.content_items || [];
+    
+    if (contentItems.length === 0) {
+      addContentPageToElement($element, section, []);
+      return;
+    }
+    
+    // Distribute content across pages
+    const pages = distributeContentAcrossPages(contentItems, PAGE_HEIGHT);
+    
+    pages.forEach((pageContent, index) => {
+      const pageSection = {
+        ...section,
+        title: index === 0 ? section.title : `${section.title} (continued)`,
+        content_items: pageContent
+      };
+      addContentPageToElement($element, pageSection, pageContent);
+    });
+    
+    // Ensure we have at least 2 content pages for Turn.js to work properly
+    // Turn.js needs a minimum number of pages to function correctly
+    if (pages.length === 1) {
+      console.log('📖 Adding empty page to ensure Turn.js compatibility');
+      addContentPageToElement($element, {
+        ...section,
+        title: `${section.title} (continued)`,
+        content_items: []
+      }, []);
+    }
   }
   
   // Distribute content across pages based on height constraints
@@ -371,6 +658,7 @@ $(function() {
   
   // Add cover page
   function addCoverPage() {
+    console.log('📄 Adding cover page');
     const coverHtml = `
       <section class="page cover">
         <div class="page-inner">
@@ -383,11 +671,53 @@ $(function() {
       </section>
     `;
     $book.append(coverHtml);
+    console.log('📄 Cover page added');
+  }
+  
+  // Add cover page to specific container
+  function addCoverPageToContainer($container) {
+    console.log('📄 Adding cover page to container');
+    const coverHtml = `
+      <section class="page cover">
+        <div class="page-inner">
+          <div class="page-content">
+            <h1 class="cover-title">🦃 Maguire Family Thanksgiving</h1>
+            <p class="cover-subtitle">Our treasured memories in one book</p>
+            <div class="cover-decoration">❦</div>
+          </div>
+        </div>
+      </section>
+    `;
+    $container.append(coverHtml);
+    console.log('📄 Cover page added to container');
+  }
+  
+  // Add cover page to specific element
+  function addCoverPageToElement($element) {
+    console.log('📄 Adding cover page to element');
+    const coverHtml = `
+      <section class="page cover">
+        <div class="page-inner">
+          <div class="page-content">
+            <h1 class="cover-title">🦃 Maguire Family Thanksgiving</h1>
+            <p class="cover-subtitle">Our treasured memories in one book</p>
+            <div class="cover-decoration">❦</div>
+          </div>
+        </div>
+      </section>
+    `;
+    $element.append(coverHtml);
+    console.log('📄 Cover page added to element');
   }
   
   // Add content page
   function addContentPage(section, contentItems = null) {
     const items = contentItems || section.content_items || [];
+    const currentPageCount = $book.children().length;
+    console.log(`📄 Adding page ${currentPageCount + 1} for section: ${section.title}`);
+    console.log(`📄 Page will contain ${items.length} content items`);
+    console.log(`📄 Content items:`, items.map(item => ({ type: item.content_type, id: item.content_item_id })));
+    
     const pageHtml = `
       <section class="page">
         <div class="page-inner">
@@ -398,6 +728,58 @@ $(function() {
       </section>
     `;
     $book.append(pageHtml);
+    
+    const newPageCount = $book.children().length;
+    console.log(`📄 Page ${newPageCount} added successfully`);
+    console.log(`📄 Current total pages: ${newPageCount}`);
+  }
+  
+  // Add content page to specific container
+  function addContentPageToContainer($container, section, contentItems = null) {
+    const items = contentItems || section.content_items || [];
+    const currentPageCount = $container.children().length;
+    console.log(`📄 Adding page ${currentPageCount + 1} for section to container: ${section.title}`);
+    console.log(`📄 Page will contain ${items.length} content items`);
+    console.log(`📄 Content items:`, items.map(item => ({ type: item.content_type, id: item.content_item_id })));
+    
+    const pageHtml = `
+      <section class="page">
+        <div class="page-inner">
+          <div class="page-content">
+            ${generateContentHtml(items)}
+          </div>
+        </div>
+      </section>
+    `;
+    $container.append(pageHtml);
+    
+    const newPageCount = $container.children().length;
+    console.log(`📄 Page ${newPageCount} added successfully to container`);
+    console.log(`📄 Current total pages: ${newPageCount}`);
+  }
+  
+  // Add content page to specific element
+  function addContentPageToElement($element, section, contentItems = null) {
+    const items = contentItems || section.content_items || [];
+    const currentPageCount = $element.children().length;
+    console.log(`📄 Adding page ${currentPageCount + 1} for section to element: ${section.title}`);
+    console.log(`📄 Page will contain ${items.length} content items`);
+    console.log(`📄 Content items:`, items.map(item => ({ type: item.content_type, id: item.content_item_id })));
+    
+    const pageHtml = `
+      <section class="page">
+        <div class="page-inner">
+          <div class="page-content">
+            ${generateContentHtml(items)}
+          </div>
+        </div>
+      </section>
+    `;
+    $element.append(pageHtml);
+    
+    const newPageCount = $element.children().length;
+    console.log(`📄 Page ${newPageCount} added successfully to element`);
+    console.log(`📄 Current total pages: ${newPageCount}`);
   }
   
   // Generate content HTML for a section
@@ -534,14 +916,22 @@ $(function() {
   
   // Navigation button event handlers
   $("#prevPage").click(() => {
-    if (!$("#prevPage").prop("disabled")) {
-      $book.turn("previous");
+    if (!$("#prevPage").prop("disabled") && flipbookInitialized) {
+      try {
+        $book.turn("previous");
+      } catch (error) {
+        console.log('⚠️ Error turning to previous page:', error.message);
+      }
     }
   });
   
   $("#nextPage").click(() => {
-    if (!$("#nextPage").prop("disabled")) {
-      $book.turn("next");
+    if (!$("#nextPage").prop("disabled") && flipbookInitialized) {
+      try {
+        $book.turn("next");
+      } catch (error) {
+        console.log('⚠️ Error turning to next page:', error.message);
+      }
     }
   });
 
@@ -581,22 +971,26 @@ $(function() {
   
   // Handle window resize
   $(window).on("resize", function() {
-    if ($book.turn("pages")) {
-      // Check if we're in fullscreen mode
-      const isFullscreen = $('.scrapbook-shell').hasClass('fullscreen');
-      
-      let width, height;
-      if (isFullscreen) {
-        // Slightly smaller dimensions to ensure content fits within viewport
-        width = Math.min(window.innerWidth * 0.95, 2200);
-        height = Math.min(window.innerHeight * 0.90, 1600);
-      } else {
-        // Much larger normal size to prevent any content cutoff
-        width = Math.min(window.innerWidth * 0.9, 1250);
-        height = Math.min(window.innerHeight * 0.8, 1000); // Reduced height to test image scaling
+    if (flipbookInitialized) {
+      try {
+        // Check if we're in fullscreen mode
+        const isFullscreen = $('.scrapbook-shell').hasClass('fullscreen');
+        
+        let width, height;
+        if (isFullscreen) {
+          // Slightly smaller dimensions to ensure content fits within viewport
+          width = Math.min(window.innerWidth * 0.95, 2200);
+          height = Math.min(window.innerHeight * 0.90, 1600);
+        } else {
+          // Much larger normal size to prevent any content cutoff
+          width = Math.min(window.innerWidth * 0.9, 1250);
+          height = Math.min(window.innerHeight * 0.8, 1000); // Reduced height to test image scaling
+        }
+        
+        $book.turn("size", width, height);
+      } catch (error) {
+        console.log('⚠️ Error resizing flipbook:', error.message);
       }
-      
-      $book.turn("size", width, height);
     }
   });
   

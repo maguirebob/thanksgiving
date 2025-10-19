@@ -1,0 +1,53 @@
+body {
+  margin: 0;
+  padding: 20px;
+  background: #f0f0f0;
+  display: flex;
+  justify-content: center;
+}
+
+.flipbook {
+  width: 800px;
+  height: 600px;
+}
+
+.page {
+  width: 400px;
+  height: 600px;
+  background: white;
+  border: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.cover {
+  background: #8B4513;
+  color: white;
+}
+
+.menu-page img {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 10px;
+  width: 90%;
+  height: 90%;
+  padding: 20px;
+}
+
+.photo-grid img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  aspect-ratio: 1/1;
+  border-radius: 5px;
+}
