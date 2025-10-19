@@ -1,0 +1,405 @@
+/* Page Templates CSS - Different Page Layout Styles */
+
+/* Base Page Styles */
+.page {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-inner {
+  width: 90%;
+  height: 90%;
+  padding: 20px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+}
+
+.page-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Front Cover Styles */
+.front-cover {
+  background: linear-gradient(135deg, #8B4513 0%, #A0522D 25%, #8B4513 50%, #654321 75%, #8B4513 100%);
+}
+
+.front-cover .cover-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.front-cover .cover-title {
+  font-size: 3em;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.front-cover .cover-year {
+  font-size: 2em;
+  margin-bottom: 20px;
+}
+
+.front-cover .cover-subtitle {
+  font-size: 1.2em;
+  color: #8B4513;
+  margin-bottom: 20px;
+  font-style: italic;
+}
+
+/* Back Cover Styles */
+.back-cover {
+  background: linear-gradient(135deg, #8B4513 0%, #A0522D 25%, #8B4513 50%, #654321 75%, #8B4513 100%);
+}
+
+.back-cover .cover-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.back-cover .cover-title {
+  font-size: 2.5em;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.back-cover .cover-year {
+  font-size: 1.8em;
+  margin-bottom: 20px;
+}
+
+/* Title/Section Header Page Styles */
+.title-page .page-content {
+  justify-content: center;
+}
+
+.title-page .section-title {
+  font-size: 2.5em;
+  margin-bottom: 30px;
+  line-height: 1.2;
+}
+
+.title-page .section-subtitle {
+  font-size: 1.3em;
+  color: #8B4513;
+  margin-bottom: 20px;
+  font-style: italic;
+}
+
+/* Text Paragraph Page Styles */
+.text-page .page-content {
+  justify-content: center;
+  text-align: left;
+  padding: 40px;
+}
+
+.text-page .text-paragraph {
+  font-size: 1.1em;
+  line-height: 1.8;
+  color: #333;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Menu Page Styles */
+.menu-page .page-content {
+  justify-content: center;
+}
+
+.menu-page .page-title {
+  font-size: 2em;
+  margin-bottom: 30px;
+  color: #8B4513;
+}
+
+.menu-item-centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 500px;
+}
+
+.menu-item-centered .menu-image-centered {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  margin-bottom: 20px;
+}
+
+.menu-item-centered .item-name {
+  font-size: 1.5em;
+  margin-bottom: 10px;
+  color: #8B4513;
+}
+
+.menu-item-centered .item-description {
+  font-size: 1em;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* Photo Grid Page Styles */
+.photo-page .page-content {
+  justify-content: flex-start;
+  padding-top: 20px;
+}
+
+.photo-page .page-title {
+  font-size: 1.8em;
+  margin-bottom: 20px;
+  color: #8B4513;
+}
+
+.photo-grid-6 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 15px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.photo-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.photo-item .grid-photo {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.photo-item .photo-caption {
+  font-size: 0.9em;
+  color: #666;
+  margin-top: 8px;
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* Page Photo Styles */
+.page-photo-page .page-content {
+  justify-content: center;
+}
+
+.page-photo-page .page-title {
+  font-size: 1.8em;
+  margin-bottom: 20px;
+  color: #8B4513;
+}
+
+.page-photo-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 500px;
+}
+
+.page-photo-content .page-photo-image {
+  width: 100%;
+  max-width: 450px;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  margin-bottom: 15px;
+}
+
+.page-photo-content .photo-caption {
+  font-size: 1em;
+  color: #666;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Journal Page Styles */
+.journal-with-image .page-content {
+  justify-content: flex-start;
+  text-align: left;
+  padding: 30px;
+}
+
+.journal-with-image .page-title {
+  font-size: 1.8em;
+  margin-bottom: 20px;
+  color: #8B4513;
+  text-align: center;
+}
+
+.journal-layout {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 600px;
+}
+
+.journal-text {
+  margin-bottom: 20px;
+}
+
+.journal-text p {
+  font-size: 1.1em;
+  line-height: 1.7;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.journal-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+}
+
+.journal-image {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 250px;
+}
+
+.journal-image .content-image {
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 8px;
+}
+
+.journal-image .image-caption {
+  font-size: 0.9em;
+  color: #666;
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* Journal Text-Only Styles */
+.journal-text-only .page-content {
+  justify-content: center;
+  text-align: left;
+  padding: 40px;
+}
+
+.journal-text-only .page-title {
+  font-size: 2em;
+  margin-bottom: 30px;
+  color: #8B4513;
+  text-align: center;
+}
+
+.journal-text-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.journal-text-content .journal-text {
+  font-size: 1.1em;
+  line-height: 1.8;
+  color: #333;
+}
+
+/* Empty Page Styles */
+.empty-page {
+  background: #F4E4BC;
+  background-image: 
+    linear-gradient(90deg, transparent 98%, rgba(139, 69, 19, 0.1) 100%),
+    linear-gradient(0deg, transparent 98%, rgba(139, 69, 19, 0.1) 100%);
+  background-size: 20px 20px;
+  position: relative;
+  box-shadow: 
+    inset 0 0 20px rgba(139, 69, 19, 0.1),
+    0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.empty-page .page-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  opacity: 0.3;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .page-inner {
+    width: 95%;
+    height: 95%;
+    padding: 15px;
+  }
+  
+  .front-cover .cover-title {
+    font-size: 2em;
+  }
+  
+  .front-cover .cover-year {
+    font-size: 1.5em;
+  }
+  
+  .title-page .section-title {
+    font-size: 2em;
+  }
+  
+  .photo-grid-6 {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 10px;
+  }
+  
+  .photo-item .grid-photo {
+    height: 100px;
+  }
+  
+  .journal-layout {
+    padding: 20px;
+  }
+  
+  .journal-images {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .journal-image {
+    max-width: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .photo-grid-6 {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(6, 1fr);
+  }
+  
+  .photo-item .grid-photo {
+    height: 120px;
+  }
+  
+  .front-cover .cover-title {
+    font-size: 1.5em;
+  }
+  
+  .title-page .section-title {
+    font-size: 1.5em;
+  }
+}

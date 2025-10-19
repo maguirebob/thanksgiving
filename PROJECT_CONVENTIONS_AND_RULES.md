@@ -48,6 +48,8 @@ npm run version:patch "Short description" "Detailed explanation" "Additional con
 2. **Include descriptive commit messages** with the version bump
 3. **Update hardcoded version strings** in code when versioning
 4. **Use the versioning script** - never manually edit version numbers
+5. **Update schema definitions** - Always add schema definition for new versions in `src/lib/schemaVersions.ts`
+6. **Document database changes** - Include all new tables, columns, and migrations in schema definition
 
 ## Code Quality and Standards
 
@@ -84,6 +86,13 @@ npm run version:patch "Short description" "Detailed explanation" "Additional con
 - **Validate migration safety** before production deployment
 - **Backup before migrations** in production environments
 - **Order operations carefully** - rename columns before updating constraints
+
+### Data Integrity Rules
+- **NO MANUAL DATABASE MANIPULATION** - Never manually insert/update/delete records unless explicitly requested by user
+- **Debug the root cause** - If records are missing, debug why the application didn't create them properly
+- **Fix the code, not the data** - Always fix the underlying code issue rather than manually patching data
+- **Use proper error handling** - Ensure all database operations have proper error handling and logging
+- **Validate before operations** - Always validate data before database operations
 
 ### Migration Safety Checklist
 1. **Backup database** before any migration
@@ -180,6 +189,22 @@ gh project item-add --owner USERNAME --number PROJECT_NUMBER --content-id ISSUE_
 5. **Review logs** for detailed error information
 6. **Test with minimal reproduction** cases
 7. **Fix in dev first** before applying to other environments
+
+### AI Assistant Debugging Rules
+**CRITICAL: When the user points to a specific problem, follow these rules:**
+
+1. **Start exactly where the user points** - Look at the specific file/component mentioned first
+2. **Follow the complete data flow** - Trace the path from user action to error display, don't assume the problem is where it seems
+3. **Trust user evidence** - If user says something works (like "2013 generation works"), believe it and look elsewhere
+4. **Ask clarifying questions** - "Where exactly do you see the error?" instead of assuming
+5. **Don't overcomplicate** - If user says "the error doesn't display", look at the display layer, not the data layer
+6. **Listen to user guidance** - When user says "look at X", start there, don't spin on unrelated issues
+
+**Common mistakes to avoid:**
+- Fixing server-side code when the problem is frontend error handling
+- Spending time on database issues when the user says the data exists
+- Creating test cases for APIs that are already working
+- Ignoring user evidence that narrows down the problem scope
 
 ### Common Issue Patterns
 - **Authentication issues** - check session configuration and middleware

@@ -79,8 +79,22 @@ class JournalViewer {
     
     async selectYear(year) {
         console.log(`📅 Selected year: ${year}`);
+        console.log(`📅 Previous year was: ${this.currentYear}`);
+        console.log(`📅 Previous page count: ${this.pages ? this.pages.length : 'null'}`);
+        
         this.currentYear = year;
         this.currentPageIndex = 0;
+        
+        // Clear existing content immediately to prevent display issues
+        const journalContent = document.getElementById('journalContent');
+        console.log(`🧹 Clearing journal content DOM`);
+        journalContent.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Loading journal...</p></div>';
+        
+        // Reset all state
+        this.journalData = null;
+        this.pages = [];
+        
+        console.log(`🔄 State reset complete - pages: ${this.pages.length}, journalData: ${this.journalData}`);
         
         // Update active year button
         document.querySelectorAll('.year-btn').forEach(btn => {
@@ -114,6 +128,8 @@ class JournalViewer {
     
     generatePages() {
         console.log('📄 Generating pages from journal data...');
+        console.log(`📄 Current year: ${this.currentYear}`);
+        console.log(`📄 Journal data:`, this.journalData);
         this.pages = [];
         
         if (!this.journalData || !this.journalData.journal_sections || this.journalData.journal_sections.length === 0) {
@@ -123,6 +139,7 @@ class JournalViewer {
         
         // Create cover page
         this.pages.push(this.createCoverPage());
+        console.log(`📄 Created cover page for year ${this.currentYear}`);
         
         // Process all content items from all sections
         const allContentItems = [];
@@ -132,10 +149,13 @@ class JournalViewer {
             }
         });
         
+        console.log(`📄 Found ${allContentItems.length} content items to distribute`);
+        
         // Distribute content across pages
         this.distributeContentAcrossPages(allContentItems);
         
-        console.log(`✅ Generated ${this.pages.length} pages`);
+        console.log(`✅ Generated ${this.pages.length} pages for year ${this.currentYear}`);
+        console.log(`📄 Pages:`, this.pages.map(p => ({ type: p.type, pageNumber: p.pageNumber, contentLength: p.content ? p.content.length : 0 })));
     }
     
     createCoverPage() {
@@ -342,9 +362,16 @@ class JournalViewer {
     }
     
     renderCurrentPage() {
+        console.log(`🎨 Rendering current page...`);
+        console.log(`🎨 Current page index: ${this.currentPageIndex}`);
+        console.log(`🎨 Total pages: ${this.pages ? this.pages.length : 'null'}`);
+        console.log(`🎨 Current year: ${this.currentYear}`);
+        
         const journalContent = document.getElementById('journalContent');
         
-        if (this.pages.length === 0) {
+        // Ensure we have valid state
+        if (!this.pages || this.pages.length === 0) {
+            console.log('⚠️ No pages to render');
             journalContent.innerHTML = `
                 <div class="no-content">
                     <i class="fas fa-book-open fa-3x mb-3" style="color: var(--scrapbook-text-light);"></i>
@@ -355,11 +382,19 @@ class JournalViewer {
             return;
         }
         
+        // Ensure currentPageIndex is within bounds
+        if (this.currentPageIndex < 0 || this.currentPageIndex >= this.pages.length) {
+            console.warn(`⚠️ Page index ${this.currentPageIndex} out of bounds, resetting to 0`);
+            this.currentPageIndex = 0;
+        }
+        
         const currentPage = this.pages[this.currentPageIndex];
         if (!currentPage) {
             console.error('❌ Current page not found');
             return;
         }
+        
+        console.log(`🎨 Rendering page ${currentPage.pageNumber} of type ${currentPage.type}`);
         
         // Generate page HTML
         const pageHtml = this.generatePageHtml(currentPage);
@@ -367,12 +402,16 @@ class JournalViewer {
         // Generate navigation
         const navigationHtml = this.generatePageNavigation();
         
+        console.log(`🎨 Generated HTML for page ${currentPage.pageNumber}`);
+        
         journalContent.innerHTML = `
             <div class="scrapbook-page-container">
                 ${pageHtml}
                 ${navigationHtml}
             </div>
         `;
+        
+        console.log(`🎨 Page ${currentPage.pageNumber} rendered successfully`);
     }
     
     generatePageHtml(page) {
