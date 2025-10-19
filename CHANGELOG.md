@@ -2,6 +2,10 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [3.0.1] - 2025-10-19
+
+- Fix TypeScript errors in scrapbookRoutes
+- Resolved TS7030 errors by adding explicit return statements to all route handlers and fixing unused parameter warnings
 ## [2.13.32] - 2025-10-19
 
 - Scrapbook system improvements
