@@ -181,6 +181,22 @@ gh project item-add --owner USERNAME --number PROJECT_NUMBER --content-id ISSUE_
 6. **Test with minimal reproduction** cases
 7. **Fix in dev first** before applying to other environments
 
+### AI Assistant Debugging Rules
+**CRITICAL: When the user points to a specific problem, follow these rules:**
+
+1. **Start exactly where the user points** - Look at the specific file/component mentioned first
+2. **Follow the complete data flow** - Trace the path from user action to error display, don't assume the problem is where it seems
+3. **Trust user evidence** - If user says something works (like "2013 generation works"), believe it and look elsewhere
+4. **Ask clarifying questions** - "Where exactly do you see the error?" instead of assuming
+5. **Don't overcomplicate** - If user says "the error doesn't display", look at the display layer, not the data layer
+6. **Listen to user guidance** - When user says "look at X", start there, don't spin on unrelated issues
+
+**Common mistakes to avoid:**
+- Fixing server-side code when the problem is frontend error handling
+- Spending time on database issues when the user says the data exists
+- Creating test cases for APIs that are already working
+- Ignoring user evidence that narrows down the problem scope
+
 ### Common Issue Patterns
 - **Authentication issues** - check session configuration and middleware
 - **Database issues** - verify migrations and schema consistency

@@ -51,6 +51,7 @@ class JournalEditor {
         document.getElementById('saveBtn')?.addEventListener('click', () => this.saveDraft());
         document.getElementById('publishBtn')?.addEventListener('click', () => this.publishSection());
         document.getElementById('previewBtn')?.addEventListener('click', () => this.showPreview());
+        document.getElementById('generateScrapbookBtn')?.addEventListener('click', () => this.generateScrapbook());
         
         // Section title/description changes
         document.getElementById('sectionTitle')?.addEventListener('input', () => this.markDirty());
@@ -436,7 +437,7 @@ class JournalEditor {
         if (contentItemId < 0) {
             // Remove from local content items array
             this.contentItems = this.contentItems.filter(item => item.content_item_id !== contentItemId);
-            this.renderContentLayout();
+            this.renderContentItems();
             this.markDirty();
             return;
         }
@@ -456,7 +457,7 @@ class JournalEditor {
             if (result.success) {
                 // Remove from local content items array
                 this.contentItems = this.contentItems.filter(item => item.content_item_id !== contentItemId);
-                this.renderContentLayout();
+                this.renderContentItems();
                 this.markDirty();
             } else {
                 alert('Failed to delete content item: ' + result.message);
@@ -742,6 +743,65 @@ class JournalEditor {
         } catch (error) {
             console.error('Error publishing section:', error);
             alert('Error publishing section: ' + error.message);
+        }
+    }
+
+    async generateScrapbook() {
+        if (!this.currentYear) {
+            alert('Please select a year first');
+            return;
+        }
+
+        if (!this.currentSectionId) {
+            alert('Please select a section first');
+            return;
+        }
+
+        try {
+            // First save any pending changes
+            await this.saveDraft();
+            
+            // Convert journal content to scrapbook content
+            const response = await fetch(`/api/scrapbook/convert-from-journal/${this.currentYear}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            const convertResult = await response.json();
+            
+            if (!response.ok || !convertResult.success) {
+                // Display the actual error message from the server
+                alert(convertResult.message || 'Failed to convert journal content');
+                return;
+            }
+
+            // Generate the scrapbook HTML
+            const generateResponse = await fetch(`/api/scrapbook/generate/${this.currentYear}`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+
+            const generateResult = await generateResponse.json();
+            
+            if (!generateResponse.ok || !generateResult.success) {
+                // Display the actual error message from the server
+                alert(generateResult.message || 'Failed to generate scrapbook');
+                return;
+            }
+
+            alert(`Scrapbook generated successfully!\n\nYou can view it at: ${generateResult.url}`);
+            
+            // Optionally open the scrapbook in a new tab
+            if (confirm('Would you like to open the scrapbook now?')) {
+                window.open(generateResult.url, '_blank');
+            }
+            
+        } catch (error) {
+            console.error('Error generating scrapbook:', error);
+            alert('Error generating scrapbook: ' + error.message);
         }
     }
 
