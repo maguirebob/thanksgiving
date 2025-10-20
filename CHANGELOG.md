@@ -2,6 +2,21 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [3.1.14] - 2025-10-20
+
+### Fixed
+- **Scrapbook Blog Layout**: Fixed blog page generation to display titles and content at the top of pages instead of alongside images
+- **Individual Blog Pages**: Each blog now gets separate pages instead of being grouped together on a single page
+- **Image Distribution**: Images are properly distributed across pages with maximum 2 images per page
+- **CSS Styling**: Added proper journal page styling with flexbox layout for vertical content arrangement
+
+### Technical Details
+- Updated `createBlogPages` method to process each blog individually
+- Added `journal-page` CSS class with `flex-direction: column` for proper layout
+- Enhanced `generateJournalPage` method to include blog titles and content at the top
+- Updated scrapbook template with proper CSS styling for blog headers and content
+- Improved HTML structure with `blog-header` div containing title and content above images
+
 ## [3.1.6] - 2025-10-20
 
 - fix: Suppress MemoryStore warning in production for Railway deployment

@@ -171,9 +171,8 @@ export class ScrapbookHtmlGenerator {
       }
     });
 
-    // Group photos for 6-photo grids and blog items for single page
+    // Group photos for 6-photo grids
     const photoItems: ScrapbookContentItem[] = [];
-    const blogItems: ScrapbookContentItem[] = [];
     
     // Process content items and create pages
     for (const item of items) {
@@ -193,8 +192,9 @@ export class ScrapbookHtmlGenerator {
           photoItems.length = 0; // Clear the array
         }
       } else if (item.content_type === 'blog') {
-        // Handle blog items specially - group them into a single page
-        blogItems.push(item);
+        // Handle each blog item individually - create separate pages
+        const blogPages = await this.createBlogPages(item);
+        pages.push(...blogPages);
       } else {
         // For non-photo, non-blog items, create page normally
         const page = await this.createPageFromContent(item);
@@ -213,12 +213,6 @@ export class ScrapbookHtmlGenerator {
     if (photoItems.length > 0) {
       const photoPage = await this.createPhotoGridPage(photoItems);
       pages.push(photoPage);
-    }
-
-    // Handle blog items - create a single journal page
-    if (blogItems.length > 0) {
-      const journalPage = await this.createJournalPage(blogItems);
-      pages.push(journalPage);
     }
 
     // Add back cover
@@ -258,30 +252,88 @@ export class ScrapbookHtmlGenerator {
   }
 
   /**
-   * Create a journal page from multiple blog items
+   * Create multiple pages for a single blog entry, distributing images across pages
    */
-  private async createJournalPage(blogItems: ScrapbookContentItem[]): Promise<ScrapbookPage> {
-    const allBlogImages: { imageUrl: string; caption: string }[] = [];
+  private async createBlogPages(blogItem: ScrapbookContentItem): Promise<ScrapbookPage[]> {
+    const pages: ScrapbookPage[] = [];
     
-    // Process each blog item to get all its images
-    for (const item of blogItems) {
-      const blogImages = await this.getBlogImages(item.content_reference);
-      blogImages.forEach(imageUrl => {
-        allBlogImages.push({
-          imageUrl: imageUrl,
-          caption: 'Journal Entry'
-        });
+    // Get blog data from database
+    const blogId = parseInt(blogItem.content_reference.replace('blog_', ''));
+    const blog = await prisma.blogPost.findUnique({
+      where: { blog_post_id: blogId },
+      select: { 
+        title: true, 
+        content: true, 
+        featured_image: true, 
+        images: true 
+      }
+    });
+
+    if (!blog) {
+      console.error(`Blog with ID ${blogId} not found`);
+      return [];
+    }
+
+    // Get all images for this blog
+    const allImages: string[] = [];
+    
+    // Add featured image if it exists
+    if (blog.featured_image) {
+      const featuredFilename = blog.featured_image
+        .replace('/api/blog-images/', '')
+        .replace('/preview', '');
+      allImages.push(featuredFilename);
+    }
+    
+    // Add all images from the images array
+    if (blog.images && Array.isArray(blog.images)) {
+      blog.images.forEach(imagePath => {
+        const imageFilename = imagePath
+          .replace('/api/blog-images/', '')
+          .replace('/preview', '');
+        allImages.push(imageFilename);
       });
     }
 
-    return {
-      id: `journal-page-${blogItems[0]?.id || 'unknown'}`,
+    // Create first page with title, content, and up to 2 images
+    const firstPageImages = allImages.slice(0, 2);
+    const remainingImages = allImages.slice(2);
+
+    pages.push({
+      id: `blog-${blogId}-page-1`,
       type: 'journal-page',
       content: {
-        title: 'Thanksgiving Memories',
-        blogImages: allBlogImages
+        title: blog.title,
+        content: blog.content,
+        blogImages: firstPageImages.map(imageUrl => ({
+          imageUrl: imageUrl,
+          caption: 'Journal Entry'
+        }))
       }
-    };
+    });
+
+    // Create additional pages for remaining images (2 per page)
+    let pageNumber = 2;
+    for (let i = 0; i < remainingImages.length; i += 2) {
+      const pageImages = remainingImages.slice(i, i + 2);
+      
+      pages.push({
+        id: `blog-${blogId}-page-${pageNumber}`,
+        type: 'journal-page',
+        content: {
+          title: `${blog.title} (continued)`,
+          content: '', // No content on continuation pages
+          blogImages: pageImages.map(imageUrl => ({
+            imageUrl: imageUrl,
+            caption: 'Journal Entry'
+          }))
+        }
+      });
+      pageNumber++;
+    }
+
+    console.log(`📝 Created ${pages.length} pages for blog "${blog.title}" with ${allImages.length} images`);
+    return pages;
   }
 
   /**
@@ -521,14 +573,25 @@ export class ScrapbookHtmlGenerator {
 
   private generateJournalPage(content: any): string {
     const blogImages = content.blogImages || [];
-    if (blogImages.length === 0) return `        <div class="page"><p>No blog images</p></div>`;
+    const title = content.title || 'Journal Entry';
+    const blogContent = content.content || '';
     
     const imageItems = blogImages.map((image: any) => 
       `<img src="/api/blog-images/${image.imageUrl}/preview" alt="${image.caption}">`
     ).join('\n                ');
     
-    return `        <!-- Blog Images Page -->
-        <div class="page">
+    // Put title and content at the top of the page
+    const contentHtml = blogContent ? `
+            <div class="blog-content">
+                <h3 class="blog-title">${title}</h3>
+                <div class="blog-text">${blogContent}</div>
+            </div>` : '';
+    
+    return `        <!-- Journal Page -->
+        <div class="page journal-page">
+            <div class="blog-header">
+                ${contentHtml}
+            </div>
             <div class="blog-images">
                 ${imageItems}
             </div>
@@ -600,50 +663,4 @@ export class ScrapbookHtmlGenerator {
     return photo.filename;
   }
 
-  /**
-   * Get all blog images from database (featured_image + images array)
-   */
-  private async getBlogImages(contentReference: string): Promise<string[]> {
-    // Extract blog ID from content_reference (e.g., "blog_4" -> 4)
-    const blogId = parseInt(contentReference.replace('blog_', ''));
-    console.log(`🔍 DEBUG: Looking up blog ID ${blogId} for reference ${contentReference}`);
-    
-    if (isNaN(blogId)) {
-      throw new Error(`Invalid blog ID extracted from ${contentReference}`);
-    }
-    
-    const blog = await prisma.blogPost.findUnique({
-      where: { blog_post_id: blogId },
-      select: { featured_image: true, images: true }
-    });
-
-    console.log(`📝 DEBUG: Found blog:`, blog);
-
-    if (!blog) {
-      throw new Error(`Blog with ID ${blogId} not found in database`);
-    }
-
-    const allImages: string[] = [];
-    
-    // Add featured image if it exists
-    if (blog.featured_image) {
-      const featuredFilename = blog.featured_image
-        .replace('/api/blog-images/', '')
-        .replace('/preview', '');
-      allImages.push(featuredFilename);
-    }
-    
-    // Add all images from the images array
-    if (blog.images && Array.isArray(blog.images)) {
-      blog.images.forEach(imagePath => {
-        const imageFilename = imagePath
-          .replace('/api/blog-images/', '')
-          .replace('/preview', '');
-        allImages.push(imageFilename);
-      });
-    }
-    
-    console.log(`📝 DEBUG: All blog images:`, allImages);
-    return allImages;
-  }
 }
