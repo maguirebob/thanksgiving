@@ -176,27 +176,35 @@ export const createEventBlogPost = async (req: Request, res: Response): Promise<
     let featuredImageUrl = null;
     let additionalImages: string[] = [];
     
-    if (req.file) {
-      // Single file was uploaded to S3, store the filename for preview endpoint
-      const filename = (req.file as any).key.split('/').pop(); // Extract filename from S3 key
-      featuredImageUrl = `/api/blog-images/${filename}/preview`;
-      console.log(`Blog image uploaded to S3: ${(req.file as any).location}`);
-      console.log(`Blog image preview URL: ${featuredImageUrl}`);
-    } else if (req.files && Array.isArray(req.files) && req.files.length > 0) {
-      // Multiple files were uploaded
-      const files = req.files as Express.Multer.File[];
-      const imageUrls = files.map(file => {
-        const filename = (file as any).key.split('/').pop();
-        return `/api/blog-images/${filename}/preview`;
-      });
+    // Handle file uploads from multer.fields() structure
+    if (req.files) {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       
-      // First image becomes featured image, rest go to additional images
-      featuredImageUrl = imageUrls[0] || null;
-      additionalImages = imageUrls.slice(1);
+      // Collect all images from both field names
+      const allImages: Express.Multer.File[] = [];
       
-      console.log(`Multiple blog images uploaded: ${files.length} files`);
-      console.log(`Featured image: ${featuredImageUrl}`);
-      console.log(`Additional images: ${additionalImages.length}`);
+      if (files['blog_image'] && files['blog_image'].length > 0) {
+        allImages.push(...files['blog_image']);
+      }
+      
+      if (files['blog_images'] && files['blog_images'].length > 0) {
+        allImages.push(...files['blog_images']);
+      }
+      
+      if (allImages.length > 0) {
+        const imageUrls = allImages.map(file => {
+          const filename = (file as any).key.split('/').pop();
+          return `/api/blog-images/${filename}/preview`;
+        });
+        
+        // First image becomes featured image, rest go to additional images
+        featuredImageUrl = imageUrls[0] || null;
+        additionalImages = imageUrls.slice(1);
+        
+        console.log(`Blog images uploaded: ${allImages.length} files`);
+        console.log(`Featured image: ${featuredImageUrl}`);
+        console.log(`Additional images: ${additionalImages.length}`);
+      }
     } else if (req.body.featured_image) {
       // URL was provided directly
       featuredImageUrl = req.body.featured_image;

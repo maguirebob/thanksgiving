@@ -102,8 +102,12 @@ export const uploadSingleBlog = s3Upload.single('blog_image');
 
 /**
  * Middleware for multiple blog images upload
+ * Handles both 'blog_image' (single) and 'blog_images' (multiple) field names
  */
-export const uploadMultipleBlogImages = s3Upload.array('blog_images', 10);
+export const uploadMultipleBlogImages = s3Upload.fields([
+  { name: 'blog_image', maxCount: 1 },
+  { name: 'blog_images', maxCount: 10 }
+]);
 
 /**
  * Middleware for multiple file uploads
