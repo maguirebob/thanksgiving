@@ -2,6 +2,10 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [3.1.0] - 2025-10-20
+
+- Add section descriptions to scrapbook first pages
+- Enhanced scrapbook generation to include section descriptions as introductions on title pages. Updated formatting with smaller title at top and description text in middle of page.
 ## [3.0.1] - 2025-10-19
 
 - Fix TypeScript errors in scrapbookRoutes
