@@ -89,9 +89,7 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
       }
       await emailService.sendPasswordReset(user.email, emailData);
 
-      console.log(`🔐 Password reset requested for user: ${user.username} (${user.email})`);
-    } else {
-      console.log(`🔐 Password reset requested for non-existent user: ${username}`);
+      console.log(`Password reset requested for user: ${user.username}`);
     }
 
     // Record attempt for rate limiting
@@ -101,7 +99,7 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
     res.redirect('/auth/forgot-password?success=If an account with that username exists, we have sent password reset instructions to the registered email address.');
 
   } catch (error) {
-    console.error('Error in forgot password:', error);
+    console.error('Error in forgot password:', error instanceof Error ? error.message : 'Unknown error');
     res.redirect('/auth/forgot-password?error=An error occurred. Please try again.');
   }
 });

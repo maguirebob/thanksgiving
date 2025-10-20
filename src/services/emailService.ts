@@ -12,15 +12,12 @@ export interface EmailTemplates {
 }
 
 export class EmailService {
-  private apiKey: string | null = null;
-  private domain: string | null = null;
-  private fromEmail: string | null = null;
-  private templates: EmailTemplates | null = null;
-  private initialized: boolean = false;
+  private apiKey: string;
+  private domain: string;
+  private fromEmail: string;
+  private templates: EmailTemplates;
 
-  private initialize() {
-    if (this.initialized) return;
-
+  constructor() {
     // Mailgun configuration
     this.apiKey = process.env['MAILGUN_API_KEY'] || '';
     this.domain = process.env['MAILGUN_DOMAIN'] || '';
@@ -124,17 +121,9 @@ export class EmailService {
         `
       }
     };
-
-    this.initialized = true;
-  }
-
-  constructor() {
-    // Lazy initialization - don't validate environment variables until first use
   }
 
   private async sendMailgunEmail(to: string, subject: string, html: string): Promise<void> {
-    this.initialize(); // Ensure configuration is loaded
-    
     try {
       const url = `https://api.mailgun.net/v3/${this.domain}/messages`;
       
@@ -144,27 +133,20 @@ export class EmailService {
       formData.append('subject', subject);
       formData.append('html', html);
 
+      // Use environment variables directly to avoid any potential logging
+      const apiKey = process.env['MAILGUN_API_KEY'];
+      
       const response = await axios.post(url, formData, {
         auth: {
           username: 'api',
-          password: this.apiKey!
+          password: apiKey!
         },
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        // Prevent axios from logging sensitive auth data
-        transformRequest: [(data, headers) => {
-          // Remove auth from headers to prevent logging
-          delete headers['Authorization'];
-          return data;
-        }]
+        }
       });
 
-      console.log(`📧 Email sent successfully to: ${to}`);
-      // Only log response status in development to reduce Railway log volume
-      if (process.env['NODE_ENV'] !== 'production') {
-        console.log(`📧 Mailgun response: ${response.status} ${response.statusText}`);
-      }
+      console.log(`Email sent successfully to: ${to}`);
     } catch (error) {
       console.error('❌ Error sending email via Mailgun:', error);
       throw error;
@@ -172,12 +154,11 @@ export class EmailService {
   }
 
   async sendPasswordReset(email: string, data: { firstName?: string; username: string; resetUrl: string }): Promise<void> {
-    this.initialize(); // Ensure configuration is loaded
-    const template = this.templates!.passwordReset;
+    const template = this.templates.passwordReset;
     
     try {
       await this.sendMailgunEmail(email, template.subject, template.html(data));
-      console.log(`📧 Password reset email sent to: ${email}`);
+      console.log(`Password reset email sent to: ${email}`);
     } catch (error) {
       console.error('❌ Failed to send password reset email:', error);
       throw error;
@@ -185,12 +166,11 @@ export class EmailService {
   }
 
   async sendUsernameRecovery(email: string, data: { firstName?: string; username: string; loginUrl: string }): Promise<void> {
-    this.initialize(); // Ensure configuration is loaded
-    const template = this.templates!.usernameRecovery;
+    const template = this.templates.usernameRecovery;
     
     try {
       await this.sendMailgunEmail(email, template.subject, template.html(data));
-      console.log(`📧 Username recovery email sent to: ${email}`);
+      console.log(`Username recovery email sent to: ${email}`);
     } catch (error) {
       console.error('❌ Failed to send username recovery email:', error);
       throw error;
@@ -198,8 +178,6 @@ export class EmailService {
   }
 
   async testConnection(): Promise<boolean> {
-    this.initialize(); // Ensure configuration is loaded
-    
     try {
       // Test the API connection without actually sending
       const url = `https://api.mailgun.net/v3/${this.domain}/messages`;
@@ -207,7 +185,7 @@ export class EmailService {
       await axios.get(url, {
         auth: {
           username: 'api',
-          password: this.apiKey!
+          password: this.apiKey
         }
       });
       
