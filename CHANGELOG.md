@@ -2,6 +2,10 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [3.1.6] - 2025-10-20
+
+- fix: Suppress MemoryStore warning in production for Railway deployment
+- Fixed Railway deployment healthcheck failure by suppressing MemoryStore warnings in production environment. Added environment-based session configuration.
 ## [3.1.5] - 2025-10-20
 
 - fix: Remove unused variables from emailService.ts
