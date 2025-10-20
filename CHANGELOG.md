@@ -2,6 +2,10 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [3.1.4] - 2025-10-20
+
+- docs: Add git filter-branch warning to conventions
+- Added critical 'never use' rule for git filter-branch command to prevent future repository history destruction. Includes modern alternatives and best practices for git history management.
 ## [3.1.3] - 2025-10-20
 
 - **Security: Remove hardcoded Mailgun API key**
