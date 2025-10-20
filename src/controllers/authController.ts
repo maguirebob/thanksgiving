@@ -16,13 +16,6 @@ export class AuthController {
 
   // Handle login
   login = async (req: Request, res: Response) => {
-    console.log('🔐 LOGIN ATTEMPT:', {
-      method: req.method,
-      path: req.path,
-      body: { username: req.body.username, hasPassword: !!req.body.password },
-      sessionId: req.sessionID
-    });
-    
     try {
       const { username, password } = req.body;
 
@@ -31,7 +24,6 @@ export class AuthController {
       }
 
       // Find user by username or email
-      console.log('🔐 Searching for user:', username);
       const user = await prisma.user.findFirst({
         where: {
           OR: [
@@ -42,32 +34,18 @@ export class AuthController {
       });
 
       if (!user) {
-        console.log('❌ User not found:', username);
         return res.redirect('/auth/login?error=Invalid username or password');
       }
-
-      console.log('✅ User found:', { id: user.user_id, username: user.username, email: user.email });
 
       // Check password
-      console.log('🔐 Checking password...');
       const isValidPassword = await bcrypt.compare(password, user.password_hash);
       if (!isValidPassword) {
-        console.log('❌ Invalid password for user:', username);
         return res.redirect('/auth/login?error=Invalid username or password');
       }
 
-      console.log('✅ Password valid for user:', username);
-
       // Set session
-      console.log('🔐 Setting session data:', { userId: user.user_id, role: user.role });
       req.session.userId = user.user_id;
       req.session.userRole = user.role;
-      
-      console.log('✅ Session set successfully:', { 
-        sessionId: req.sessionID, 
-        userId: req.session.userId, 
-        userRole: req.session.userRole 
-      });
       
       // Redirect to profile or home
       const redirectTo = req.session.returnTo || '/auth/profile';
