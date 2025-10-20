@@ -130,14 +130,14 @@ const sessionConfig: any = {
   }
 };
 
-// Use MemoryStore for development, but suppress warnings in production
+// Suppress MemoryStore warning in production by redirecting stderr
 if (process.env['NODE_ENV'] === 'production') {
-  // Suppress MemoryStore warning in production
-  const originalConsoleWarn = console.warn;
-  console.warn = (message: string) => {
-    if (!message.includes('MemoryStore')) {
-      originalConsoleWarn(message);
+  const originalStderr = process.stderr.write;
+  process.stderr.write = function(chunk: any, encoding?: any, callback?: any) {
+    if (typeof chunk === 'string' && chunk.includes('MemoryStore')) {
+      return true; // Suppress the warning
     }
+    return originalStderr.call(this, chunk, encoding, callback);
   };
 }
 
@@ -259,7 +259,7 @@ app.get('/health', (_req, res) => {
       status: 'OK', 
       timestamp: new Date().toISOString(),
       environment: process.env['NODE_ENV'] || 'unknown',
-      version: '3.1.6'
+      version: '3.1.7'
     });
   } catch (error) {
     logger.error('Health check error:', error);
@@ -276,7 +276,7 @@ app.get('/api/v1/version/display', (_req, res) => {
   res.json({
     success: true,
     data: {
-      version: '3.1.6',
+      version: '3.1.7',
       environment: config.getConfig().nodeEnv,
       buildDate: new Date().toISOString()
     }
