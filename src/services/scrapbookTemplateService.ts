@@ -16,7 +16,7 @@ export class ScrapbookTemplateService {
   private outputDir: string;
 
   constructor() {
-    this.templatePath = path.join(__dirname, '../../public/scrapbooks/simple.html');
+    this.templatePath = path.join(__dirname, '../templates/scrapbook-template.html');
     this.outputDir = path.join(__dirname, '../../public/scrapbooks');
   }
 
