@@ -124,19 +124,24 @@ export class EmailService {
   }
 
   private async sendMailgunEmail(to: string, subject: string, html: string): Promise<void> {
+    this.initialize(); // Ensure configuration is loaded
+    
     try {
       const url = `https://api.mailgun.net/v3/${this.domain}/messages`;
       
       const formData = new URLSearchParams();
-      formData.append('from', this.fromEmail);
+      formData.append('from', this.fromEmail!);
       formData.append('to', to);
       formData.append('subject', subject);
       formData.append('html', html);
 
+      // Use environment variables directly to avoid any potential logging
+      const apiKey = process.env['MAILGUN_API_KEY'];
+      
       const response = await axios.post(url, formData, {
         auth: {
           username: 'api',
-          password: this.apiKey
+          password: apiKey!
         },
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
