@@ -239,10 +239,34 @@
             background: url('../assets/parchment.jpg') center/cover;
             background-color: white;
             color: #8B4513;
-            font-size: 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        
+        .section-title {
+            font-size: 32px;
             font-weight: bold;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            letter-spacing: 2px;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .section-description {
+            font-size: 18px;
+            line-height: 1.6;
+            text-align: center;
+            max-width: 80%;
+            margin-top: 40px;
+        }
+        
+        .section-description p {
+            margin: 0;
+            color: #654321;
+            font-style: italic;
         }
     </style>
 </head>
@@ -258,43 +282,50 @@
             <span class="rivet rivet-br"></span>
         </div>
         <!-- Section Header Page -->
-        <div class="page section-header">New Section</div>
+        <div class="page section-header">
+            <div class="section-title">2013 Maguire Thanksgiving</div>
+            <div class="section-description">
+                <p>This year we honored Grandma Goose's passing.</p>
+            </div>
+        </div>
         <!-- Menu Page -->
         <div class="page menu-page">
             <img src="/api/v1/menu-images/15" alt="Menu">
         </div>
-        <!-- Page Photo Page -->
-        <div class="page page-photo">
-            <div class="page-photo-content">
-                <img src="/api/photos/03aa7caa-1949-46a2-b630-4330ed5a7d72.jpeg/preview" alt="Thanksgiving Memory">
-            </div>
-        </div>
-        <!-- Page Photo Page -->
-        <div class="page page-photo">
-            <div class="page-photo-content">
-                <img src="/api/photos/a6d6b8b1-5102-4a09-be6a-5ff0f423aea7.jpeg/preview" alt="Thanksgiving Memory">
-            </div>
-        </div>
-        <!-- Page Photo Page -->
-        <div class="page page-photo">
-            <div class="page-photo-content">
-                <img src="/api/photos/c564c4a1-85db-4808-919f-f75929201339.jpeg/preview" alt="Thanksgiving Memory">
-            </div>
-        </div>
         <!-- Photo Grid Page -->
         <div class="page">
             <div class="photo-grid">
-                <img src="/api/photos/c99bd4d0-767a-4007-bd3c-c310755567a4.jpg/preview" alt="Thanksgiving Memory">
-                <img src="/api/photos/d636c1c7-ac52-4d41-a232-1ab98056fec1.jpg/preview" alt="Thanksgiving Memory">
-                <img src="/api/photos/3ef695a4-da40-4510-9acd-b20ff78e9567.jpg/preview" alt="Thanksgiving Memory">
-                <img src="/api/photos/826b97ac-9bac-40d2-941a-49483d3ba450.jpg/preview" alt="Thanksgiving Memory">
+                <img src="/api/photos/6bc13ec6-007d-4746-8f90-b150b386308f.jpg/preview" alt="Thanksgiving Memory">
+                <img src="/api/photos/6e98ba02-0859-4651-9fa6-5b574f31ca70.jpg/preview" alt="Thanksgiving Memory">
+                <img src="/api/photos/4129c374-0366-41c3-95f8-6249e3152576.jpg/preview" alt="Thanksgiving Memory">
+                <img src="/api/photos/82ede41b-feb9-4cfe-b2eb-519aa7b409c1.jpg/preview" alt="Thanksgiving Memory">
+                <img src="/api/photos/efc04417-3193-4145-b3a4-bdf30ed6d4c2.jpg/preview" alt="Thanksgiving Memory">
+                <img src="/api/photos/52f1c796-661a-47b9-a337-df648cda42b4.jpg/preview" alt="Thanksgiving Memory">
+            </div>
+        </div>
+        <!-- Page Photo Page -->
+        <div class="page page-photo">
+            <div class="page-photo-content">
+                <img src="/api/photos/3cd3a368-9feb-4f28-80ef-9b4c05f2f3a9.jpeg/preview" alt="Thanksgiving Memory">
+            </div>
+        </div>
+        <!-- Page Photo Page -->
+        <div class="page page-photo">
+            <div class="page-photo-content">
+                <img src="/api/photos/42760094-f214-441f-a5b1-b1c548d3d43d.jpeg/preview" alt="Thanksgiving Memory">
+            </div>
+        </div>
+        <!-- Page Photo Page -->
+        <div class="page page-photo">
+            <div class="page-photo-content">
+                <img src="/api/photos/9b91f7ab-027c-4757-bfaa-38de3ac4636f.jpeg/preview" alt="Thanksgiving Memory">
             </div>
         </div>
         <!-- Blog Images Page -->
         <div class="page">
             <div class="blog-images">
-                <img src="/api/blog-images/f3aa9756-2a50-4a97-ab22-c63556345cdf.jpeg/preview" alt="Journal Entry">
-                <img src="/api/blog-images/fa5803ba-405d-4b1f-bcb5-019d1efd4a54.jpeg/preview" alt="Journal Entry">
+                <img src="/api/blog-images/e514e6e3-f3a4-4c7c-994b-d2c93dbbae17.jpeg/preview" alt="Journal Entry">
+                <img src="/api/blog-images/63a60653-fcdf-40f3-9600-3c1a10a64c41.jpeg/preview" alt="Journal Entry">
             </div>
         </div>
         <!-- Back Cover -->

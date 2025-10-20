@@ -11,6 +11,7 @@ import { logger } from './lib/logger';
 import s3Service from './services/s3Service';
 import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/authRoutes';
+import passwordResetRoutes from './routes/passwordResetRoutes';
 import adminRoutes from './routes/adminRoutes';
 import photoRoutes from './routes/photoRoutes';
 import blogRoutes from './routes/blogRoutes';
@@ -245,7 +246,7 @@ app.get('/health', (_req, res) => {
       status: 'OK', 
       timestamp: new Date().toISOString(),
       environment: process.env['NODE_ENV'] || 'unknown',
-      version: '3.0.1'
+      version: '3.1.4'
     });
   } catch (error) {
     logger.error('Health check error:', error);
@@ -262,7 +263,7 @@ app.get('/api/v1/version/display', (_req, res) => {
   res.json({
     success: true,
     data: {
-      version: '3.0.1',
+      version: '3.1.4',
       environment: config.getConfig().nodeEnv,
       buildDate: new Date().toISOString()
     }
@@ -746,6 +747,7 @@ app.get('/journal', async (_req, res) => {
 
 // Authentication routes
 app.use('/auth', authRoutes);
+app.use('/auth', passwordResetRoutes);
 
 // Admin routes
 app.use('/admin', adminRoutes);

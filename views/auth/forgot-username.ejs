@@ -1,0 +1,78 @@
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow">
+        <div class="card-body">
+          <h2 class="card-title text-center mb-4">Recover Username</h2>
+          
+          <% if (error) { %>
+            <div class="alert alert-danger" role="alert">
+              <%= error %>
+            </div>
+          <% } %>
+          
+          <% if (success) { %>
+            <div class="alert alert-success" role="alert">
+              <%= success %>
+            </div>
+          <% } %>
+
+          <p class="text-muted text-center mb-4">
+            Enter the email address you used when creating your account. We'll send your username to that email.
+          </p>
+
+          <form id="forgotUsernameForm" method="POST" action="/auth/forgot-username">
+            <div class="mb-3">
+              <label for="email" class="form-label">Registered Email Address</label>
+              <input 
+                type="email" 
+                class="form-control" 
+                id="email" 
+                name="email" 
+                required
+                placeholder="Enter your registered email"
+                value="<%= typeof email !== 'undefined' ? email : '' %>"
+              >
+              <div class="form-text">
+                This must be the exact email address you used when creating your account.
+              </div>
+            </div>
+            
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">Send Username</button>
+            </div>
+          </form>
+          
+          <div class="text-center mt-3">
+            <p class="mb-0">
+              <a href="/auth/login" class="text-decoration-none">
+                <i class="fas fa-arrow-left me-1"></i>Back to Login
+              </a>
+            </p>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('forgotUsernameForm').addEventListener('submit', function(e) {
+  const email = document.getElementById('email').value.trim();
+  
+  if (!email) {
+    e.preventDefault();
+    alert('Please enter your email address.');
+    return false;
+  }
+  
+  // Basic email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    e.preventDefault();
+    alert('Please enter a valid email address.');
+    return false;
+  }
+});
+</script>

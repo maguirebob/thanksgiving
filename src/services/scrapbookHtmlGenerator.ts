@@ -448,8 +448,35 @@ export class ScrapbookHtmlGenerator {
   }
 
   private generateTitlePage(content: any): string {
-    return `        <!-- Section Header Page -->
-        <div class="page section-header">${content.title}</div>`;
+    // Handle both old string format and new JSON format
+    let title = '';
+    let description = '';
+    
+    try {
+      // Try to parse as JSON (new format with description)
+      const parsedContent = JSON.parse(content.title || content);
+      title = parsedContent.title || '';
+      description = parsedContent.description || '';
+    } catch {
+      // Fall back to old string format
+      title = content.title || content;
+    }
+    
+    let html = `        <!-- Section Header Page -->
+        <div class="page section-header">
+            <div class="section-title">${title}</div>`;
+    
+    if (description && description.trim()) {
+      html += `
+            <div class="section-description">
+                <p>${description}</p>
+            </div>`;
+    }
+    
+    html += `
+        </div>`;
+    
+    return html;
   }
 
   private generateTextPage(content: any): string {

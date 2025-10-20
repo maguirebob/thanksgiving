@@ -187,13 +187,20 @@ router.post('/convert-from-journal/:year', async (req, res) => {
     for (const section of sections) {
       console.log(`📝 SCRAPBOOK DEBUG: Processing section: ${section.title || 'Untitled'} (ID: ${section.section_id})`);
       
-      // Add section title if it exists
+      // Add section title and description as combined content
       if (section.title) {
         console.log(`📋 SCRAPBOOK DEBUG: Adding section title: "${section.title}"`);
+        
+        // Create combined title+description content
+        const titleContent = {
+          title: section.title,
+          description: section.description && section.description.trim() ? section.description : null
+        };
+        
         scrapbookContent.push({
           year,
           content_type: 'title',
-          content_reference: section.title,
+          content_reference: JSON.stringify(titleContent),
           display_order: displayOrder++,
           page_break_before: true,
           page_break_after: false
