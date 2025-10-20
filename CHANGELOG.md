@@ -2,6 +2,10 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [3.1.5] - 2025-10-20
+
+- fix: Remove unused variables from emailService.ts
+- Fixed TypeScript compilation errors by removing unused imports and variables. Build now passes successfully for deployment.
 ## [3.1.4] - 2025-10-20
 
 - docs: Add git filter-branch warning to conventions
