@@ -1206,6 +1206,118 @@ export const SCHEMA_VERSIONS: Record<string, SchemaVersion> = {
     optionalColumns: {},
     migrationStatus: 'complete',
     notes: 'Production fix release: Improved MemoryStore warning suppression by redirecting stderr instead of console.warn. This should resolve Railway healthcheck failures caused by express-session MemoryStore warnings. No database schema changes.'
+  },
+  '3.1.8': {
+    version: '3.1.8',
+    requiredTables: [
+      'events',
+      'JournalSections',
+      'JournalContentItems',
+      'Users',
+      'BlogPosts',
+      'Photos',
+      'Recipes',
+      'Sessions',
+      'ScrapbookContent',
+      'PasswordResetTokens'
+    ],
+    requiredColumns: {
+      'events': [
+        'event_id',
+        'year',
+        'title',
+        'description',
+        'location',
+        'date',
+        'created_at',
+        'updated_at'
+      ],
+      'JournalSections': [
+        'section_id',
+        'event_id',
+        'title',
+        'description',
+        'order_index',
+        'created_at',
+        'updated_at'
+      ],
+      'JournalContentItems': [
+        'content_id',
+        'section_id',
+        'content_type',
+        'content_data',
+        'order_index',
+        'created_at',
+        'updated_at'
+      ],
+      'Users': [
+        'user_id',
+        'username',
+        'email',
+        'password_hash',
+        'first_name',
+        'last_name',
+        'role',
+        'created_at',
+        'updated_at'
+      ],
+      'BlogPosts': [
+        'post_id',
+        'title',
+        'content',
+        'author_id',
+        'created_at',
+        'updated_at'
+      ],
+      'Photos': [
+        'photo_id',
+        'event_id',
+        'filename',
+        'original_filename',
+        'file_path',
+        'file_size',
+        'mime_type',
+        'uploaded_by',
+        'created_at'
+      ],
+      'Recipes': [
+        'recipe_id',
+        'event_id',
+        'name',
+        'description',
+        'ingredients',
+        'instructions',
+        'created_at',
+        'updated_at'
+      ],
+      'Sessions': [
+        'session_id',
+        'user_id',
+        'token',
+        'expires_at',
+        'created_at'
+      ],
+      'ScrapbookContent': [
+        'scrapbook_id',
+        'event_id',
+        'content_type',
+        'content_data',
+        'page_number',
+        'created_at',
+        'updated_at'
+      ],
+      'PasswordResetTokens': [
+        'id',
+        'user_id',
+        'token',
+        'expires_at',
+        'used',
+        'created_at'
+      ]
+    },
+    optionalColumns: {},
+    migrationStatus: 'complete',
+    notes: 'Critical fix release: Implemented lazy initialization in EmailService to prevent Railway deployment failures. Environment variables are now validated only when first used, not during module import. This resolves healthcheck failures caused by premature Mailgun configuration validation. No database schema changes.'
   }
 };
 
