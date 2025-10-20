@@ -13,27 +13,22 @@ export interface EmailTemplates {
 
 export class EmailService {
   private apiKey: string;
-  private domain: string;
   private fromEmail: string;
   private templates: EmailTemplates;
 
   constructor() {
-    // Mailgun configuration
-    this.apiKey = process.env['MAILGUN_API_KEY'] || '';
-    this.domain = process.env['MAILGUN_DOMAIN'] || '';
-    this.fromEmail = process.env['MAILGUN_FROM'] || '';
+    // Resend configuration
+    this.apiKey = process.env['RESEND_API_KEY'] || '';
+    this.fromEmail = 'Thanksgiving Menu Collection <postmaster@sandbox6a0ace4e5d1f40f38af4cc43c2c11e6f.mailgun.org>';
 
     // Validate required environment variables
-    if (!this.apiKey || !this.domain || !this.fromEmail) {
-      console.error('❌ Missing required Mailgun environment variables:');
-      console.error('   MAILGUN_API_KEY:', this.apiKey ? '✅ Set' : '❌ Missing');
-      console.error('   MAILGUN_DOMAIN:', this.domain ? '✅ Set' : '❌ Missing');
-      console.error('   MAILGUN_FROM:', this.fromEmail ? '✅ Set' : '❌ Missing');
-      throw new Error('Mailgun configuration incomplete. Please set MAILGUN_API_KEY, MAILGUN_DOMAIN, and MAILGUN_FROM environment variables.');
+    if (!this.apiKey) {
+      console.error('❌ Missing required Resend environment variables:');
+      console.error('   RESEND_API_KEY:', this.apiKey ? '✅ Set' : '❌ Missing');
+      throw new Error('Resend configuration incomplete. Please set RESEND_API_KEY environment variable.');
     }
 
-    console.log('📧 Email service configured for Mailgun REST API');
-    console.log(`📧 Domain: ${this.domain}`);
+    console.log('📧 Email service configured for Resend API');
     console.log(`📧 From: ${this.fromEmail}`);
 
     this.templates = {
@@ -123,32 +118,30 @@ export class EmailService {
     };
   }
 
-  private async sendMailgunEmail(to: string, subject: string, html: string): Promise<void> {
+  private async sendResendEmail(to: string, subject: string, html: string): Promise<void> {
     try {
-      const url = `https://api.mailgun.net/v3/${this.domain}/messages`;
+      const url = 'https://api.resend.com/emails';
       
-      const formData = new URLSearchParams();
-      formData.append('from', this.fromEmail!);
-      formData.append('to', to);
-      formData.append('subject', subject);
-      formData.append('html', html);
+      const payload = {
+        from: this.fromEmail,
+        to: [to],
+        subject: subject,
+        html: html
+      };
 
       // Use environment variables directly to avoid any potential logging
-      const apiKey = process.env['MAILGUN_API_KEY'];
+      const apiKey = process.env['RESEND_API_KEY'];
       
-      await axios.post(url, formData, {
-        auth: {
-          username: 'api',
-          password: apiKey!
-        },
+      await axios.post(url, payload, {
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
         }
       });
 
       console.log(`Email sent successfully to: ${to}`);
     } catch (error) {
-      console.error('❌ Error sending email via Mailgun:', error);
+      console.error('❌ Error sending email via Resend:', error);
       throw error;
     }
   }
@@ -157,7 +150,7 @@ export class EmailService {
     const template = this.templates.passwordReset;
     
     try {
-      await this.sendMailgunEmail(email, template.subject, template.html(data));
+      await this.sendResendEmail(email, template.subject, template.html(data));
       console.log(`Password reset email sent to: ${email}`);
     } catch (error) {
       console.error('❌ Failed to send password reset email:', error);
@@ -169,7 +162,7 @@ export class EmailService {
     const template = this.templates.usernameRecovery;
     
     try {
-      await this.sendMailgunEmail(email, template.subject, template.html(data));
+      await this.sendResendEmail(email, template.subject, template.html(data));
       console.log(`Username recovery email sent to: ${email}`);
     } catch (error) {
       console.error('❌ Failed to send username recovery email:', error);
@@ -179,20 +172,20 @@ export class EmailService {
 
   async testConnection(): Promise<boolean> {
     try {
-      // Test the API connection without actually sending
-      const url = `https://api.mailgun.net/v3/${this.domain}/messages`;
+      // Test the API connection by checking API key validity
+      const url = 'https://api.resend.com/api-keys';
       
+      const apiKey = process.env['RESEND_API_KEY'];
       await axios.get(url, {
-        auth: {
-          username: 'api',
-          password: this.apiKey
+        headers: {
+          'Authorization': `Bearer ${apiKey}`
         }
       });
       
-      console.log('✅ Mailgun API connection verified');
+      console.log('✅ Resend API connection verified');
       return true;
     } catch (error) {
-      console.error('❌ Mailgun API connection failed:', error);
+      console.error('❌ Resend API connection failed:', error);
       return false;
     }
   }
