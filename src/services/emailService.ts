@@ -12,12 +12,15 @@ export interface EmailTemplates {
 }
 
 export class EmailService {
-  private apiKey: string;
-  private domain: string;
-  private fromEmail: string;
-  private templates: EmailTemplates;
+  private apiKey: string | null = null;
+  private domain: string | null = null;
+  private fromEmail: string | null = null;
+  private templates: EmailTemplates | null = null;
+  private initialized: boolean = false;
 
-  constructor() {
+  private initialize() {
+    if (this.initialized) return;
+
     // Mailgun configuration
     this.apiKey = process.env['MAILGUN_API_KEY'] || '';
     this.domain = process.env['MAILGUN_DOMAIN'] || '';
@@ -121,14 +124,22 @@ export class EmailService {
         `
       }
     };
+
+    this.initialized = true;
+  }
+
+  constructor() {
+    // Lazy initialization - don't validate environment variables until first use
   }
 
   private async sendMailgunEmail(to: string, subject: string, html: string): Promise<void> {
+    this.initialize(); // Ensure configuration is loaded
+    
     try {
       const url = `https://api.mailgun.net/v3/${this.domain}/messages`;
       
       const formData = new URLSearchParams();
-      formData.append('from', this.fromEmail);
+      formData.append('from', this.fromEmail!);
       formData.append('to', to);
       formData.append('subject', subject);
       formData.append('html', html);
@@ -136,7 +147,7 @@ export class EmailService {
       const response = await axios.post(url, formData, {
         auth: {
           username: 'api',
-          password: this.apiKey
+          password: this.apiKey!
         },
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -152,7 +163,8 @@ export class EmailService {
   }
 
   async sendPasswordReset(email: string, data: { firstName?: string; username: string; resetUrl: string }): Promise<void> {
-    const template = this.templates.passwordReset;
+    this.initialize(); // Ensure configuration is loaded
+    const template = this.templates!.passwordReset;
     
     try {
       await this.sendMailgunEmail(email, template.subject, template.html(data));
@@ -164,7 +176,8 @@ export class EmailService {
   }
 
   async sendUsernameRecovery(email: string, data: { firstName?: string; username: string; loginUrl: string }): Promise<void> {
-    const template = this.templates.usernameRecovery;
+    this.initialize(); // Ensure configuration is loaded
+    const template = this.templates!.usernameRecovery;
     
     try {
       await this.sendMailgunEmail(email, template.subject, template.html(data));
@@ -176,6 +189,8 @@ export class EmailService {
   }
 
   async testConnection(): Promise<boolean> {
+    this.initialize(); // Ensure configuration is loaded
+    
     try {
       // Test the API connection without actually sending
       const url = `https://api.mailgun.net/v3/${this.domain}/messages`;
@@ -183,7 +198,7 @@ export class EmailService {
       await axios.get(url, {
         auth: {
           username: 'api',
-          password: this.apiKey
+          password: this.apiKey!
         }
       });
       
