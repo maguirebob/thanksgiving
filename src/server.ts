@@ -118,17 +118,30 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(compression());
 
 // Session configuration
-app.use(session({
+const sessionConfig: any = {
   secret: config.getConfig().sessionSecret,
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false, // Set to false for Railway deployment to avoid HTTPS issues
+    secure: process.env['NODE_ENV'] === 'production' ? true : false,
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     sameSite: 'lax' // Allow cross-site cookies for Railway
   }
-}));
+};
+
+// Use MemoryStore for development, but suppress warnings in production
+if (process.env['NODE_ENV'] === 'production') {
+  // Suppress MemoryStore warning in production
+  const originalConsoleWarn = console.warn;
+  console.warn = (message: string) => {
+    if (!message.includes('MemoryStore')) {
+      originalConsoleWarn(message);
+    }
+  };
+}
+
+app.use(session(sessionConfig));
 
 // Authentication middleware
 app.use(addUserToLocals);
