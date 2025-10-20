@@ -24,30 +24,19 @@ router.get('/forgot-password', (req: Request, res: Response) => {
  * POST /auth/forgot-password
  */
 router.post('/forgot-password', async (req: Request, res: Response) => {
-  console.log('🔐 === FORGOT PASSWORD ROUTE STARTED ===');
-  console.log('🔐 Request body:', req.body);
-  console.log('🔐 Session ID:', req.sessionID);
-  
   try {
     const { username } = req.body;
-    console.log('🔐 Extracted username:', username);
 
     if (!username || !username.trim()) {
-      console.log('❌ Username validation failed - empty or missing');
       return res.redirect('/auth/forgot-password?error=Username is required');
     }
-    console.log('✅ Username validation passed');
 
     // Check rate limiting
-    console.log('🔐 Checking rate limiting for:', username);
     if (RateLimitService.isRateLimited(username)) {
-      console.log('❌ Rate limit exceeded for:', username);
       return res.redirect('/auth/forgot-password?error=Too many requests. Please try again later.');
     }
-    console.log('✅ Rate limit check passed');
 
     // Find user by username or email
-    console.log('🔐 Searching database for user with username/email:', username.trim());
     const user = await prisma.user.findFirst({
       where: {
         OR: [
@@ -66,15 +55,7 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
     // Always show success message to prevent username enumeration
     // But only send email if user exists
     if (user) {
-      console.log('✅ User found in database:', {
-        id: user.user_id,
-        username: user.username,
-        email: user.email,
-        firstName: user.first_name
-      });
-      
       // Invalidate any existing reset tokens for this user
-      console.log('🔐 Invalidating existing reset tokens for user:', user.user_id);
       await prisma.passwordResetToken.updateMany({
         where: {
           user_id: user.user_id,
@@ -84,16 +65,9 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
           used: true
         }
       });
-      console.log('✅ Existing tokens invalidated');
 
       // Create new reset token
-      console.log('🔐 Creating new reset token...');
       const tokenData = TokenService.createTokenData();
-      console.log('🔐 Token data created:', {
-        token: tokenData.token.substring(0, 8) + '...',
-        expiresAt: tokenData.expiresAt
-      });
-      
       await prisma.passwordResetToken.create({
         data: {
           user_id: user.user_id,
@@ -101,14 +75,11 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
           expires_at: tokenData.expiresAt
         }
       });
-      console.log('✅ Reset token saved to database');
 
       // Generate reset URL
       const resetUrl = `${req.protocol}://${req.get('host')}/auth/reset-password/${tokenData.token}`;
-      console.log('🔐 Reset URL generated:', resetUrl);
 
       // Send email
-      console.log('📧 Preparing to send password reset email...');
       const emailData: { firstName?: string; username: string; resetUrl: string } = {
         username: user.username,
         resetUrl
@@ -116,36 +87,19 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
       if (user.first_name) {
         emailData.firstName = user.first_name;
       }
-      console.log('📧 Email data prepared:', {
-        to: user.email,
-        username: emailData.username,
-        hasFirstName: !!emailData.firstName,
-        resetUrl: resetUrl.substring(0, 50) + '...'
-      });
-      
       await emailService.sendPasswordReset(user.email, emailData);
-      console.log('✅ Password reset email sent successfully');
 
-      console.log(`🔐 Password reset requested for user: ${user.username} (${user.email})`);
-    } else {
-      console.log(`❌ User not found in database for: ${username}`);
+      console.log(`Password reset requested for user: ${user.username}`);
     }
 
     // Record attempt for rate limiting
-    console.log('🔐 Recording attempt for rate limiting...');
     RateLimitService.recordAttempt(username);
-    console.log('✅ Rate limiting attempt recorded');
 
     // Always redirect to success page to prevent enumeration
-    console.log('🔐 Redirecting to success page...');
     res.redirect('/auth/forgot-password?success=If an account with that username exists, we have sent password reset instructions to the registered email address.');
 
   } catch (error) {
-    console.error('❌ === ERROR IN FORGOT PASSWORD ROUTE ===');
-    console.error('❌ Error type:', typeof error);
-    console.error('❌ Error message:', error instanceof Error ? error.message : 'Unknown error');
-    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-    console.error('❌ Full error object:', error);
+    console.error('Error in forgot password:', error instanceof Error ? error.message : 'Unknown error');
     res.redirect('/auth/forgot-password?error=An error occurred. Please try again.');
   }
 });

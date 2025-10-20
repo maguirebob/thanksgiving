@@ -146,11 +146,7 @@ export class EmailService {
         }
       });
 
-      console.log(`📧 Email sent successfully to: ${to}`);
-      // Only log response status in development to reduce Railway log volume
-      if (process.env['NODE_ENV'] !== 'production') {
-        console.log(`📧 Mailgun response: ${response.status} ${response.statusText}`);
-      }
+      console.log(`Email sent successfully to: ${to}`);
     } catch (error) {
       console.error('❌ Error sending email via Mailgun:', error);
       throw error;
@@ -162,7 +158,7 @@ export class EmailService {
     
     try {
       await this.sendMailgunEmail(email, template.subject, template.html(data));
-      console.log(`📧 Password reset email sent to: ${email}`);
+      console.log(`Password reset email sent to: ${email}`);
     } catch (error) {
       console.error('❌ Failed to send password reset email:', error);
       throw error;
@@ -174,7 +170,7 @@ export class EmailService {
     
     try {
       await this.sendMailgunEmail(email, template.subject, template.html(data));
-      console.log(`📧 Username recovery email sent to: ${email}`);
+      console.log(`Username recovery email sent to: ${email}`);
     } catch (error) {
       console.error('❌ Failed to send username recovery email:', error);
       throw error;
