@@ -19,7 +19,7 @@ export class EmailService {
   constructor() {
     // Resend configuration
     this.apiKey = process.env['RESEND_API_KEY'] || '';
-    this.fromEmail = 'Thanksgiving Menu Collection <postmaster@sandbox6a0ace4e5d1f40f38af4cc43c2c11e6f.mailgun.org>';
+    this.fromEmail = 'Thanksgiving Menu Collection <onboarding@resend.dev>';
 
     // Validate required environment variables
     if (!this.apiKey) {
