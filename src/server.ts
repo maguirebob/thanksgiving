@@ -123,11 +123,10 @@ const sessionConfig: any = {
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env['NODE_ENV'] === 'production' ? true : false,
+    secure: false, // Disable secure cookies for Railway compatibility
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: process.env['NODE_ENV'] === 'production' ? 'none' : 'lax', // Railway requires 'none' for HTTPS
-    domain: process.env['NODE_ENV'] === 'production' ? '.up.railway.app' : undefined // Railway domain
+    sameSite: 'lax' // Allow cross-site cookies for Railway
   }
 };
 

@@ -151,11 +151,20 @@ export class EmailService {
         },
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
-        }
+        },
+        // Prevent axios from logging sensitive auth data
+        transformRequest: [(data, headers) => {
+          // Remove auth from headers to prevent logging
+          delete headers['Authorization'];
+          return data;
+        }]
       });
 
       console.log(`📧 Email sent successfully to: ${to}`);
-      console.log(`📧 Mailgun response: ${response.status} ${response.statusText}`);
+      // Only log response status in development to reduce Railway log volume
+      if (process.env['NODE_ENV'] !== 'production') {
+        console.log(`📧 Mailgun response: ${response.status} ${response.statusText}`);
+      }
     } catch (error) {
       console.error('❌ Error sending email via Mailgun:', error);
       throw error;

@@ -3,17 +3,22 @@ import { logger } from '../lib/logger';
 
 // Middleware to require authentication
 export const requireAuth = (req: Request, res: Response, next: NextFunction) => {
-  console.log('🔐 === AUTH MIDDLEWARE DEBUG ===');
-  console.log('📊 Request path:', req.path);
-  console.log('📊 Request method:', req.method);
-  console.log('🔐 Has session:', !!req.session);
-  console.log('🔐 Session user ID:', req.session?.userId);
-  console.log('🔐 Session user role:', req.session?.userRole);
-  console.log('🔐 Session ID:', req.sessionID);
+  // Only log auth failures in production to reduce Railway log volume
+  if (process.env['NODE_ENV'] !== 'production') {
+    console.log('🔐 === AUTH MIDDLEWARE DEBUG ===');
+    console.log('📊 Request path:', req.path);
+    console.log('📊 Request method:', req.method);
+    console.log('🔐 Has session:', !!req.session);
+    console.log('🔐 Session user ID:', req.session?.userId);
+    console.log('🔐 Session user role:', req.session?.userRole);
+    console.log('🔐 Session ID:', req.sessionID);
+  }
   
   // Only log authentication failures, not every check
   if (!req.session || !req.session.userId) {
-    console.log('❌ Authentication failed - redirecting to login');
+    if (process.env['NODE_ENV'] !== 'production') {
+      console.log('❌ Authentication failed - redirecting to login');
+    }
     logger.debug('Authentication required, redirecting to login', {
       hasSession: !!req.session,
       userId: req.session?.userId,
@@ -28,7 +33,9 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
     return res.redirect('/auth/login');
   }
   
-  console.log('✅ Authentication passed - proceeding to next middleware');
+  if (process.env['NODE_ENV'] !== 'production') {
+    console.log('✅ Authentication passed - proceeding to next middleware');
+  }
   next();
 };
 
