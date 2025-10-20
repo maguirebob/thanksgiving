@@ -2,6 +2,48 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [3.1.6] - 2025-10-20
+
+- fix: Suppress MemoryStore warning in production for Railway deployment
+- Fixed Railway deployment healthcheck failure by suppressing MemoryStore warnings in production environment. Added environment-based session configuration.
+## [3.1.5] - 2025-10-20
+
+- fix: Remove unused variables from emailService.ts
+- Fixed TypeScript compilation errors by removing unused imports and variables. Build now passes successfully for deployment.
+## [3.1.4] - 2025-10-20
+
+- docs: Add git filter-branch warning to conventions
+- Added critical 'never use' rule for git filter-branch command to prevent future repository history destruction. Includes modern alternatives and best practices for git history management.
+## [3.1.3] - 2025-10-20
+
+- **Security: Remove hardcoded Mailgun API key**
+  - Removed hardcoded API key from email service for improved security
+  - Now uses environment variables exclusively with proper validation
+  - Added clear error messages if Mailgun configuration is missing
+  - Same functionality, improved security posture
+  - Ready for secure deployment across all environments
+
+## [3.1.2] - 2025-10-20
+
+- **Feature: Password Reset & Forgot Credentials**
+  - Added complete password reset and username recovery functionality
+  - Implemented secure token-based password reset system with 1-hour expiration
+  - Added PasswordResetTokens table for secure token storage
+  - Integrated Mailgun email service for sending password reset and username recovery emails
+  - Added professional HTML email templates with Thanksgiving theme
+  - Implemented security best practices: account-linked email only, generic messages to prevent enumeration
+  - Added "Forgot Password?" and "Forgot Username?" links to login page
+  - Updated database verification to include new PasswordResetTokens table
+  - Configured Mailgun REST API integration for all environments (dev, test, prod)
+
+## [3.1.1] - 2025-10-20
+
+- Prepare for password reset implementation
+- Updated todos and prepared for implementing password reset and username recovery functionality
+## [3.1.0] - 2025-10-20
+
+- Add section descriptions to scrapbook first pages
+- Enhanced scrapbook generation to include section descriptions as introductions on title pages. Updated formatting with smaller title at top and description text in middle of page.
 ## [3.0.1] - 2025-10-19
 
 - Fix TypeScript errors in scrapbookRoutes

@@ -1,0 +1,854 @@
+# Thanksgiving Menu Collection - TypeScript Version
+
+A modern Node.js web application that displays a collection of Thanksgiving menus from 1994 to today, built with TypeScript, Express.js, Prisma ORM, and PostgreSQL.
+
+## 🎉 Migration Complete!
+
+This project has been successfully migrated from JavaScript/Sequelize to TypeScript/Prisma and deployed to Railway. All phases of the reconfiguration plan have been completed with 100% smoke test success rate.
+
+## ✨ Features
+
+- **Modern TypeScript Architecture** - Full TypeScript implementation with type safety
+- **Prisma ORM** - Type-safe database access with automatic migrations
+- **Responsive Design** - Bootstrap 5 with custom CSS for mobile-first design
+- **Comprehensive Testing** - Jest unit tests and Playwright E2E tests
+- **Railway Deployment** - Fully deployed and tested on Railway platform
+- **Database Management** - 31 Thanksgiving events with user authentication
+- **Security** - Helmet.js, CORS, rate limiting, and Content Security Policy
+- **Password Reset & Recovery** - Secure password reset and username recovery functionality
+- **Email Integration** - Mailgun email service for transactional emails
+
+## 🚀 Live Application
+
+**Test Environment:** https://thanksgiving-test-test.up.railway.app  
+**Production Environment:** https://thanksgiving-prod-production.up.railway.app
+
+## 🚂 Railway Deployment
+
+### Railway CLI Setup
+
+The application is deployed on Railway with separate test and production environments. Use the Railway CLI to manage deployments and switch between environments.
+
+#### Install Railway CLI
+```bash
+npm install -g @railway/cli
+```
+
+#### Login to Railway
+```bash
+railway login
+```
+
+#### Link to Project
+```bash
+# Link to the thanksgiving project
+railway link --project thanksgiving
+```
+
+### Environment Management
+
+#### Switch Between Environments
+
+**Switch to Test Environment:**
+```bash
+railway link --project thanksgiving --environment test
+```
+
+**Switch to Production Environment:**
+```bash
+railway link --project thanksgiving --environment production
+```
+
+**Check Current Environment:**
+```bash
+railway status
+```
+
+#### Environment Variables
+
+Each environment has its own set of variables:
+
+**Development Environment Variables:**
+- `NODE_ENV=development`
+- `PORT=3000`
+- `DATABASE_URL=<local-database-url>`
+- `SESSION_SECRET=<local-session-secret>`
+- `MAILGUN_API_KEY=<your-mailgun-api-key>`
+- `MAILGUN_DOMAIN=sandbox6a0ace4e5d1f40f38af4cc43c2c11e6f.mailgun.org`
+- `MAILGUN_FROM=postmaster@sandbox6a0ace4e5d1f40f38af4cc43c2c11e6f.mailgun.org`
+
+**Test Environment Variables:**
+- `NODE_ENV=production`
+- `PORT=3000`
+- `DATABASE_URL=<test-database-url>`
+- `SESSION_SECRET=<test-session-secret>`
+- `CORS_ORIGIN=https://thanksgiving-test-test.up.railway.app`
+- `MAILGUN_API_KEY=<your-mailgun-api-key>`
+- `MAILGUN_DOMAIN=sandbox6a0ace4e5d1f40f38af4cc43c2c11e6f.mailgun.org`
+- `MAILGUN_FROM=postmaster@sandbox6a0ace4e5d1f40f38af4cc43c2c11e6f.mailgun.org`
+
+**Production Environment Variables:**
+- `NODE_ENV=production`
+- `PORT=3000`
+- `DATABASE_URL=<production-database-url>`
+- `SESSION_SECRET=<production-session-secret>`
+- `CORS_ORIGIN=https://thanksgiving-prod-production.up.railway.app`
+- `MAILGUN_API_KEY=<your-mailgun-api-key>`
+- `MAILGUN_DOMAIN=sandbox6a0ace4e5d1f40f38af4cc43c2c11e6f.mailgun.org`
+- `MAILGUN_FROM=postmaster@sandbox6a0ace4e5d1f40f38af4cc43c2c11e6f.mailgun.org`
+
+**Mailgun Configuration:**
+- **API Key:** `<your-mailgun-api-key>`
+- **Domain:** `sandbox6a0ace4e5d1f40f38af4cc43c2c11e6f.mailgun.org`
+- **From Email:** `postmaster@sandbox6a0ace4e5d1f40f38af4cc43c2c11e6f.mailgun.org`
+- **API Endpoint:** `https://api.mailgun.net/v3/sandbox6a0ace4e5d1f40f38af4cc43c2c11e6f.mailgun.org/messages`
+- **Free Tier:** 5,000 emails/month
+- **Purpose:** Password reset and username recovery emails
+
+### Deployment Commands
+
+#### Deploy to Current Environment
+```bash
+# Deploy current branch to linked environment
+railway up
+```
+
+#### Deploy Specific Branch
+```bash
+# Deploy specific branch
+railway up --detach
+```
+
+#### View Deployment Logs
+```bash
+# View real-time logs
+railway logs
+
+# View logs with follow
+railway logs --follow
+```
+
+#### Database Management
+
+**Connect to Database:**
+```bash
+# Connect to current environment's database
+railway connect postgres
+```
+
+**Run Database Commands:**
+```bash
+# Run migrations
+railway run npx prisma migrate deploy
+
+# Seed database
+railway run npm run db:seed
+
+# Open Prisma Studio
+railway run npx prisma studio
+```
+
+### Railway Dashboard
+
+Access the Railway dashboard at https://railway.app/dashboard to:
+- View deployment status
+- Manage environment variables
+- Monitor application metrics
+- View logs and errors
+- Manage database connections
+
+### Troubleshooting Railway Deployments
+
+1. **Deployment Failures:**
+   ```bash
+   # Check logs for errors
+   railway logs
+   
+   # Redeploy if needed
+   railway up
+   ```
+
+2. **Environment Variable Issues:**
+   ```bash
+   # List current variables
+   railway variables
+   
+   # Set variables via CLI
+   railway variables set KEY=value
+   ```
+
+3. **Database Connection Issues:**
+   ```bash
+   # Test database connection
+   railway run npx prisma db push
+   
+   # Check database status
+   railway status
+   ```
+
+4. **Service Issues:**
+   ```bash
+   # Restart service
+   railway service restart
+   
+   # Check service status
+   railway status
+   ```
+
+### Railway Best Practices
+
+1. **Environment Separation:** Always use separate environments for test and production
+2. **Variable Management:** Use Railway dashboard for sensitive variables
+3. **Database Backups:** Railway handles automatic backups, but consider additional backup strategies
+4. **Monitoring:** Use Railway's built-in monitoring and set up alerts
+5. **Security:** Keep production secrets secure and rotate them regularly
+
+### Railway CLI Commands Reference
+
+```bash
+# Project Management
+railway login                    # Login to Railway
+railway link                     # Link to project
+railway status                   # Show current status
+railway projects                 # List projects
+
+# Environment Management
+railway environment              # Switch environment
+railway variables                # Manage environment variables
+railway variables set KEY=value # Set environment variable
+
+# Deployment
+railway up                       # Deploy current branch
+railway up --detach              # Deploy in background
+railway logs                     # View deployment logs
+railway logs --follow            # Follow logs in real-time
+
+# Database
+railway connect postgres         # Connect to database
+railway run <command>            # Run command in Railway environment
+
+# Service Management
+railway service restart          # Restart service
+railway service logs             # View service logs
+```
+
+## 🛠️ Tech Stack
+
+- **Backend:** Node.js, TypeScript, Express.js
+- **Database:** PostgreSQL with Prisma ORM
+- **Frontend:** EJS templates, Bootstrap 5, custom CSS
+- **Testing:** Jest, Playwright, comprehensive smoke tests
+- **Deployment:** Railway with automated CI/CD
+- **Security:** Helmet.js, CORS, rate limiting, CSP
+- **Email:** Mailgun REST API for transactional emails
+
+## 📋 Prerequisites
+
+- Node.js (v18 or higher)
+- PostgreSQL database
+- npm package manager
+- Mailgun account (for email functionality)
+
+## 🚀 Quick Start
+
+### Development Setup
+
+1. **Clone and install:**
+   ```bash
+   git clone <repository-url>
+   cd thanksgiving
+   npm install
+   ```
+
+2. **Set up environment variables:**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your database credentials and Mailgun settings
+   ```
+
+3. **Set up database:**
+   ```bash
+   npm run db:generate
+   npm run db:push
+   ```
+
+4. **Start development server:**
+   ```bash
+   npm run dev
+   ```
+   
+   **Important:** Use `npm run dev` (not `npm start dev`) for development. This uses `ts-node-dev` which automatically recompiles TypeScript and restarts the server when files change.
+
+5. **Access the application:**
+   Open http://localhost:3000
+
+### TypeScript Development Workflow
+
+**Important:** This project uses TypeScript, so follow these development practices:
+
+#### Development Mode (Recommended)
+```bash
+npm run dev
+```
+- ✅ **Auto-recompiles** TypeScript when files change
+- ✅ **Auto-restarts** server when files change  
+- ✅ **No manual build step** needed
+- ✅ **Faster development** workflow
+
+#### Manual Build Mode (Not Recommended for Development)
+```bash
+npm run build    # Compile TypeScript
+npm start dev    # Start compiled JavaScript
+```
+- ❌ **Manual build required** after each change
+- ❌ **Manual restart required** after each change
+- ❌ **Slower development** workflow
+
+#### When to Use Manual Build
+- **Production deployment** - Always build before deploying
+- **Testing compiled output** - When you need to test the actual JavaScript
+- **Debugging build issues** - When investigating compilation problems
+
+### Version Management
+
+The project uses semantic versioning (SemVer) with automated version management:
+
+#### Version Commands
+```bash
+# Check current version
+npm run version:check
+
+# Increment patch version (bug fixes)
+npm run version:patch
+
+# Increment minor version (new features)
+npm run version:minor
+
+# Increment major version (breaking changes)
+npm run version:major
+```
+
+#### Version Workflow
+1. **Make changes** in the `dev` branch
+2. **Version your changes** using the appropriate command above
+3. **Deploy to test** environment for testing
+4. **Deploy to production** after successful testing
+
+#### Branch Promotion Commands
+The project enforces a strict dev → test → main workflow:
+
+**Deploy to Test Environment:**
+```bash
+git checkout test
+git merge dev
+git push origin test
+# → Railway automatically deploys to test environment
+```
+
+**Deploy to Production:**
+```bash
+git checkout main
+git merge test
+git push origin main
+# → Railway automatically deploys to production environment
+```
+
+#### Workflow Enforcement
+- **GitHub Branch Protection**: Prevents direct pushes to `test` and `main` branches
+- **GitHub Workflow**: Enforces correct branch promotion order (dev → test → main)
+- **Required**: All code must flow through dev → test → main sequence
+
+#### Version Display
+The current version is automatically displayed on the About page and can be accessed via:
+- **Web UI**: Visit `/about` page
+- **API**: `GET /api/v1/version/display`
+
+#### Database Migrations
+When making database schema changes:
+```bash
+# Generate migration
+npx prisma migrate dev --name describe_your_change
+
+# Apply migrations in production
+npm run db:migrate
+```
+
+#### Database Safety & Protection
+**⚠️ CRITICAL: Always backup your database before destructive operations!**
+
+This project includes comprehensive database protection to prevent data loss:
+
+##### Automatic Backup Commands
+```bash
+# Create a backup before any destructive operation
+npm run db:backup
+
+# Check database status
+npm run db:check
+
+# List available backups
+npm run db:list
+
+# Restore from backup (with confirmation prompt)
+npm run db:restore <backup_file>
+
+# Safe reset (creates backup then resets)
+npm run db:safe-reset
+```
+
+##### Manual Backup Script
+```bash
+# Direct script usage
+./db-protect.sh backup          # Create backup
+./db-protect.sh status          # Check database status
+./db-protect.sh list            # List backups
+./db-protect.sh restore <file>  # Restore from backup
+./db-protect.sh help            # Show help
+```
+
+##### ⚠️ Dangerous Commands (Use with Extreme Caution)
+```bash
+# NEVER run these without a backup first:
+npx prisma migrate reset        # ❌ DESTROYS ALL DATA
+npx prisma migrate reset --force # ❌ DESTROYS ALL DATA
+
+# Instead, use the safe version:
+npm run db:safe-reset           # ✅ Creates backup first
+```
+
+##### Backup Location
+- Backups are stored in `./archive/` directory
+- Format: `backup_YYYYMMDD_HHMMSS.sql`
+- Test backups: `test_backup_test_YYYYMMDD_HHMMSS.sql`
+- Production backups: `production_backup_production_YYYYMMDD_HHMMSS.sql`
+
+##### Environment Protection Summary
+
+| Environment | Script | Backup Command | Status Check | Warning Command |
+|-------------|--------|----------------|--------------|-----------------|
+| **Local Dev** | `db-protect.sh` | `npm run db:backup` | `npm run db:check` | `npm run db:warn` |
+| **Railway Test** | `test-protect.sh` | `npm run test:backup` | `npm run test:status` | `npm run test:warn` |
+| **Railway Prod** | `prod-protect.sh` | `npm run prod:backup` | `npm run prod:status` | `npm run prod:warn` |
+
+##### Test Environment Protection
+**🧪 CRITICAL: Test data should be preserved for consistency!**
+
+For Railway test environment:
+```bash
+# Create test backup (REQUIRED before any changes)
+npm run test:backup
+
+# Check test database status
+npm run test:status
+
+# Show test operations warning
+npm run test:warn
+
+# Safe migration (backup + migrate)
+npm run test:safe-migrate
+
+# Sync test data from production
+npm run test:sync
+```
+
+##### Production Environment Protection
+**🚨 CRITICAL: Production data is irreplaceable!**
+
+For Railway production environment:
+```bash
+# Create production backup (REQUIRED before any changes)
+npm run prod:backup
+
+# Check production database status
+npm run prod:status
+
+# Show dangerous operations warning
+npm run prod:warn
+
+# Safe migration (backup + migrate)
+npm run prod:safe-migrate
+```
+
+##### ⚠️ ENVIRONMENT SAFETY RULES
+
+**Test Environment:**
+1. **NEVER run destructive commands on test without backup**
+2. **ALWAYS use `npm run test:backup` before any changes**
+3. **Test changes locally before applying to test environment**
+4. **Use `npm run test:sync` to refresh test data from production**
+
+**Production Environment:**
+1. **NEVER run destructive commands on production without backup**
+2. **ALWAYS use `npm run prod:backup` before any changes**
+3. **Use Railway dashboard for safe operations when possible**
+4. **Test all changes on test environment first**
+
+##### Recovery Procedures
+If you accidentally lose data:
+
+**Local Development:**
+1. **Stop all operations immediately**
+2. **Check available backups**: `npm run db:list`
+3. **Restore from most recent backup**: `npm run db:restore <backup_file>`
+4. **Verify data integrity**: `npm run db:check`
+
+**Test Environment:**
+1. **Stop all operations immediately**
+2. **Check available backups**: `npm run test:status`
+3. **Restore from backup**: `npm run test:restore <backup_file>`
+4. **Or sync from production**: `npm run test:sync`
+5. **Verify data integrity**: `npm run test:status`
+
+**Production Environment:**
+1. **Stop all operations immediately**
+2. **Check available backups**: `npm run prod:status`
+3. **Restore from most recent backup**: `npm run prod:restore <backup_file>`
+4. **Verify data integrity**: `npm run prod:status`
+5. **Contact admin immediately if production data is lost**
+
+##### Railway Deployment Workflow
+
+**Safe Deployment Process:**
+```bash
+# 1. Test changes locally first
+npm run dev
+
+# 2. Create backup before any Railway changes
+npm run test:backup      # For test environment
+npm run prod:backup      # For production environment
+
+# 3. Deploy to test environment
+git push origin test
+# Railway auto-deploys test branch
+
+# 4. Verify test environment
+npm run test:status
+
+# 5. Deploy to production (only after test verification)
+git push origin main
+# Railway auto-deploys main branch
+
+# 6. Verify production environment
+npm run prod:status
+```
+
+**Railway-Specific Commands:**
+```bash
+# Safe Railway operations
+npm run railway:safe-deploy    # Full safe deployment
+npm run railway:safe-backup    # Railway-specific backup
+npm run railway:safe-migrate   # Railway-safe migration
+npm run railway:status         # Railway deployment status
+```
+
+   ### Production Deployment
+
+The application is configured for Railway deployment:
+
+1. **Build the application:**
+   ```bash
+   npm run build
+   ```
+
+2. **Start production server:**
+   ```bash
+   npm start
+   ```
+
+## 🧪 Testing
+
+### Run Smoke Tests
+```bash
+# Test against local development
+npm run test:smoke:runner
+
+# Test against Railway test environment
+export TEST_BASE_URL=https://thanksgiving-test-test.up.railway.app
+npm run test:smoke:runner
+```
+
+### Run E2E Tests
+```bash
+# Install browsers (first time only)
+npx playwright install
+
+# Run E2E tests
+npm run test:e2e:smoke
+```
+
+### Run Unit Tests
+```bash
+npm test
+npm run test:coverage
+```
+
+## 📁 Project Structure
+
+```
+thanksgiving/
+├── src/
+│   ├── controllers/          # Route controllers
+│   ├── middleware/           # Express middleware
+│   ├── routes/              # API routes
+│   ├── services/            # Business logic
+│   ├── lib/                 # Utility libraries
+│   └── server.ts            # Main server file
+├── prisma/
+│   └── schema.prisma        # Database schema
+├── tests/
+│   ├── smoke/               # Smoke tests
+│   ├── e2e/                 # End-to-end tests
+│   └── setup.ts             # Test configuration
+├── scripts/
+│   └── run-smoke-tests.ts   # Comprehensive test runner
+├── views/                   # EJS templates
+├── public/                  # Static assets
+├── docs/                    # Documentation
+└── dist/                    # Compiled TypeScript output
+```
+
+## 🗄️ Database Schema
+
+The application uses Prisma with the following models:
+
+- **Event** - Thanksgiving menu events (31 events from 1994-2024)
+- **User** - User authentication and management
+- **Photo** - Photo attachments for events
+- **Session** - User session management
+- **PasswordResetToken** - Secure password reset tokens
+
+## 🔧 Available Scripts
+
+- `npm run dev` - Start development server with hot reload
+- `npm run build` - Compile TypeScript to JavaScript
+- `npm start` - Start production server
+- `npm test` - Run Jest unit tests
+- `npm run test:smoke` - Run smoke tests
+- `npm run test:e2e` - Run Playwright E2E tests
+- `npm run db:generate` - Generate Prisma client
+- `npm run db:push` - Push schema to database
+- `npm run db:studio` - Open Prisma Studio
+
+## 🌐 API Endpoints
+
+- `GET /` - Home page with menu collection
+- `GET /menu/:id` - Individual menu detail page
+- `GET /api/v1/version/display` - Version information
+- `GET /api/setup-database` - Database initialization endpoint
+- `GET /forgot-password` - Password reset form
+- `POST /forgot-password` - Send password reset email
+- `GET /reset-password/:token` - Password reset form
+- `POST /reset-password/:token` - Update password
+- `GET /forgot-username` - Username recovery form
+- `POST /forgot-username` - Send username recovery email
+
+## 🔒 Security Features
+
+- **Content Security Policy** - XSS protection
+- **Helmet.js** - Security headers
+- **Rate Limiting** - API protection
+- **CORS** - Cross-origin request handling
+- **Input Validation** - Request validation middleware
+- **Password Reset Security** - Secure token-based password reset with expiration
+- **Email Security** - Account-linked email recovery only
+
+## 📊 Deployment Status
+
+✅ **All Phases Complete:**
+- Phase 1: Project Structure Migration
+- Phase 2: Database Migration (Prisma)
+- Phase 3: Server Architecture (TypeScript)
+- Phase 4: API Development
+- Phase 5: Frontend Development
+- Phase 6: Testing (100% smoke test pass rate)
+- Phase 7: Deployment (Railway)
+- Phase 8: Final Cleanup
+- Phase 9: Password Reset & Email Integration (v3.1.3)
+
+## 🐛 Troubleshooting
+
+1. **Database Connection Issues:**
+   - Verify `DATABASE_URL` in `.env`
+   - Ensure PostgreSQL is running
+   - Run `npm run db:push` to sync schema
+
+2. **Build Issues:**
+   - Run `npm run clean && npm run build`
+   - Check TypeScript errors with `npx tsc --noEmit`
+
+3. **Test Failures:**
+   - Ensure database is initialized: `npm run db:push`
+   - Check environment variables are set correctly
+
+4. **Email Issues:**
+   - Verify `MAILGUN_API_KEY`, `MAILGUN_DOMAIN`, and `MAILGUN_FROM` are set
+   - Check Mailgun account status and limits
+   - Verify email service logs for delivery issues
+
+## 📚 Documentation
+
+- [Reconfiguration Plan](docs/Reconfiguration_Plan.md) - Complete migration documentation
+- [Railway Deployment Lessons](docs/RAILWAY_DEPLOYMENT_LESSONS.md) - Deployment troubleshooting guide
+- [Architecture Documentation](docs/Thanksgiving%20Website%20Architecture.md) - Detailed system architecture
+- [Test Documentation](tests/README.md) - Testing guide and conventions
+- [Mailgun Setup Guide](MAILGUN_SETUP.md) - Email service configuration
+
+## 🤝 Development Workflow & Rules
+
+### Core Development Rules
+
+1. **Always Use Versioning Function**
+   - Use `npm run version:patch` for bug fixes
+   - Use `npm run version:minor` for new features  
+   - Use `npm run version:major` for breaking changes
+   - **NEVER** manually edit version numbers
+
+2. **Server Restart Protocol**
+   - **ALWAYS** stop and start the server after making changes
+   - Use `pkill -f "ts-node-dev" && npm run dev` to ensure clean restart
+   - This prevents caching issues and ensures changes are loaded
+
+3. **Environment Management Rules**
+   - **NEVER** make changes directly in test or production
+   - **ALWAYS** work in dev branch first
+   - **ALWAYS** backup database before any destructive operations
+   - Follow strict dev → test → main promotion workflow
+
+4. **Database Change Rules**
+   - **ALWAYS** backup before schema changes
+   - **ALWAYS** test migrations locally first
+   - **ALWAYS** backup test environment before changes
+   - **ALWAYS** backup production before any changes
+
+5. **Journal Scrapbook Development**
+   - Journal editor and viewer are core features
+   - Always test drag-and-drop functionality
+   - Always test image display in both editor and viewer
+   - Always test page break functionality
+   - Always test delete functionality for content items
+
+6. **Email Configuration Rules**
+   - **NEVER** hardcode API keys in source code
+   - **ALWAYS** use environment variables for sensitive data
+   - **ALWAYS** test email functionality in development first
+   - **ALWAYS** verify Mailgun configuration before deployment
+
+### Development Best Practices
+
+1. **Testing Protocol**
+   - Run smoke tests after major changes
+   - Test journal editor functionality thoroughly
+   - Verify image display across all content types
+   - Test responsive design on different screen sizes
+   - Test password reset and email functionality
+
+2. **Code Quality**
+   - Fix TypeScript errors immediately
+   - Use proper error handling
+   - Add debugging logs when needed
+   - Clean up temporary files after debugging
+
+3. **Git Workflow**
+   - Commit frequently with descriptive messages
+   - Use semantic versioning for all releases
+   - Tag releases properly
+   - Push to remote after versioning
+
+### GitHub Issue Management
+
+**CRITICAL: Always add issues to the kanban board!**
+
+When creating GitHub issues, follow this process to ensure they appear in the kanban board:
+
+#### Creating Issues with Kanban Integration
+
+1. **Create the issue:**
+   ```bash
+   gh issue create --title "Your Issue Title" --body "Issue description" --label "bug"
+   ```
+
+2. **Add to Thanksgiving Website Backlog project:**
+   ```bash
+   gh project item-add 1 --owner maguirebob --url https://github.com/maguirebob/thanksgiving/issues/[ISSUE_NUMBER]
+   ```
+
+#### Complete Issue Creation Process
+
+**Step 1: Create Issue**
+```bash
+gh issue create --title "Bug Title" --body "## Bug Description
+Detailed description here...
+
+## Steps to Reproduce
+1. Step one
+2. Step two
+
+## Expected Behavior
+What should happen
+
+## Priority
+High/Medium/Low" --label "bug"
+```
+
+**Step 2: Get Issue Number**
+The command will output: `https://github.com/maguirebob/thanksgiving/issues/XX`
+
+**Step 3: Add to Kanban**
+```bash
+gh project item-add 1 --owner maguirebob --url https://github.com/maguirebob/thanksgiving/issues/XX
+```
+
+#### Available Labels
+- `bug` - For bugs and issues
+- `documentation` - For documentation tasks
+- `enhancement` - For new features
+- `help wanted` - For community help needed
+
+#### Project Information
+- **Project Name:** Thanksgiving Website Backlog
+- **Project ID:** 1
+- **Owner:** maguirebob
+- **Repository:** thanksgiving
+
+#### Verification Commands
+```bash
+# List all open issues
+gh issue list --state open
+
+# View specific issue
+gh issue view [NUMBER]
+
+# List projects
+gh project list
+
+# Check if issue is in project
+gh project item-list 1
+```
+
+**⚠️ IMPORTANT:** Issues created without adding to the project will NOT appear in the kanban board!
+
+## 🎯 Next Steps
+
+The application is production-ready! Consider:
+
+1. **Production Deployment** - Deploy to Railway production environment
+2. **Custom Domain** - Set up custom domain and SSL
+3. **Monitoring** - Add application monitoring and logging
+4. **Backup Strategy** - Implement database backup procedures
+5. **Email Monitoring** - Set up Mailgun webhook monitoring for delivery status
+
+## 📄 License
+
+MIT License - see LICENSE file for details
+
+---
+
+**Migration completed successfully!** 🎉 The Thanksgiving Menu Collection is now running on modern TypeScript/Prisma architecture with comprehensive testing, Railway deployment, and secure email functionality.
+
+## 🔄 Recent Updates (v3.1.3)
+
+- **✅ Password Reset & Recovery** - Complete password reset and username recovery functionality
+- **✅ Mailgun Integration** - Secure email service for transactional emails
+- **✅ Security Improvements** - Removed hardcoded API keys, environment variable-based configuration
+- **✅ Database Schema** - Added PasswordResetTokens table for secure token management
+- **✅ Email Templates** - Professional HTML email templates with Thanksgiving theme

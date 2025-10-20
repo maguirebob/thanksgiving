@@ -114,6 +114,13 @@ npm run version:patch "Short description" "Detailed explanation" "Additional con
 - **Use proper error handling** - Ensure all database operations have proper error handling and logging
 - **Validate before operations** - Always validate data before database operations
 
+### Git History Management Rules
+- **NEVER USE `git filter-branch`** - This command is deprecated and dangerous, can destroy entire repository history
+- **Use `git filter-repo` instead** - Modern, safer alternative for rewriting git history
+- **For removing secrets from history** - Use targeted approaches like editing specific commits or using `git filter-repo`
+- **Always backup before history rewriting** - Create a full repository backup before any history manipulation
+- **Prefer prevention over cure** - Never commit secrets in the first place, use environment variables
+
 ### Migration Safety Checklist
 1. **Backup database** before any migration
 2. **Test migration locally** with production-like data
