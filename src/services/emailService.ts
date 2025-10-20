@@ -140,13 +140,7 @@ export class EmailService {
         },
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        // Prevent axios from logging sensitive auth data
-        transformRequest: [(data, headers) => {
-          // Remove auth from headers to prevent logging
-          delete headers['Authorization'];
-          return data;
-        }]
+        }
       });
 
       console.log(`📧 Email sent successfully to: ${to}`);
