@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { logger } from '../lib/logger';
 
 export interface EmailTemplates {
   passwordReset: {
@@ -178,17 +177,10 @@ export class EmailService {
 
   async testConnection(): Promise<boolean> {
     try {
-      // Test by sending a simple email to ourselves
-      const testEmail = 'test@example.com';
-      const testData = {
-        username: 'test',
-        resetUrl: 'https://example.com/test'
-      };
-      
-      // We'll just test the API connection without actually sending
+      // Test the API connection without actually sending
       const url = `https://api.mailgun.net/v3/${this.domain}/messages`;
       
-      const response = await axios.get(url, {
+      await axios.get(url, {
         auth: {
           username: 'api',
           password: this.apiKey
