@@ -101,3 +101,6 @@ build/
 # Railway specific
 .railway/
 .vercel
+
+# Generated scrapbook files (should only be created in each environment)
+public/scrapbooks/
