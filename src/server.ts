@@ -11,7 +11,7 @@ import { logger } from './lib/logger';
 import s3Service from './services/s3Service';
 import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/authRoutes';
-// import passwordResetRoutes from './routes/passwordResetRoutes';
+import passwordResetRoutes from './routes/passwordResetRoutes';
 import adminRoutes from './routes/adminRoutes';
 import photoRoutes from './routes/photoRoutes';
 import blogRoutes from './routes/blogRoutes';
@@ -123,7 +123,7 @@ const sessionConfig: any = {
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env['NODE_ENV'] === 'production' ? true : false,
+    secure: false, // Temporarily disable secure cookies for Railway testing
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     sameSite: 'lax' // Allow cross-site cookies for Railway
@@ -760,7 +760,7 @@ app.get('/journal', async (_req, res) => {
 
 // Authentication routes
 app.use('/auth', authRoutes);
-// app.use('/auth', passwordResetRoutes);
+app.use('/auth', passwordResetRoutes);
 
 // Admin routes
 app.use('/admin', adminRoutes);
