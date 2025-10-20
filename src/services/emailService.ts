@@ -158,8 +158,7 @@ export class EmailService {
   }
 
   async sendPasswordReset(email: string, data: { firstName?: string; username: string; resetUrl: string }): Promise<void> {
-    this.initialize(); // Ensure configuration is loaded
-    const template = this.templates!.passwordReset;
+    const template = this.templates.passwordReset;
     
     try {
       await this.sendMailgunEmail(email, template.subject, template.html(data));
@@ -171,8 +170,7 @@ export class EmailService {
   }
 
   async sendUsernameRecovery(email: string, data: { firstName?: string; username: string; loginUrl: string }): Promise<void> {
-    this.initialize(); // Ensure configuration is loaded
-    const template = this.templates!.usernameRecovery;
+    const template = this.templates.usernameRecovery;
     
     try {
       await this.sendMailgunEmail(email, template.subject, template.html(data));
@@ -184,8 +182,6 @@ export class EmailService {
   }
 
   async testConnection(): Promise<boolean> {
-    this.initialize(); // Ensure configuration is loaded
-    
     try {
       // Test the API connection without actually sending
       const url = `https://api.mailgun.net/v3/${this.domain}/messages`;
