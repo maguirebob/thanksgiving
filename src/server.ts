@@ -11,6 +11,7 @@ import { logger } from './lib/logger';
 import s3Service from './services/s3Service';
 import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/authRoutes';
+import passwordResetRoutes from './routes/passwordResetRoutes';
 import adminRoutes from './routes/adminRoutes';
 import photoRoutes from './routes/photoRoutes';
 import blogRoutes from './routes/blogRoutes';
@@ -746,6 +747,7 @@ app.get('/journal', async (_req, res) => {
 
 // Authentication routes
 app.use('/auth', authRoutes);
+app.use('/auth', passwordResetRoutes);
 
 // Admin routes
 app.use('/admin', adminRoutes);

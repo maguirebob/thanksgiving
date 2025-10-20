@@ -2,6 +2,19 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [3.1.2] - 2025-10-20
+
+- **Feature: Password Reset & Forgot Credentials**
+  - Added complete password reset and username recovery functionality
+  - Implemented secure token-based password reset system with 1-hour expiration
+  - Added PasswordResetTokens table for secure token storage
+  - Integrated Mailgun email service for sending password reset and username recovery emails
+  - Added professional HTML email templates with Thanksgiving theme
+  - Implemented security best practices: account-linked email only, generic messages to prevent enumeration
+  - Added "Forgot Password?" and "Forgot Username?" links to login page
+  - Updated database verification to include new PasswordResetTokens table
+  - Configured Mailgun REST API integration for all environments (dev, test, prod)
+
 ## [3.1.1] - 2025-10-20
 
 - Prepare for password reset implementation

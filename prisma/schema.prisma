@@ -20,6 +20,7 @@ model User {
   blog_posts    BlogPost[]
   recipes       Recipe[]
   sessions      Session[]
+  password_reset_tokens PasswordResetToken[]
 
   @@map("Users")
 }
@@ -33,6 +34,18 @@ model Session {
   user       User?    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 
   @@map("Sessions")
+}
+
+model PasswordResetToken {
+  id          Int      @id @default(autoincrement())
+  user_id     Int
+  token       String   @unique @db.VarChar(255)
+  expires_at  DateTime
+  used        Boolean  @default(false)
+  created_at  DateTime @default(now())
+  user        User     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@map("PasswordResetTokens")
 }
 
 model Event {
