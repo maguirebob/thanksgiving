@@ -136,7 +136,7 @@ export class EmailService {
       // Use environment variables directly to avoid any potential logging
       const apiKey = process.env['MAILGUN_API_KEY'];
       
-      const response = await axios.post(url, formData, {
+      await axios.post(url, formData, {
         auth: {
           username: 'api',
           password: apiKey!
