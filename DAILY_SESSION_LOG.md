@@ -331,4 +331,156 @@
 
 ---
 
+## 📅 Session Date: October 19, 2025
+
+### 🎯 **Session Goals**
+- Complete scrapbook system implementation (Phase 1-4)
+- Deploy scrapbook system to production
+- Fix critical test safety issues
+- Restore dev database after accidental data loss
+
+### ✅ **Completed Tasks**
+
+#### **Scrapbook System Implementation**
+- **Phase 1**: ✅ Static file infrastructure with Turn.js flipbook library
+- **Phase 2**: ✅ HTML generation system with database integration
+- **Phase 3**: ✅ Testing and validation of scrapbook generation
+- **Phase 4**: ✅ Static file serving with year selection interface
+- **Result**: Complete scrapbook system with admin editor and viewer
+
+#### **Major Features Added**
+- **Scrapbook Editor**: Enhanced journal editor with published status indicators
+- **Scrapbook Viewer**: Year selection interface for viewing generated scrapbooks
+- **HTML Generation**: Dynamic scrapbook generation from journal content
+- **S3 Integration**: Scrapbooks stored locally and backed up to S3
+- **Database Tracking**: ScrapbookFiles table tracks generated scrapbooks
+- **API Endpoints**: Complete API for scrapbook management
+
+#### **Production Deployment**
+- **Version**: 3.0.1 (major release)
+- **Deployment**: Successfully moved from dev → test → main → production
+- **Backup**: Created production backup before deployment
+- **Result**: Scrapbook system live in production
+
+#### **Critical Safety Fixes**
+- **Problem**: Smoke tests accidentally deleted all dev database records
+- **Root Cause**: Destructive cleanup functions without proper safety checks
+- **Solution**: Added critical safety rules to PROJECT_CONVENTIONS_AND_RULES.md
+- **Safety Rules**: 
+  - ❌ NEVER use `deleteMany()` without WHERE clauses
+  - ❌ NEVER run destructive cleanup on non-test databases
+  - ✅ ONLY delete specific test records by ID
+  - ✅ ALWAYS verify test environment before cleanup
+
+#### **Database Restoration**
+- **Users Restored**: admin, user, testuser from production backup
+- **Events Restored**: 20 Thanksgiving events (1997-2024) with dev S3 URLs
+- **S3 URLs Updated**: All menu images point to thanksgiving-images-dev.s3.us-east-1.amazonaws.com
+- **Result**: Dev database fully restored with correct data
+
+### 📊 **Current Status**
+
+#### **Environment Health**
+- **Development**: ✅ Working (users and events restored)
+- **Test**: ✅ Working (Railway test environment)
+- **Production**: ✅ Working (scrapbook system deployed)
+
+#### **Version Status**
+- **Current Version**: 3.0.1
+- **Major Features**: Complete scrapbook system
+- **Database Schema**: Updated with ScrapbookContent and ScrapbookFiles tables
+
+### 🐛 **Issues Resolved**
+
+#### **Data Loss Prevention**
+- **Status**: ✅ Resolved with safety rules
+- **Impact**: Prevents accidental deletion of dev/production data
+- **Solution**: Comprehensive safety checks in test cleanup functions
+
+#### **Scrapbook Image References**
+- **Status**: ✅ Resolved
+- **Problem**: Images sourced locally instead of S3
+- **Solution**: Updated to use S3 API endpoints for all image types
+
+### 📚 **Key Learnings**
+
+#### **Critical Safety Lessons**
+- **Test Isolation**: Tests MUST run against dedicated test database only
+- **Destructive Operations**: NEVER use `deleteMany()` without WHERE clauses
+- **Safety Checks**: Always verify environment before destructive operations
+- **Backup Strategy**: Always backup before major changes
+
+#### **Scrapbook System Architecture**
+- **Static Generation**: HTML files generated locally, served from public directory
+- **S3 Backup**: Generated scrapbooks backed up to S3 for redundancy
+- **Database Tracking**: ScrapbookFiles table tracks all generated scrapbooks
+- **API Integration**: All images served via S3 API endpoints
+
+### 🔧 **Technical Changes Made**
+
+#### **New Files Created**
+- `src/routes/scrapbookRoutes.ts` - Scrapbook API endpoints
+- `src/services/scrapbookHtmlGenerator.ts` - HTML generation service
+- `src/services/scrapbookTemplateService.ts` - Template management
+- `views/scrapbook-viewer.ejs` - Scrapbook viewer interface
+- `public/js/scrapbook-viewer.js` - Frontend scrapbook functionality
+- `prisma/migrations/20250116_add_scrapbook_content/` - Database migration
+- `prisma/migrations/20250119_add_scrapbook_files/` - Database migration
+
+#### **Files Modified**
+- `views/layout.ejs` - Changed "Journal" to "Scrapbooks" in navigation
+- `views/admin/journal-editor.ejs` - Added published status indicators
+- `public/js/components/journalEditor.js` - Enhanced with scrapbook features
+- `src/server.ts` - Updated journal route to serve scrapbook viewer
+- `src/lib/schemaVersions.ts` - Added schema definitions for version 3.0.0 and 3.0.1
+
+#### **Database Changes**
+- **ScrapbookContent**: Tracks scrapbook content items
+- **ScrapbookFiles**: Tracks generated scrapbook files
+- **JournalSections**: Added `is_published` field
+
+### 🚀 **Next Session Priorities**
+
+1. **Continue Development on Dev Branch**
+   - User is ready to make changes to dev environment
+   - Dev database is restored and ready for development
+   - All safety measures are in place
+
+2. **Monitor Production**
+   - Verify scrapbook system working in production
+   - Monitor for any issues with new features
+   - User acceptance testing
+
+3. **Future Enhancements**
+   - Phase 5: Direct editing and polish features
+   - Additional scrapbook customization options
+   - Performance optimizations
+
+### 📝 **Notes for Next Session**
+
+#### **Current Branch Status**
+- **Current Branch**: main (production deployment complete)
+- **Next Action**: Switch to dev branch for new development
+- **Dev Database**: Fully restored with users and events
+
+#### **Safety Measures in Place**
+- **Critical Safety Rules**: Added to PROJECT_CONVENTIONS_AND_RULES.md
+- **Test Safety**: All test cleanup functions use selective deletion
+- **Backup Strategy**: Production backup created before deployment
+
+#### **Scrapbook System Status**
+- **Production**: Live and functional
+- **Features**: Complete scrapbook generation and viewing system
+- **Database**: All tables and migrations applied
+- **S3 Integration**: Working with proper image serving
+
+### 🔗 **Resources**
+- **Production Backup**: `backups/production_backup_20251019_181727.sql`
+- **Dev Backup**: `backups/dev_backup_20251019_180028.sql`
+- **Safety Rules**: `PROJECT_CONVENTIONS_AND_RULES.md`
+- **Deployment Checklist**: `checklist.md`
+- **Schema Versions**: `src/lib/schemaVersions.ts`
+
+---
+
 *This document is updated daily to track progress, decisions, and learnings for the Thanksgiving Website Project.*
