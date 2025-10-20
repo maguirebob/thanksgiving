@@ -2,6 +2,15 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [3.1.3] - 2025-10-20
+
+- **Security: Remove hardcoded Mailgun API key**
+  - Removed hardcoded API key from email service for improved security
+  - Now uses environment variables exclusively with proper validation
+  - Added clear error messages if Mailgun configuration is missing
+  - Same functionality, improved security posture
+  - Ready for secure deployment across all environments
+
 ## [3.1.2] - 2025-10-20
 
 - **Feature: Password Reset & Forgot Credentials**

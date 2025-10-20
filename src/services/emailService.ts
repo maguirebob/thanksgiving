@@ -20,9 +20,18 @@ export class EmailService {
 
   constructor() {
     // Mailgun configuration
-    this.apiKey = process.env['MAILGUN_API_KEY'] || 'cb3535e4809d032881908bb11cab2960-ba8a60cd-94c9e06e';
-    this.domain = process.env['MAILGUN_DOMAIN'] || 'sandbox6a0ace4e5d1f40f38af4cc43c2c11e6f.mailgun.org';
-    this.fromEmail = process.env['MAILGUN_FROM'] || 'postmaster@sandbox6a0ace4e5d1f40f38af4cc43c2c11e6f.mailgun.org';
+    this.apiKey = process.env['MAILGUN_API_KEY'] || '';
+    this.domain = process.env['MAILGUN_DOMAIN'] || '';
+    this.fromEmail = process.env['MAILGUN_FROM'] || '';
+
+    // Validate required environment variables
+    if (!this.apiKey || !this.domain || !this.fromEmail) {
+      console.error('❌ Missing required Mailgun environment variables:');
+      console.error('   MAILGUN_API_KEY:', this.apiKey ? '✅ Set' : '❌ Missing');
+      console.error('   MAILGUN_DOMAIN:', this.domain ? '✅ Set' : '❌ Missing');
+      console.error('   MAILGUN_FROM:', this.fromEmail ? '✅ Set' : '❌ Missing');
+      throw new Error('Mailgun configuration incomplete. Please set MAILGUN_API_KEY, MAILGUN_DOMAIN, and MAILGUN_FROM environment variables.');
+    }
 
     console.log('📧 Email service configured for Mailgun REST API');
     console.log(`📧 Domain: ${this.domain}`);
