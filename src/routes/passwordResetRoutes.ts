@@ -24,6 +24,11 @@ router.get('/forgot-password', (req: Request, res: Response) => {
  * POST /auth/forgot-password
  */
 router.post('/forgot-password', async (req: Request, res: Response) => {
+  console.log('🔐 FORGOT PASSWORD ATTEMPT:', {
+    username: req.body.username,
+    sessionId: req.sessionID
+  });
+  
   try {
     const { username } = req.body;
 
@@ -37,6 +42,7 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
     }
 
     // Find user by username or email
+    console.log('🔐 Searching for user:', username.trim());
     const user = await prisma.user.findFirst({
       where: {
         OR: [
@@ -55,7 +61,10 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
     // Always show success message to prevent username enumeration
     // But only send email if user exists
     if (user) {
+      console.log('✅ User found:', { id: user.user_id, username: user.username, email: user.email });
+      
       // Invalidate any existing reset tokens for this user
+      console.log('🔐 Invalidating existing tokens...');
       await prisma.passwordResetToken.updateMany({
         where: {
           user_id: user.user_id,
@@ -67,6 +76,7 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
       });
 
       // Create new reset token
+      console.log('🔐 Creating new reset token...');
       const tokenData = TokenService.createTokenData();
       await prisma.passwordResetToken.create({
         data: {
@@ -76,10 +86,14 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
         }
       });
 
+      console.log('✅ Reset token created:', { token: tokenData.token.substring(0, 8) + '...', expiresAt: tokenData.expiresAt });
+
       // Generate reset URL
       const resetUrl = `${req.protocol}://${req.get('host')}/auth/reset-password/${tokenData.token}`;
+      console.log('🔐 Reset URL generated:', resetUrl);
 
       // Send email
+      console.log('📧 Sending password reset email...');
       const emailData: { firstName?: string; username: string; resetUrl: string } = {
         username: user.username,
         resetUrl
@@ -101,7 +115,12 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
     res.redirect('/auth/forgot-password?success=If an account with that username exists, we have sent password reset instructions to the registered email address.');
 
   } catch (error) {
-    console.error('Error in forgot password:', error);
+    console.error('❌ Error in forgot password:', error);
+    console.error('❌ Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      username: req.body.username
+    });
     res.redirect('/auth/forgot-password?error=An error occurred. Please try again.');
   }
 });
