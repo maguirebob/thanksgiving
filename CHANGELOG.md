@@ -2,6 +2,10 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [3.1.1] - 2025-10-20
+
+- Prepare for password reset implementation
+- Updated todos and prepared for implementing password reset and username recovery functionality
 ## [3.1.0] - 2025-10-20
 
 - Add section descriptions to scrapbook first pages
