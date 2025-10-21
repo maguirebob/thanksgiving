@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { ScrapbookHtmlGenerator } from '../services/scrapbookHtmlGenerator';
 import prisma from '../lib/prisma';
 
+console.log('🔧 SCRAPBOOK ROUTES: Module loaded successfully');
+
 // Debug configuration
 const DEBUG_SCRAPBOOK = process.env['DEBUG_SCRAPBOOK'] === 'true' || process.env['NODE_ENV'] === 'development';
 
