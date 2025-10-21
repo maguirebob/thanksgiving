@@ -3287,6 +3287,144 @@ export const SCHEMA_VERSIONS: Record<string, SchemaVersion> = {
     optionalColumns: {},
     migrationStatus: 'complete',
     notes: 'Build validation improvements: Added comprehensive build validation hooks including pre-commit validation, version manager integration, and deployment script validation. Created test-build.sh script for comprehensive build testing. Updated Railway deployment scripts to validate TypeScript builds before deployment.'
+  },
+  '3.1.24': {
+    version: '3.1.24',
+    requiredTables: [
+      'events',
+      'JournalSections',
+      'JournalContentItems',
+      'Users',
+      'BlogPosts',
+      'Photos',
+      'Recipes',
+      'Sessions',
+      'ScrapbookContent',
+      'PasswordResetTokens',
+      'ScrapbookFiles'
+    ],
+    requiredColumns: {
+      'events': [
+        'event_id',
+        'event_name',
+        'event_type',
+        'event_location',
+        'event_date',
+        'event_description',
+        'menu_title',
+        'menu_image_filename',
+        'created_at',
+        'updated_at',
+        'menu_image_s3_url'
+      ],
+      'JournalSections': [
+        'section_id',
+        'event_id',
+        'year',
+        'section_order',
+        'title',
+        'description',
+        'layout_config',
+        'is_published',
+        'created_at',
+        'updated_at'
+      ],
+      'JournalContentItems': [
+        'content_item_id',
+        'journal_section_id',
+        'content_type',
+        'content_id',
+        'content_order',
+        'page_number',
+        'manual_page_break',
+        'page_break_position',
+        'created_at',
+        'updated_at'
+      ],
+      'Users': [
+        'user_id',
+        'username',
+        'email',
+        'password_hash',
+        'role',
+        'first_name',
+        'last_name',
+        'created_at',
+        'updated_at'
+      ],
+      'BlogPosts': [
+        'blog_post_id',
+        'title',
+        'content',
+        'author_id',
+        'created_at',
+        'updated_at',
+        'image_url',
+        'image_filename'
+      ],
+      'Photos': [
+        'photo_id',
+        'filename',
+        'original_filename',
+        'file_path',
+        'file_size',
+        'mime_type',
+        'uploaded_by',
+        'upload_date',
+        's3_url',
+        's3_key'
+      ],
+      'Recipes': [
+        'recipe_id',
+        'title',
+        'description',
+        'ingredients',
+        'instructions',
+        'prep_time',
+        'cook_time',
+        'servings',
+        'created_at',
+        'updated_at',
+        'image_url',
+        'image_filename'
+      ],
+      'Sessions': [
+        'session_id',
+        'user_id',
+        'expires_at',
+        'created_at',
+        'updated_at'
+      ],
+      'ScrapbookContent': [
+        'id',
+        'year',
+        'content_type',
+        'content_data',
+        'page_number',
+        'created_at',
+        'updated_at'
+      ],
+      'PasswordResetTokens': [
+        'id',
+        'user_id',
+        'token',
+        'expires_at',
+        'used',
+        'created_at'
+      ],
+      'ScrapbookFiles': [
+        'id',
+        'year',
+        'filename',
+        'file_path',
+        'file_size',
+        'created_at',
+        'updated_at'
+      ]
+    },
+    optionalColumns: {},
+    migrationStatus: 'complete',
+    notes: 'Text page styling improvements: Fixed Thanksgiving border overflow on text pages and restored Patrick Hand font for text content. Improved border responsiveness and text alignment. Added new titlepageborder.png asset. Updated scrapbook template styling for better text layout. No database schema changes.'
   }
 };
 
