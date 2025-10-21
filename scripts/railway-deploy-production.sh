@@ -200,11 +200,35 @@ start_server() {
     fi
 }
 
+# Function to validate build
+validate_build() {
+    log_step "Validating TypeScript build..."
+    
+    # Check if dist directory exists
+    if [ ! -d "dist" ]; then
+        log_error "Build directory 'dist' not found!"
+        log_info "Running build process..."
+        npm run build || {
+            log_error "Build failed!"
+            exit 1
+        }
+    else
+        log_info "Build directory exists, validating TypeScript..."
+        npx tsc --noEmit || {
+            log_error "TypeScript validation failed!"
+            exit 1
+        }
+    fi
+    
+    log_success "Build validation passed"
+}
+
 # Main deployment process
 main() {
     log_step "PRODUCTION DEPLOYMENT STARTED"
     
     # Pre-deployment checks
+    validate_build
     validate_migrations
     check_migration_status
     

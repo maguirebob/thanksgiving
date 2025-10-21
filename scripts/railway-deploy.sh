@@ -5,6 +5,22 @@
 
 echo "🚀 Starting Railway deployment process..."
 
+# Step 0: Validate build (if not already built)
+echo "🔍 Validating TypeScript build..."
+if [ ! -d "dist" ]; then
+    echo "📦 Building application..."
+    npm run build || {
+        echo "❌ Build failed! Deployment aborted."
+        exit 1
+    }
+else
+    echo "✅ Build already exists, validating TypeScript..."
+    npx tsc --noEmit || {
+        echo "❌ TypeScript validation failed! Deployment aborted."
+        exit 1
+    }
+fi
+
 # Step 1: Generate Prisma client
 echo "📦 Generating Prisma client..."
 npx prisma generate || {

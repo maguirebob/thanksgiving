@@ -131,12 +131,18 @@ class VersionManager {
     const versionString = `${version.major}.${version.minor}.${version.patch}`;
     
     try {
+      // Run build validation before committing
+      console.log('🔍 Running build validation...');
+      execSync(`npx tsc --noEmit`, { stdio: 'inherit' });
+      console.log('✅ Build validation passed!');
+      
       execSync(`git add .`, { stdio: 'inherit' });
       execSync(`git commit -m "chore: bump version to ${versionString}"`, { stdio: 'inherit' });
       execSync(`git tag -a v${versionString} -m "Release version ${versionString}"`, { stdio: 'inherit' });
       console.log(`🏷️  Git tag v${versionString} created`);
     } catch (error) {
       console.error('❌ Error creating git tag:', error);
+      throw error;
     }
   }
 }
