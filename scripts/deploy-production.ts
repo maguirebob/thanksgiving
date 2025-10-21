@@ -90,8 +90,8 @@ function runTests(): void {
     execCommand('npm run test:api');
     log.success('API tests passed');
     
-    execCommand('npm run test:smoke');
-    log.success('Smoke tests passed');
+    // Note: Smoke tests removed to prevent creating test data in production
+    log.info('Smoke tests skipped for production deployment');
   } catch (error) {
     throw new Error('Tests failed - deployment aborted');
   }
@@ -173,15 +173,12 @@ function checkVersion(): void {
  * Run production smoke tests
  */
 function runProductionSmokeTests(): void {
-  log.step('Running production smoke tests...');
+  log.step('Skipping production smoke tests...');
   
-  try {
-    const testCommand = `TEST_BASE_URL=${config.productionUrl} npm run test:smoke`;
-    execCommand(testCommand);
-    log.success('Production smoke tests passed');
-  } catch (error) {
-    log.warning('Production smoke tests failed - check deployment manually');
-  }
+  // Note: Smoke tests removed to prevent creating test data in production
+  // Production validation should be done manually after deployment
+  log.info('Production smoke tests skipped to prevent test data creation');
+  log.info('Please verify production deployment manually after deployment completes');
 }
 
 /**
