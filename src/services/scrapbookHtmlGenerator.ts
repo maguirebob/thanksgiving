@@ -34,6 +34,9 @@ export class ScrapbookHtmlGenerator {
   constructor() {
     this.templatePath = path.join(__dirname, '../templates/scrapbook-template.html');
     this.outputDir = path.join(__dirname, '../../public/scrapbooks');
+    console.log(`🔧 TEMPLATE DEBUG: __dirname = ${__dirname}`);
+    console.log(`🔧 TEMPLATE DEBUG: templatePath = ${this.templatePath}`);
+    console.log(`🔧 TEMPLATE DEBUG: outputDir = ${this.outputDir}`);
   }
 
   /**
@@ -399,6 +402,17 @@ export class ScrapbookHtmlGenerator {
    * Generate HTML from template
    */
   private async generateHtmlFromTemplate(data: ScrapbookData): Promise<string> {
+    console.log(`🔧 TEMPLATE DEBUG: Attempting to read template from: ${this.templatePath}`);
+    
+    // Check if template file exists
+    try {
+      await fs.promises.access(this.templatePath);
+      console.log(`🔧 TEMPLATE DEBUG: Template file exists`);
+    } catch (error) {
+      console.error(`🔧 TEMPLATE DEBUG: Template file does not exist: ${error}`);
+      throw new Error(`Template file not found at: ${this.templatePath}`);
+    }
+    
     // Read the simple.html template
     const template = await fs.promises.readFile(this.templatePath, 'utf8');
     
