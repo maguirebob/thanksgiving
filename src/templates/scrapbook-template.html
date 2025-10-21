@@ -69,6 +69,71 @@
             font-weight: bold;
         }
         
+        /* Page type specific styles */
+        .menu-page {
+            background: url('../assets/parchment.jpg') center/cover;
+            background-color: white;
+            color: #8B4513;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .menu-page img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .title-page {
+            background: url('../assets/parchment.jpg') center/cover;
+            background-color: white;
+            color: #8B4513;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        
+        .text-page {
+            background: url('../assets/parchment.jpg') center/cover;
+            background-color: white;
+            color: #8B4513;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .photo-page {
+            background: url('../assets/parchment.jpg') center/cover;
+            background-color: white;
+            color: #8B4513;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .page-photo-page {
+            background: url('../assets/parchment.jpg') center/cover;
+            background-color: white;
+            color: #8B4513;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
         .cover {
             position: relative;
             height: 100%;
@@ -335,7 +400,7 @@
         <button id="prevBtn" class="nav-btn">← Previous</button>
         <button id="nextBtn" class="nav-btn">Next →</button>
         <button id="fullscreenBtn" class="nav-btn">Fullscreen</button>
-        <button class="nav-btn close-button" onclick="window.history.back()">Close</button>
+        <button class="nav-btn close-button" onclick="window.close()" title="Close Scrapbook">Close</button>
     </div>
 
     <script src="../js/jquery-3.7.1.min.js"></script>
