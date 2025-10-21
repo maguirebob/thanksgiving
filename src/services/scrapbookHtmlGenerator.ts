@@ -67,6 +67,8 @@ export class ScrapbookHtmlGenerator {
    */
   async generateScrapbook(year: number): Promise<string> {
     console.log(`🔧 GENERATOR DEBUG: Starting scrapbook generation for year ${year}`);
+    console.log(`🔧 GENERATOR DEBUG: Template path will be: ${this.templatePath}`);
+    console.log(`🔧 GENERATOR DEBUG: Output directory will be: ${this.outputDir}`);
     
     try {
       // Validate year parameter
