@@ -2818,6 +2818,151 @@ export const SCHEMA_VERSIONS: Record<string, SchemaVersion> = {
     optionalColumns: {},
     migrationStatus: 'complete',
     notes: 'Scrapbook module loading debug: Added console.log at module load to verify if scrapbookRoutes.ts is loading properly. This will help identify if the 500 error is due to module import failure or route execution failure.'
+  },
+  '3.1.20': {
+    version: '3.1.20',
+    requiredTables: [
+      'events',
+      'JournalSections',
+      'JournalContentItems',
+      'Users',
+      'BlogPosts',
+      'Photos',
+      'Recipes',
+      'Sessions',
+      'ScrapbookContent',
+      'PasswordResetTokens'
+    ],
+    requiredColumns: {
+      'events': [
+        'event_id',
+        'event_name',
+        'event_type',
+        'event_location',
+        'event_date',
+        'event_description',
+        'menu_title',
+        'menu_image_filename',
+        'created_at',
+        'updated_at',
+        'menu_image_s3_url'
+      ],
+      'JournalSections': [
+        'section_id',
+        'event_id',
+        'year',
+        'section_order',
+        'title',
+        'description',
+        'layout_config',
+        'is_published',
+        'created_at',
+        'updated_at'
+      ],
+      'JournalContentItems': [
+        'content_item_id',
+        'journal_section_id',
+        'content_type',
+        'content_id',
+        'custom_text',
+        'heading_level',
+        'display_order',
+        'is_visible',
+        'manual_page_break',
+        'page_break_position',
+        'created_at',
+        'updated_at'
+      ],
+      'Users': [
+        'user_id',
+        'username',
+        'email',
+        'password_hash',
+        'first_name',
+        'last_name',
+        'role',
+        'created_at',
+        'updated_at'
+      ],
+      'BlogPosts': [
+        'blog_post_id',
+        'event_id',
+        'user_id',
+        'title',
+        'content',
+        'excerpt',
+        'featured_image',
+        'tags',
+        'status',
+        'published_at',
+        'created_at',
+        'updated_at',
+        'images'
+      ],
+      'Photos': [
+        'photo_id',
+        'event_id',
+        'filename',
+        'original_filename',
+        'description',
+        'caption',
+        'taken_date',
+        'file_size',
+        'mime_type',
+        'file_data',
+        'created_at',
+        'updated_at',
+        's3_url',
+        'photo_type'
+      ],
+      'Recipes': [
+        'recipe_id',
+        'event_id',
+        'user_id',
+        'title',
+        'description',
+        'ingredients',
+        'instructions',
+        'prep_time',
+        'cook_time',
+        'servings',
+        'difficulty_level',
+        'category',
+        'image_filename',
+        'is_featured',
+        'created_at',
+        'updated_at',
+        'image_s3_url'
+      ],
+      'Sessions': [
+        'session_id',
+        'user_id',
+        'expires',
+        'data',
+        'created_at'
+      ],
+      'ScrapbookContent': [
+        'id',
+        'year',
+        'content_type',
+        'content_reference',
+        'display_order',
+        'page_break_before',
+        'page_break_after',
+        'created_at'
+      ],
+      'PasswordResetTokens': [
+        'id',
+        'user_id',
+        'token',
+        'expires_at',
+        'used',
+        'created_at'
+      ]
+    },
+    optionalColumns: {},
+    migrationStatus: 'complete',
+    notes: 'Scrapbook directory creation fix: Fixed ENOENT error by ensuring the /app/public/scrapbooks/ directory is created before attempting to write scrapbook files. Added directory existence check and creation with recursive: true option.'
   }
 };
 
