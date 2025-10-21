@@ -7,6 +7,10 @@ const cleanupTestData = async (prisma: PrismaClient, testRecordIds?: {
   photoIds?: number[];
   blogPostIds?: number[];
   recipeIds?: number[];
+  journalSectionIds?: number[];
+  journalContentItemIds?: number[];
+  scrapbookContentIds?: number[];
+  passwordResetTokenIds?: number[];
 }) => {
   // SAFETY CHECK: Verify we're in test environment
   if (process.env['NODE_ENV'] !== 'test') {
@@ -26,37 +30,72 @@ const cleanupTestData = async (prisma: PrismaClient, testRecordIds?: {
   }
   
   // Delete ONLY the specific records we created during tests
+  // Order matters: delete child records first, then parent records
+  
+  if (testRecordIds.passwordResetTokenIds && testRecordIds.passwordResetTokenIds.length > 0) {
+    const deleted = await prisma.passwordResetToken.deleteMany({
+      where: { id: { in: testRecordIds.passwordResetTokenIds } }
+    });
+    console.log(`🗑️ Deleted ${deleted.count} password reset tokens`);
+  }
+  
+  if (testRecordIds.scrapbookContentIds && testRecordIds.scrapbookContentIds.length > 0) {
+    const deleted = await prisma.scrapbookContent.deleteMany({
+      where: { id: { in: testRecordIds.scrapbookContentIds } }
+    });
+    console.log(`🗑️ Deleted ${deleted.count} scrapbook content items`);
+  }
+  
+  if (testRecordIds.journalContentItemIds && testRecordIds.journalContentItemIds.length > 0) {
+    const deleted = await prisma.journalContentItem.deleteMany({
+      where: { content_item_id: { in: testRecordIds.journalContentItemIds } }
+    });
+    console.log(`🗑️ Deleted ${deleted.count} journal content items`);
+  }
+  
+  if (testRecordIds.journalSectionIds && testRecordIds.journalSectionIds.length > 0) {
+    const deleted = await prisma.journalSection.deleteMany({
+      where: { section_id: { in: testRecordIds.journalSectionIds } }
+    });
+    console.log(`🗑️ Deleted ${deleted.count} journal sections`);
+  }
+  
   if (testRecordIds.photoIds && testRecordIds.photoIds.length > 0) {
-    await prisma.photo.deleteMany({
+    const deleted = await prisma.photo.deleteMany({
       where: { photo_id: { in: testRecordIds.photoIds } }
     });
+    console.log(`🗑️ Deleted ${deleted.count} photos`);
   }
   
   if (testRecordIds.recipeIds && testRecordIds.recipeIds.length > 0) {
-    await prisma.recipe.deleteMany({
+    const deleted = await prisma.recipe.deleteMany({
       where: { recipe_id: { in: testRecordIds.recipeIds } }
     });
+    console.log(`🗑️ Deleted ${deleted.count} recipes`);
   }
   
   if (testRecordIds.blogPostIds && testRecordIds.blogPostIds.length > 0) {
-    await prisma.blogPost.deleteMany({
+    const deleted = await prisma.blogPost.deleteMany({
       where: { blog_post_id: { in: testRecordIds.blogPostIds } }
     });
+    console.log(`🗑️ Deleted ${deleted.count} blog posts`);
   }
   
   if (testRecordIds.eventIds && testRecordIds.eventIds.length > 0) {
-    await prisma.event.deleteMany({
+    const deleted = await prisma.event.deleteMany({
       where: { event_id: { in: testRecordIds.eventIds } }
     });
+    console.log(`🗑️ Deleted ${deleted.count} events`);
   }
   
   if (testRecordIds.userIds && testRecordIds.userIds.length > 0) {
-    await prisma.user.deleteMany({
+    const deleted = await prisma.user.deleteMany({
       where: { user_id: { in: testRecordIds.userIds } }
     });
+    console.log(`🗑️ Deleted ${deleted.count} users`);
   }
   
-  console.log('✅ Cleaned up only test records we created');
+  console.log('✅ Test data cleanup completed - only deleted specific test records');
 };
 
 // Define test event creation function locally
@@ -103,6 +142,10 @@ describe('Smoke Tests - Database Operations', () => {
     photoIds: number[];
     blogPostIds: number[];
     recipeIds: number[];
+    journalSectionIds: number[];
+    journalContentItemIds: number[];
+    scrapbookContentIds: number[];
+    passwordResetTokenIds: number[];
   };
 
   beforeAll(async () => {
@@ -112,7 +155,11 @@ describe('Smoke Tests - Database Operations', () => {
       userIds: [],
       photoIds: [],
       blogPostIds: [],
-      recipeIds: []
+      recipeIds: [],
+      journalSectionIds: [],
+      journalContentItemIds: [],
+      scrapbookContentIds: [],
+      passwordResetTokenIds: []
     };
   });
 

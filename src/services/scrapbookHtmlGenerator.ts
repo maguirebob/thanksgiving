@@ -632,9 +632,11 @@ SCRAPBOOK GENERATION METADATA:
 
   private generateTextPage(content: any): string {
     return `        <!-- Text Page -->
-        <div class="page">
-            <p>${content.text}</p>
-        </div>`;
+            <div class="page text-page">
+                <div class="thanksgiving-border">
+                    <p>${content.text}</p>
+                </div>
+            </div>`;
   }
 
   private generateHeadingPage(content: any): string {
