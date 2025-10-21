@@ -1,4 +1,12 @@
 <!DOCTYPE html>
+<!-- 
+SCRAPBOOK GENERATION METADATA:
+- Generated: 10/21/2025, 7:58:10 AM EST
+- Expected Items: 17
+- Year: 2013
+- Template: /Users/bobmaguire/repos/thanksgiving/src/templates/scrapbook-template.html
+-->
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -59,7 +67,7 @@
         .page {
             width: 400px;
             height: 600px;
-            background: url('../assets/parchment.jpg') center/cover;
+            background: url('../assets/parchment.jpg') center center / cover no-repeat;
             background-color: white;
             border: 1px solid #ccc;
             display: flex;
@@ -67,6 +75,116 @@
             justify-content: center;
             font-size: 24px;
             font-weight: bold;
+        }
+        
+        /* Page type specific styles */
+        .menu-page {
+            background: url('../assets/parchment.jpg') center/cover;
+            background-color: white;
+            color: #8B4513;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .menu-page img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .title-page {
+            background: url('../assets/parchment.jpg') center/cover;
+            background-color: white;
+            color: #8B4513;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        
+        .text-page {
+            background: url('../assets/parchment.jpg') center/cover;
+            background-color: white;
+            color: #8B4513;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .heading-page {
+            background: url('../assets/parchment.jpg') center/cover;
+            background-color: white;
+            color: #8B4513;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .section-heading {
+            font-size: 32px;
+            font-weight: bold;
+            color: #5a3a1b;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .photo-page {
+            background: url('../assets/parchment.jpg') center/cover;
+            background-color: white;
+            color: #8B4513;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .page-photo-page {
+            background: url('../assets/parchment.jpg') center/cover;
+            background-color: white;
+            color: #8B4513;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .page-photo-page img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .page-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            aspect-ratio: 1/1;
+        }
+        
+        .page-photo-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .cover {
@@ -93,8 +211,8 @@
                 -2px -2px 3px rgba(0,0,0,0.8);      /* shadow bottom-right */
             z-index: 3;
         }
-
-        /* Corner Protector Styling */
+        
+        /* Brass corners and rivets */
         .cover::before,
         .cover::after,
         .cover .bottom-corners::before,
@@ -108,31 +226,12 @@
             box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.6);
             margin: -1px;
         }
-
-        .cover::before {
-            top: 0;
-            left: 0;
-            border-radius: 0 0 15px 0;
-        }
-
-        .cover::after {
-            top: 0;
-            right: 0;
-            border-radius: 0 0 0 15px;
-        }
-
-        .cover .bottom-corners::before {
-            bottom: 0;
-            left: 0;
-            border-radius: 0 15px 0 0;
-        }
-
-        .cover .bottom-corners::after {
-            bottom: 0;
-            right: 0;
-            border-radius: 15px 0 0 0;
-        }
-
+        
+        .cover::before { top: 0; left: 0; border-radius: 0 0 15px 0; }
+        .cover::after { top: 0; right: 0; border-radius: 0 0 0 15px; }
+        .cover .bottom-corners::before { bottom: 0; left: 0; border-radius: 0 15px 0 0; }
+        .cover .bottom-corners::after { bottom: 0; right: 0; border-radius: 15px 0 0 0; }
+        
         .rivet {
             position: absolute;
             width: 6px;
@@ -142,35 +241,44 @@
             box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5);
             z-index: 2;
         }
-
+        
         .rivet-tl { top: 3px; left: 3px; }
         .rivet-tr { top: 3px; right: 3px; }
         .rivet-bl { bottom: 3px; left: 3px; }
         .rivet-br { bottom: 3px; right: 3px; }
         
-        .menu-page img {
-            max-width: 90%;
-            max-height: 90%;
-            object-fit: contain;
+        .section-header {
+            background: url('../assets/parchment.jpg') center/cover;
+            background-color: white;
+            color: #8B4513;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 40px 20px;
         }
         
-        .photo-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(2, 1fr);
-            gap: 10px;
-            width: 90%;
-            height: 90%;
-            padding: 20px;
+        .section-title {
+            font-size: 32px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+            text-align: center;
         }
         
-        .photo-grid img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            aspect-ratio: 1/1;
-            border-radius: 5px;
-            background-color: #f5f5f5;
+        .section-description {
+            font-size: 18px;
+            line-height: 1.6;
+            text-align: center;
+            max-width: 80%;
+            margin-top: 40px;
+        }
+        
+        .section-description p {
+            margin: 0;
+            color: #654321;
+            font-style: italic;
         }
         
         .navigation {
@@ -203,15 +311,18 @@
             cursor: not-allowed;
         }
         
-        .page-photo-content {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* Photo grid styling */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 10px;
+            width: 90%;
+            height: 90%;
+            padding: 20px;
         }
         
-        .page-photo img {
+        .photo-grid img {
             width: 100%;
             height: 100%;
             object-fit: contain;
@@ -233,6 +344,38 @@
             object-fit: contain;
             aspect-ratio: 1/1;
             background-color: #f5f5f5;
+        }
+        
+        /* Journal Page Styling */
+        .journal-page {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .blog-header {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .blog-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #5a3a1b;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            margin-bottom: 10px;
+        }
+
+        .blog-text {
+            font-size: 18px;
+            color: #654321;
+            font-style: italic;
+            max-width: 80%;
+            margin: 0 auto;
         }
         
         .section-header {
@@ -268,6 +411,36 @@
             color: #654321;
             font-style: italic;
         }
+        
+        .navigation {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            background: #8B4513;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .nav-btn:hover {
+            background: #A0522D;
+        }
+        
+        .nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -292,17 +465,6 @@
         <div class="page menu-page">
             <img src="/api/v1/menu-images/15" alt="Menu">
         </div>
-        <!-- Photo Grid Page -->
-        <div class="page">
-            <div class="photo-grid">
-                <img src="/api/photos/6bc13ec6-007d-4746-8f90-b150b386308f.jpg/preview" alt="Thanksgiving Memory">
-                <img src="/api/photos/6e98ba02-0859-4651-9fa6-5b574f31ca70.jpg/preview" alt="Thanksgiving Memory">
-                <img src="/api/photos/4129c374-0366-41c3-95f8-6249e3152576.jpg/preview" alt="Thanksgiving Memory">
-                <img src="/api/photos/82ede41b-feb9-4cfe-b2eb-519aa7b409c1.jpg/preview" alt="Thanksgiving Memory">
-                <img src="/api/photos/efc04417-3193-4145-b3a4-bdf30ed6d4c2.jpg/preview" alt="Thanksgiving Memory">
-                <img src="/api/photos/52f1c796-661a-47b9-a337-df648cda42b4.jpg/preview" alt="Thanksgiving Memory">
-            </div>
-        </div>
         <!-- Page Photo Page -->
         <div class="page page-photo">
             <div class="page-photo-content">
@@ -321,12 +483,91 @@
                 <img src="/api/photos/9b91f7ab-027c-4757-bfaa-38de3ac4636f.jpeg/preview" alt="Thanksgiving Memory">
             </div>
         </div>
-        <!-- Blog Images Page -->
-        <div class="page">
+        <!-- Journal Page -->
+        <div class="page journal-page">
+            <div class="blog-header">
+                
+            <div class="blog-content">
+                <h3 class="blog-title">2013 Thoughts:</h3>
+                <div class="blog-text">Here are some of my thoughts from 2013:</div>
+            </div>
+            </div>
             <div class="blog-images">
                 <img src="/api/blog-images/e514e6e3-f3a4-4c7c-994b-d2c93dbbae17.jpeg/preview" alt="Journal Entry">
                 <img src="/api/blog-images/63a60653-fcdf-40f3-9600-3c1a10a64c41.jpeg/preview" alt="Journal Entry">
             </div>
+        </div>
+        <!-- Heading Page -->
+        <div class="page heading-page">
+            <h2 class="section-heading">Photos</h2>
+        </div>
+        <!-- Text Page -->
+        <div class="page">
+            <p>These are random photos that I added to test how 7 photos actually end up.  I am adding this text block to see how that formats.</p>
+        </div>
+        <!-- Photo Grid Page -->
+        <div class="page">
+            <div class="photo-grid">
+                <img src="/api/photos/9f549896-0686-4e30-89ef-8aa1f48bd697.jpg/preview" alt="Thanksgiving Memory">
+                <img src="/api/photos/8a1f3814-27cb-4b4c-838a-b06dd45df7de.jpg/preview" alt="Thanksgiving Memory">
+                <img src="/api/photos/2f1198b2-ea24-4fed-8cce-85a13dd65fd5.jpg/preview" alt="Thanksgiving Memory">
+                <img src="/api/photos/95a90e70-83cc-4527-a6d9-5db365dc3079.jpg/preview" alt="Thanksgiving Memory">
+                <img src="/api/photos/1ede8e87-bef8-4c87-b8a9-000f32c05d93.jpg/preview" alt="Thanksgiving Memory">
+                <img src="/api/photos/534d722e-b941-4b2b-9872-dff2ecdb10d3.jpg/preview" alt="Thanksgiving Memory">
+            </div>
+        </div>
+        <!-- Photo Grid Page -->
+        <div class="page">
+            <div class="photo-grid">
+                <img src="/api/photos/d09f1e2e-65f6-49d8-aad0-2c76526827fd.jpg/preview" alt="Thanksgiving Memory">
+            </div>
+        </div>
+        <!-- Journal Page -->
+        <div class="page journal-page">
+            <div class="blog-header">
+                
+            <div class="blog-content">
+                <h3 class="blog-title">This is the title</h3>
+                <div class="blog-text">This is text to test the formating.</div>
+            </div>
+            </div>
+            <div class="blog-images">
+                <img src="/api/blog-images/37f885de-4491-468f-8927-6dac1fbd6f04.jpg/preview" alt="Journal Entry">
+                <img src="/api/blog-images/c1f1d5af-fdc0-4976-a280-8473fc2b55a9.jpg/preview" alt="Journal Entry">
+            </div>
+        </div>
+        <!-- Journal Page -->
+        <div class="page journal-page">
+            <div class="blog-header">
+                
+            </div>
+            <div class="blog-images">
+                <img src="/api/blog-images/e52652b5-0c92-4c4d-aa51-a3a85b7a515a.jpg/preview" alt="Journal Entry">
+                <img src="/api/blog-images/1294c385-a5dc-44d4-ba24-d72d2334ae64.jpg/preview" alt="Journal Entry">
+            </div>
+        </div>
+        <!-- Journal Page -->
+        <div class="page journal-page">
+            <div class="blog-header">
+                
+            </div>
+            <div class="blog-images">
+                <img src="/api/blog-images/b3d3c3e2-ff7e-449c-b443-84e9f35da85d.jpg/preview" alt="Journal Entry">
+                <img src="/api/blog-images/26e30d66-4922-4b34-bb4f-9a2082baeed9.jpg/preview" alt="Journal Entry">
+            </div>
+        </div>
+        <!-- Journal Page -->
+        <div class="page journal-page">
+            <div class="blog-header">
+                
+            </div>
+            <div class="blog-images">
+                <img src="/api/blog-images/607d7f0a-aeae-400f-81eb-3c395979b0c0.jpg/preview" alt="Journal Entry">
+            </div>
+        </div>
+        <!-- Heading Page -->
+        <div class="page heading-page">
+            <h2 class="section-heading">Testing the Heading</h2>
         </div>
         <!-- Back Cover -->
         <div class="page cover">
@@ -339,14 +580,14 @@
         </div>
     </div>
 
-    
+
     <div class="navigation">
         <button id="prevBtn" class="nav-btn">← Previous</button>
         <button id="nextBtn" class="nav-btn">Next →</button>
         <button id="fullscreenBtn" class="nav-btn">Fullscreen</button>
         <button class="nav-btn close-button" onclick="window.close()" title="Close Scrapbook">Close</button>
     </div>
-    
+
     <script src="../js/jquery-3.7.1.min.js"></script>
     <script src="../js/turn-v4.js"></script>
     <script>
@@ -355,16 +596,11 @@
             height: 600,
             display: 'single'
         });
-        
-        $("#prevBtn").click(function() {
-            $(".flipbook").turn("previous");
-        });
-        
-        $("#nextBtn").click(function() {
-            $(".flipbook").turn("next");
-        });
-        
-        $("#fullscreenBtn").click(function() {
+
+        $("#prevBtn").click(() => $(".flipbook").turn("previous"));
+        $("#nextBtn").click(() => $(".flipbook").turn("next"));
+
+        $("#fullscreenBtn").click(() => {
             if (document.fullscreenElement) {
                 document.exitFullscreen();
                 // Reset to normal size
@@ -375,6 +611,12 @@
                 setTimeout(function() {
                     $(".flipbook").turn("size", window.innerWidth * 0.9, window.innerHeight * 0.9);
                 }, 100);
+            }
+        });
+
+        window.addEventListener("resize", () => {
+            if (document.fullscreenElement) {
+                $(".flipbook").turn("size", window.innerWidth * 0.9, window.innerHeight * 0.9);
             }
         });
     </script>

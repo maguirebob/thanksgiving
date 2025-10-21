@@ -6,7 +6,7 @@ import s3Service from './s3Service';
 export interface ScrapbookContentItem {
   id: number;
   year: number;
-  content_type: 'title' | 'text-paragraph' | 'menu' | 'photo' | 'page-photo' | 'blog';
+  content_type: 'title' | 'text-paragraph' | 'menu' | 'photo' | 'page-photo' | 'blog' | 'heading';
   content_reference: string;
   display_order: number;
   page_break_before: boolean;
@@ -15,7 +15,7 @@ export interface ScrapbookContentItem {
 
 export interface ScrapbookPage {
   id: string;
-  type: 'front-cover' | 'title-page' | 'text-page' | 'menu-page' | 'photo-page' | 'page-photo-page' | 'journal-page' | 'back-cover';
+  type: 'front-cover' | 'title-page' | 'text-page' | 'heading-page' | 'menu-page' | 'photo-page' | 'page-photo-page' | 'journal-page' | 'back-cover';
   content: any;
   pageBreakBefore?: boolean;
   pageBreakAfter?: boolean;
@@ -32,10 +32,6 @@ export class ScrapbookHtmlGenerator {
   private outputDir: string;
 
   constructor() {
-    console.log(`🔧 CONSTRUCTOR DEBUG: Starting ScrapbookHtmlGenerator constructor`);
-    console.log(`🔧 CONSTRUCTOR DEBUG: __dirname = ${__dirname}`);
-    console.log(`🔧 CONSTRUCTOR DEBUG: process.cwd() = ${process.cwd()}`);
-    
     // Try multiple possible paths for the template
     const possiblePaths = [
       path.join(__dirname, '../templates/scrapbook-template.html'),
@@ -45,39 +41,26 @@ export class ScrapbookHtmlGenerator {
       path.join(__dirname, '../../dist/templates/scrapbook-template.html')
     ];
     
-    console.log(`🔧 CONSTRUCTOR DEBUG: Testing ${possiblePaths.length} possible template paths`);
-    
     // Find the first path that exists
     let templatePath = possiblePaths[0]; // default fallback
-    for (let i = 0; i < possiblePaths.length; i++) {
-      const testPath = possiblePaths[i];
-      console.log(`🔧 CONSTRUCTOR DEBUG: Testing path ${i + 1}/${possiblePaths.length}: ${testPath}`);
+    for (const testPath of possiblePaths) {
       try {
         require('fs').accessSync(testPath);
         templatePath = testPath;
-        console.log(`🔧 CONSTRUCTOR DEBUG: ✅ Found template at: ${templatePath}`);
         break;
       } catch (error) {
-        console.log(`🔧 CONSTRUCTOR DEBUG: ❌ Template not found at: ${testPath}`);
+        // Continue to next path
       }
     }
     
     this.templatePath = templatePath!;
     this.outputDir = path.join(__dirname, '../../public/scrapbooks');
-    console.log(`🔧 TEMPLATE DEBUG: __dirname = ${__dirname}`);
-    console.log(`🔧 TEMPLATE DEBUG: process.cwd() = ${process.cwd()}`);
-    console.log(`🔧 TEMPLATE DEBUG: Final templatePath = ${this.templatePath}`);
-    console.log(`🔧 TEMPLATE DEBUG: outputDir = ${this.outputDir}`);
   }
 
   /**
    * Generate HTML file for a specific year and save locally + S3 backup
    */
   async generateScrapbook(year: number): Promise<string> {
-    console.log(`🔧 GENERATOR DEBUG: Starting scrapbook generation for year ${year}`);
-    console.log(`🔧 GENERATOR DEBUG: Template path will be: ${this.templatePath}`);
-    console.log(`🔧 GENERATOR DEBUG: Output directory will be: ${this.outputDir}`);
-    
     try {
       // Validate year parameter
       if (!year || typeof year !== 'number' || year < 1900 || year > 2100) {
@@ -85,69 +68,53 @@ export class ScrapbookHtmlGenerator {
       }
       
       // Get all content items for the year
-      console.log(`📊 GENERATOR DEBUG: Fetching content items from database`);
       const contentItems = await this.getContentItems(year);
-      console.log(`📋 GENERATOR DEBUG: Found ${contentItems.length} content items`);
       
       if (contentItems.length === 0) {
-        console.log(`❌ GENERATOR DEBUG: No content found for year ${year}`);
         throw new Error(`No content found for year ${year}. Please ensure there are journal sections and content items for this year.`);
       }
 
-    // Convert content items to scrapbook pages
-    console.log(`🔄 GENERATOR DEBUG: Converting content items to scrapbook pages`);
-    const scrapbookData = await this.convertToScrapbookData(year, contentItems);
-    console.log(`📄 GENERATOR DEBUG: Generated ${scrapbookData.pages.length} pages`);
-    
-    // Generate HTML using template
-    console.log(`📝 GENERATOR DEBUG: Generating HTML from template`);
-    const htmlContent = await this.generateHtmlFromTemplate(scrapbookData);
-    console.log(`📏 GENERATOR DEBUG: Generated HTML length: ${htmlContent.length} characters`);
+      // Convert content items to scrapbook pages
+      const scrapbookData = await this.convertToScrapbookData(year, contentItems);
+      
+      // Generate HTML using template
+      const htmlContent = await this.generateHtmlFromTemplate(scrapbookData, year);
     
       // Ensure output directory exists
       try {
         await fs.promises.access(this.outputDir);
-        console.log(`📁 GENERATOR DEBUG: Output directory exists: ${this.outputDir}`);
       } catch (error) {
-        console.log(`📁 GENERATOR DEBUG: Creating output directory: ${this.outputDir}`);
         await fs.promises.mkdir(this.outputDir, { recursive: true });
-        console.log(`📁 GENERATOR DEBUG: Output directory created successfully`);
       }
       
       // Save HTML file locally (primary)
       const filename = `${year}.html`;
       const localPath = path.join(this.outputDir, filename);
-      console.log(`💾 GENERATOR DEBUG: Writing to local file: ${localPath}`);
       await fs.promises.writeFile(localPath, htmlContent, 'utf8');
     
-    // Also upload to S3 as backup
-    const s3Key = `scrapbooks/${filename}`;
-    let s3Url: string | null = null;
-    console.log(`☁️ GENERATOR DEBUG: Uploading backup to S3: ${s3Key}`);
-    try {
-      s3Url = await s3Service.uploadFile(
-        s3Key,
-        htmlContent,
-        'text/html',
-        {
-          'scrapbook-year': year.toString(),
-          'generated-at': new Date().toISOString(),
-          'content-type': 'scrapbook'
-        }
-      );
-      console.log(`🔗 GENERATOR DEBUG: S3 backup URL: ${s3Url}`);
-    } catch (s3Error) {
-      console.warn(`⚠️ GENERATOR DEBUG: S3 backup failed (non-critical):`, s3Error);
-    }
-    
-    // Record scrapbook file in database
-    console.log(`📊 GENERATOR DEBUG: Starting database record creation for year ${year}`);
-    const fileStats = await fs.promises.stat(localPath);
-    console.log(`📊 GENERATOR DEBUG: File stats: size=${fileStats.size}, path=${localPath}`);
-    
-    try {
-      console.log(`📊 GENERATOR DEBUG: Attempting database upsert for year ${year}`);
-      const result = await prisma.scrapbookFiles.upsert({
+      // Also upload to S3 as backup
+      const s3Key = `scrapbooks/${filename}`;
+      let s3Url: string | null = null;
+      try {
+        s3Url = await s3Service.uploadFile(
+          s3Key,
+          htmlContent,
+          'text/html',
+          {
+            'scrapbook-year': year.toString(),
+            'generated-at': new Date().toISOString(),
+            'content-type': 'scrapbook'
+          }
+        );
+      } catch (s3Error) {
+        console.warn(`S3 backup failed (non-critical):`, s3Error);
+      }
+      
+      // Record scrapbook file in database
+      const fileStats = await fs.promises.stat(localPath);
+      
+      try {
+        await prisma.scrapbookFiles.upsert({
         where: { year: year },
         update: {
           filename: filename,
@@ -170,24 +137,13 @@ export class ScrapbookHtmlGenerator {
           generated_at: new Date()
         }
       });
-      console.log(`📊 GENERATOR DEBUG: Database upsert successful:`, result);
     } catch (dbError) {
-      console.error(`❌ GENERATOR DEBUG: Database upsert failed:`, dbError);
-      console.error(`❌ GENERATOR DEBUG: Error details:`, {
-        message: dbError instanceof Error ? dbError.message : 'Unknown error',
-        stack: dbError instanceof Error ? dbError.stack : undefined,
-        year: year,
-        filename: filename,
-        localPath: localPath
-      });
-      throw dbError; // Re-throw to fail the generation
+      console.error(`Database upsert failed:`, dbError);
+      throw dbError;
     }
     
-      console.log(`✅ GENERATOR DEBUG: Scrapbook generation completed successfully`);
-      return localPath;
+    return localPath;
     } catch (error) {
-      console.error(`🔧 GENERATOR DEBUG: Error generating scrapbook for year ${year}:`, error);
-      
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       
       // Provide more specific error messages
@@ -261,15 +217,24 @@ export class ScrapbookHtmlGenerator {
           pages.push(photoPage);
           photoItems.length = 0; // Clear the array
         }
-      } else if (item.content_type === 'blog') {
-        // Handle each blog item individually - create separate pages
-        const blogPages = await this.createBlogPages(item);
-        pages.push(...blogPages);
       } else {
-        // For non-photo, non-blog items, create page normally
-        const page = await this.createPageFromContent(item);
-        if (page) {
-          pages.push(page);
+        // Before processing non-photo items, handle any remaining photos
+        if (photoItems.length > 0) {
+          const photoPage = await this.createPhotoGridPage(photoItems);
+          pages.push(photoPage);
+          photoItems.length = 0; // Clear the array
+        }
+        
+        if (item.content_type === 'blog') {
+          // Handle each blog item individually - create separate pages
+          const blogPages = await this.createBlogPages(item);
+          pages.push(...blogPages);
+        } else {
+          // For non-photo, non-blog items, create page normally
+          const page = await this.createPageFromContent(item);
+          if (page) {
+            pages.push(page);
+          }
         }
       }
 
@@ -459,6 +424,16 @@ export class ScrapbookHtmlGenerator {
         // Blog items are handled by createJournalPage method
         return null;
 
+      case 'heading':
+        console.log(`🔧 HEADING DEBUG: Processing heading content: ${item.content_reference}`);
+        return {
+          id: `heading-${item.id}`,
+          type: 'heading-page',
+          content: {
+            text: item.content_reference
+          }
+        };
+
       default:
         console.warn(`Unknown content type: ${item.content_type}`);
         return null;
@@ -468,7 +443,7 @@ export class ScrapbookHtmlGenerator {
   /**
    * Generate HTML from template
    */
-  private async generateHtmlFromTemplate(data: ScrapbookData): Promise<string> {
+  private async generateHtmlFromTemplate(data: ScrapbookData, year: number): Promise<string> {
     console.log(`🔧 TEMPLATE DEBUG: Attempting to read template from: ${this.templatePath}`);
     
     // Check if template file exists with detailed error info
@@ -510,8 +485,21 @@ export class ScrapbookHtmlGenerator {
       throw new Error(`Failed to read template file at ${this.templatePath}: ${errorMessage}`);
     }
     
-    // Replace the title
-    let html = template.replace('Simple Scrapbook', data.title);
+            // Add generation metadata comment at the top
+            const now = new Date();
+            const estTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
+            const generationComment = `<!-- 
+SCRAPBOOK GENERATION METADATA:
+- Generated: ${estTime.toLocaleString()} EST
+- Expected Items: ${data.pages.length}
+- Year: ${year}
+- Template: ${this.templatePath}
+-->
+`;
+            
+            // Replace the title and add metadata comment
+            let html = template.replace('Simple Scrapbook', data.title);
+            html = html.replace('<!DOCTYPE html>', `<!DOCTYPE html>\n${generationComment}`);
     
     // Find the flipbook container and replace its content
     const flipbookStart = html.indexOf('<div class="flipbook">');
@@ -570,6 +558,9 @@ export class ScrapbookHtmlGenerator {
       
       case 'text-page':
         return this.generateTextPage(page.content);
+      
+      case 'heading-page':
+        return this.generateHeadingPage(page.content);
       
       case 'menu-page':
         return this.generateMenuPage(page.content);
@@ -643,6 +634,13 @@ export class ScrapbookHtmlGenerator {
     return `        <!-- Text Page -->
         <div class="page">
             <p>${content.text}</p>
+        </div>`;
+  }
+
+  private generateHeadingPage(content: any): string {
+    return `        <!-- Heading Page -->
+        <div class="page heading-page">
+            <h2 class="section-heading">${content.text}</h2>
         </div>`;
   }
 

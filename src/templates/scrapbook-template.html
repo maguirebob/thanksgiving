@@ -112,6 +112,28 @@
             text-align: center;
         }
         
+        .heading-page {
+            background: url('../assets/parchment.jpg') center/cover;
+            background-color: white;
+            color: #8B4513;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .section-heading {
+            font-size: 32px;
+            font-weight: bold;
+            color: #5a3a1b;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
         .photo-page {
             background: url('../assets/parchment.jpg') center/cover;
             background-color: white;
@@ -134,6 +156,29 @@
             padding: 20px;
         }
         
+        .page-photo-page img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .page-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            aspect-ratio: 1/1;
+        }
+        
+        .page-photo-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
         .cover {
             position: relative;
             height: 100%;
@@ -148,15 +193,14 @@
         }
         
         .embossed-text {
-            color: #c9a600;
+            color: rgba(0,0,0,0.3);
             font-family: 'Georgia', serif;
             font-size: 3rem;
             letter-spacing: 2px;
             text-align: center;
             text-shadow:
-                1px 1px 1px rgba(255,255,255,0.3),
-                -2px -2px 3px rgba(0,0,0,0.9),
-                inset 1px 1px 2px rgba(0,0,0,0.7);
+                1px 1px 1px rgba(255,255,255,0.2),  /* highlight top-left */
+                -2px -2px 3px rgba(0,0,0,0.8);      /* shadow bottom-right */
             z-index: 3;
         }
         
@@ -416,11 +460,16 @@
         $("#nextBtn").click(() => $(".flipbook").turn("next"));
 
         $("#fullscreenBtn").click(() => {
-            const container = document.querySelector(".flipbook");
             if (document.fullscreenElement) {
                 document.exitFullscreen();
+                // Reset to normal size
+                $(".flipbook").turn("size", 800, 600);
             } else {
-                container.requestFullscreen();
+                document.documentElement.requestFullscreen();
+                // Resize to fullscreen
+                setTimeout(function() {
+                    $(".flipbook").turn("size", window.innerWidth * 0.9, window.innerHeight * 0.9);
+                }, 100);
             }
         });
 
