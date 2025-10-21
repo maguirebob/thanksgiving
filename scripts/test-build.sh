@@ -62,6 +62,35 @@ else
     echo "⚠️  Database schema validation not available, skipping..."
 fi
 
+# 6. Schema version consistency check
+echo ""
+echo "📋 Step 6: Schema version consistency check..."
+CURRENT_VERSION=$(node -p "require('./package.json').version")
+SCHEMA_FILE="./src/lib/schemaVersions.ts"
+
+if [ -f "$SCHEMA_FILE" ]; then
+    if grep -q "'$CURRENT_VERSION':" "$SCHEMA_FILE"; then
+        echo "✅ Schema definition exists for version $CURRENT_VERSION"
+    else
+        echo "❌ Schema definition missing for version $CURRENT_VERSION"
+        echo "📝 Please add schema definition to schemaVersions.ts"
+        OVERALL_SUCCESS=false
+    fi
+else
+    echo "⚠️  Schema file not found, skipping schema version check..."
+fi
+
+# 7. About page database validation
+echo ""
+echo "🔍 Step 7: About page database validation..."
+if npm run verify:about-page 2>/dev/null; then
+    echo "✅ About page database validation passed"
+else
+    echo "❌ About page database validation failed"
+    echo "📝 The about page will show database errors - fix before deployment"
+    OVERALL_SUCCESS=false
+fi
+
 echo ""
 echo "=============================================="
 if [ "$OVERALL_SUCCESS" = true ]; then

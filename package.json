@@ -37,6 +37,7 @@
     "db:migrate:status": "prisma migrate status",
     "validate:migrations": "ts-node scripts/validate-migrations.ts",
     "verify:schema": "npx prisma db execute --stdin <<< \"SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;\"",
+    "verify:about-page": "ts-node scripts/verify-about-page-validation.ts",
     "db:push": "prisma db push",
     "db:seed": "ts-node scripts/insert-sample-data.ts",
     "upload:images": "ts-node scripts/upload-images-to-railway.ts",

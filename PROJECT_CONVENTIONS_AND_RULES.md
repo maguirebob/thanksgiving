@@ -32,9 +32,11 @@ This document outlines the established conventions, rules, and best practices fo
 ### Workflow Rules
 1. **Always work in `dev` first** - Never make changes directly in `test` or `main`
 2. **Version before merging** - Use the versioning script before moving changes between branches
-3. **Push to origin** - Always push changes to origin before merging to other branches
-4. **Merge `dev` to `test`** - Use `git merge dev` to move changes from dev to test
-5. **Tag releases** - Use semantic versioning with git tags for all releases
+3. **Schema definitions** - Version manager now auto-generates schema definitions for new versions
+4. **Push to origin** - Always push changes to origin before merging to other branches
+5. **Merge `dev` to `test`** - Use `git merge dev` to move changes from dev to test
+6. **Tag releases** - Use semantic versioning with git tags for all releases
+7. **Build validation** - Always run `npm run test:build` before deployment
 
 ### Git Commands Pattern
 ```bash

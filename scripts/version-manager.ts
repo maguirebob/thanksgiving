@@ -127,14 +127,76 @@ class VersionManager {
     console.log(`📝 Changelog updated for version ${versionString}`);
   }
 
+  generateSchemaDefinition(version: VersionInfo): void {
+    const versionString = `${version.major}.${version.minor}.${version.patch}`;
+    const schemaPath = './src/lib/schemaVersions.ts';
+    
+    try {
+      console.log(`🔍 Checking if schema definition exists for ${versionString}...`);
+      
+      // Read current schema file
+      let schemaContent = readFileSync(schemaPath, 'utf8');
+      
+      // Check if version already exists
+      if (schemaContent.includes(`'${versionString}':`)) {
+        console.log(`✅ Schema definition already exists for ${versionString}`);
+        return;
+      }
+      
+      // Find the latest schema version to copy
+      const latestVersionMatch = schemaContent.match(/'(\d+\.\d+\.\d+)':\s*{[^}]+migrationStatus:\s*'complete'[^}]+}/g);
+      if (!latestVersionMatch || latestVersionMatch.length === 0) {
+        console.log('⚠️ Could not find latest schema version to copy');
+        return;
+      }
+      
+      const latestSchema = latestVersionMatch[latestVersionMatch.length - 1];
+      const latestVersion = latestSchema.match(/'(\d+\.\d+\.\d+)':/)?.[1];
+      
+      if (!latestVersion) {
+        console.log('⚠️ Could not extract version number from latest schema');
+        return;
+      }
+      
+      // Create new schema definition by copying the latest one
+      const newSchemaDefinition = latestSchema.replace(`'${latestVersion}'`, `'${versionString}'`);
+      
+      // Insert before the closing brace
+      const insertPoint = schemaContent.lastIndexOf('};');
+      if (insertPoint === -1) {
+        console.log('⚠️ Could not find insertion point in schema file');
+        return;
+      }
+      
+      schemaContent = schemaContent.slice(0, insertPoint) + 
+        `,\n  ${newSchemaDefinition}\n` + 
+        schemaContent.slice(insertPoint);
+      
+      writeFileSync(schemaPath, schemaContent);
+      console.log(`✅ Schema definition added for version ${versionString}`);
+      
+    } catch (error) {
+      console.log(`⚠️ Could not auto-generate schema definition: ${error}`);
+      console.log('📝 Please manually add schema definition to schemaVersions.ts');
+    }
+  }
+
   createReleaseTag(version: VersionInfo): void {
     const versionString = `${version.major}.${version.minor}.${version.patch}`;
     
     try {
+      // Generate schema definition first
+      this.generateSchemaDefinition(version);
+      
       // Run build validation before committing
       console.log('🔍 Running build validation...');
       execSync(`npx tsc --noEmit`, { stdio: 'inherit' });
-      console.log('✅ Build validation passed!');
+      console.log('✅ TypeScript validation passed!');
+      
+      // Run about page database validation
+      console.log('🔍 Running about page database validation...');
+      execSync(`npm run verify:about-page`, { stdio: 'inherit' });
+      console.log('✅ About page database validation passed!');
       
       execSync(`git add .`, { stdio: 'inherit' });
       execSync(`git commit -m "chore: bump version to ${versionString}"`, { stdio: 'inherit' });
