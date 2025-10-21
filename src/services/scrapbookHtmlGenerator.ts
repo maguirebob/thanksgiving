@@ -32,10 +32,33 @@ export class ScrapbookHtmlGenerator {
   private outputDir: string;
 
   constructor() {
-    this.templatePath = path.join(__dirname, '../templates/scrapbook-template.html');
+    // Try multiple possible paths for the template
+    const possiblePaths = [
+      path.join(__dirname, '../templates/scrapbook-template.html'),
+      path.join(process.cwd(), 'src/templates/scrapbook-template.html'),
+      path.join(process.cwd(), 'dist/templates/scrapbook-template.html'),
+      path.join(__dirname, '../../src/templates/scrapbook-template.html'),
+      path.join(__dirname, '../../dist/templates/scrapbook-template.html')
+    ];
+    
+    // Find the first path that exists
+    let templatePath = possiblePaths[0]; // default fallback
+    for (const testPath of possiblePaths) {
+      try {
+        require('fs').accessSync(testPath);
+        templatePath = testPath;
+        console.log(`🔧 TEMPLATE DEBUG: Found template at: ${templatePath}`);
+        break;
+      } catch (error) {
+        console.log(`🔧 TEMPLATE DEBUG: Template not found at: ${testPath}`);
+      }
+    }
+    
+    this.templatePath = templatePath;
     this.outputDir = path.join(__dirname, '../../public/scrapbooks');
     console.log(`🔧 TEMPLATE DEBUG: __dirname = ${__dirname}`);
-    console.log(`🔧 TEMPLATE DEBUG: templatePath = ${this.templatePath}`);
+    console.log(`🔧 TEMPLATE DEBUG: process.cwd() = ${process.cwd()}`);
+    console.log(`🔧 TEMPLATE DEBUG: Final templatePath = ${this.templatePath}`);
     console.log(`🔧 TEMPLATE DEBUG: outputDir = ${this.outputDir}`);
   }
 
