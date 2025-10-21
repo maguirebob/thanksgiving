@@ -32,6 +32,10 @@ export class ScrapbookHtmlGenerator {
   private outputDir: string;
 
   constructor() {
+    console.log(`🔧 CONSTRUCTOR DEBUG: Starting ScrapbookHtmlGenerator constructor`);
+    console.log(`🔧 CONSTRUCTOR DEBUG: __dirname = ${__dirname}`);
+    console.log(`🔧 CONSTRUCTOR DEBUG: process.cwd() = ${process.cwd()}`);
+    
     // Try multiple possible paths for the template
     const possiblePaths = [
       path.join(__dirname, '../templates/scrapbook-template.html'),
@@ -41,16 +45,20 @@ export class ScrapbookHtmlGenerator {
       path.join(__dirname, '../../dist/templates/scrapbook-template.html')
     ];
     
+    console.log(`🔧 CONSTRUCTOR DEBUG: Testing ${possiblePaths.length} possible template paths`);
+    
     // Find the first path that exists
     let templatePath = possiblePaths[0]; // default fallback
-    for (const testPath of possiblePaths) {
+    for (let i = 0; i < possiblePaths.length; i++) {
+      const testPath = possiblePaths[i];
+      console.log(`🔧 CONSTRUCTOR DEBUG: Testing path ${i + 1}/${possiblePaths.length}: ${testPath}`);
       try {
         require('fs').accessSync(testPath);
         templatePath = testPath;
-        console.log(`🔧 TEMPLATE DEBUG: Found template at: ${templatePath}`);
+        console.log(`🔧 CONSTRUCTOR DEBUG: ✅ Found template at: ${templatePath}`);
         break;
       } catch (error) {
-        console.log(`🔧 TEMPLATE DEBUG: Template not found at: ${testPath}`);
+        console.log(`🔧 CONSTRUCTOR DEBUG: ❌ Template not found at: ${testPath}`);
       }
     }
     
