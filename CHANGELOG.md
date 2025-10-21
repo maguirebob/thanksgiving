@@ -2,6 +2,9 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [3.1.24] - 2025-10-21
+
+- Fixed text page border layout and restored Patrick Hand font
 ## [3.1.14] - 2025-10-20
 
 ### Fixed

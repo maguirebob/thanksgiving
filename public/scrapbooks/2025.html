@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <!-- 
 SCRAPBOOK GENERATION METADATA:
-- Generated: 10/21/2025, 7:59:12 AM EST
-- Expected Items: 4
+- Generated: 10/21/2025, 11:24:45 AM EST
+- Expected Items: 6
 - Year: 2025
 - Template: /Users/bobmaguire/repos/thanksgiving/src/templates/scrapbook-template.html
 -->
@@ -12,6 +12,8 @@ SCRAPBOOK GENERATION METADATA:
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thanksgiving 2025 Scrapbook</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+Pro:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         body {
           margin: 0;
@@ -118,6 +120,32 @@ SCRAPBOOK GENERATION METADATA:
             align-items: center;
             padding: 40px 20px;
             text-align: center;
+            font-family: 'Patrick Hand', cursive;
+        }
+        
+        /* Thanksgiving border for text pages */
+        .thanksgiving-border {
+            border: 6px solid #b36b00;      /* burnt orange */
+            border-radius: 16px;
+            background: rgba(255, 250, 240, 0.9); /* translucent parchment overlay */
+            box-shadow: 0 0 20px rgba(0,0,0,0.2), inset 0 0 10px rgba(139,69,19,0.2);
+            padding: 30px 40px;
+            max-width: 600px;
+            width: 90%;
+            margin: auto;
+            color: #5b3a00;
+            font-family: "Georgia", serif;
+            line-height: 1.7;
+            text-align: left;
+        }
+        
+        /* Ensure text content has proper spacing */
+        .text-page p {
+            margin: 0;
+            line-height: 1.7;
+            font-family: 'Patrick Hand', cursive;
+            font-size: 18px;
+            text-align: left;
         }
         
         .heading-page {
@@ -127,9 +155,28 @@ SCRAPBOOK GENERATION METADATA:
             display: flex;
             flex-direction: column;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             padding: 40px 20px;
-            text-align: center;
+            text-align: left;
+            position: relative;
+            margin: 0;
+        }
+        
+        /* Thanksgiving-themed decorative border for heading pages */
+        .heading-page::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('../assets/titlepageborder.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.8;
         }
         
         .section-heading {
@@ -140,6 +187,10 @@ SCRAPBOOK GENERATION METADATA:
             margin: 0;
             text-transform: uppercase;
             letter-spacing: 2px;
+            position: relative;
+            z-index: 2;
+            margin-left: 80px;
+            margin-top: -120px;
         }
         
         .photo-page {
@@ -212,6 +263,7 @@ SCRAPBOOK GENERATION METADATA:
             z-index: 3;
         }
         
+        
         /* Brass corners and rivets */
         .cover::before,
         .cover::after,
@@ -254,8 +306,26 @@ SCRAPBOOK GENERATION METADATA:
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
-            align-items: center;
+            align-items: flex-start;
             padding: 40px 20px;
+            position: relative;
+        }
+        
+        /* Thanksgiving-themed decorative border for section header pages */
+        .section-header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('../assets/titlepageborder.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.8;
         }
         
         .section-title {
@@ -264,15 +334,22 @@ SCRAPBOOK GENERATION METADATA:
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
             letter-spacing: 1px;
             margin-bottom: 20px;
-            text-align: center;
+            text-align: left;
+            position: relative;
+            z-index: 2;
+            margin-left: 80px;
+            margin-top: 60px;
         }
         
         .section-description {
             font-size: 18px;
             line-height: 1.6;
-            text-align: center;
-            max-width: 80%;
-            margin-top: 40px;
+            text-align: left;
+            max-width: 60%;
+            margin-top: 20px;
+            position: relative;
+            z-index: 2;
+            margin-left: 80px;
         }
         
         .section-description p {
@@ -385,8 +462,26 @@ SCRAPBOOK GENERATION METADATA:
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
-            align-items: center;
+            align-items: flex-start;
             padding: 40px 20px;
+            position: relative;
+        }
+        
+        /* Thanksgiving-themed decorative border for section header pages */
+        .section-header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('../assets/titlepageborder.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.8;
         }
         
         .section-title {
@@ -395,15 +490,22 @@ SCRAPBOOK GENERATION METADATA:
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
             letter-spacing: 1px;
             margin-bottom: 20px;
-            text-align: center;
+            text-align: left;
+            position: relative;
+            z-index: 2;
+            margin-left: 80px;
+            margin-top: 60px;
         }
         
         .section-description {
             font-size: 18px;
             line-height: 1.6;
-            text-align: center;
-            max-width: 80%;
-            margin-top: 40px;
+            text-align: left;
+            max-width: 60%;
+            margin-top: 20px;
+            position: relative;
+            z-index: 2;
+            margin-left: 80px;
         }
         
         .section-description p {
@@ -465,6 +567,28 @@ SCRAPBOOK GENERATION METADATA:
         <div class="page menu-page">
             <img src="/api/v1/menu-images/40" alt="Menu">
         </div>
+        <!-- Heading Page -->
+        <div class="page heading-page">
+            <h2 class="section-heading">Test Heading</h2>
+        </div>
+        <!-- Text Page -->
+            <div class="page text-page">
+                <div class="thanksgiving-border">
+                    <p>There are strange things done in the midnight sun
+      By the men who moil for gold;
+  The Arctic trails have their secret tales
+      That would make your blood run cold;
+  The Northern Lights have seen queer sights,
+      But the queerest they ever did see
+  Was that night on the marge of Lake Lebarge
+      I cremated Sam McGee.
+
+Now Sam McGee was from Tennessee, where the cotton blooms and blows.
+Why he left his home in the South to roam 'round the Pole, God only knows.
+He was always cold, but the land of gold seemed to hold him like a spell;
+Though he'd often say in his homely way that 'he'd sooner live in hell'.</p>
+                </div>
+            </div>
         <!-- Back Cover -->
         <div class="page cover">
             <div class="embossed-text">Thank You</div>
