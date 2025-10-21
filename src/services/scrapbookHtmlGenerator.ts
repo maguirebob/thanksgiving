@@ -104,11 +104,21 @@ export class ScrapbookHtmlGenerator {
     const htmlContent = await this.generateHtmlFromTemplate(scrapbookData);
     console.log(`📏 GENERATOR DEBUG: Generated HTML length: ${htmlContent.length} characters`);
     
-    // Save HTML file locally (primary)
-    const filename = `${year}.html`;
-    const localPath = path.join(this.outputDir, filename);
-    console.log(`💾 GENERATOR DEBUG: Writing to local file: ${localPath}`);
-    await fs.promises.writeFile(localPath, htmlContent, 'utf8');
+      // Ensure output directory exists
+      try {
+        await fs.promises.access(this.outputDir);
+        console.log(`📁 GENERATOR DEBUG: Output directory exists: ${this.outputDir}`);
+      } catch (error) {
+        console.log(`📁 GENERATOR DEBUG: Creating output directory: ${this.outputDir}`);
+        await fs.promises.mkdir(this.outputDir, { recursive: true });
+        console.log(`📁 GENERATOR DEBUG: Output directory created successfully`);
+      }
+      
+      // Save HTML file locally (primary)
+      const filename = `${year}.html`;
+      const localPath = path.join(this.outputDir, filename);
+      console.log(`💾 GENERATOR DEBUG: Writing to local file: ${localPath}`);
+      await fs.promises.writeFile(localPath, htmlContent, 'utf8');
     
     // Also upload to S3 as backup
     const s3Key = `scrapbooks/${filename}`;
