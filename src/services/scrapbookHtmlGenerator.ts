@@ -68,15 +68,21 @@ export class ScrapbookHtmlGenerator {
   async generateScrapbook(year: number): Promise<string> {
     console.log(`🔧 GENERATOR DEBUG: Starting scrapbook generation for year ${year}`);
     
-    // Get all content items for the year
-    console.log(`📊 GENERATOR DEBUG: Fetching content items from database`);
-    const contentItems = await this.getContentItems(year);
-    console.log(`📋 GENERATOR DEBUG: Found ${contentItems.length} content items`);
-    
-    if (contentItems.length === 0) {
-      console.log(`❌ GENERATOR DEBUG: No content found for year ${year}`);
-      throw new Error(`No content found for year ${year}`);
-    }
+    try {
+      // Validate year parameter
+      if (!year || typeof year !== 'number' || year < 1900 || year > 2100) {
+        throw new Error(`Invalid year parameter: ${year}. Must be a number between 1900 and 2100.`);
+      }
+      
+      // Get all content items for the year
+      console.log(`📊 GENERATOR DEBUG: Fetching content items from database`);
+      const contentItems = await this.getContentItems(year);
+      console.log(`📋 GENERATOR DEBUG: Found ${contentItems.length} content items`);
+      
+      if (contentItems.length === 0) {
+        console.log(`❌ GENERATOR DEBUG: No content found for year ${year}`);
+        throw new Error(`No content found for year ${year}. Please ensure there are journal sections and content items for this year.`);
+      }
 
     // Convert content items to scrapbook pages
     console.log(`🔄 GENERATOR DEBUG: Converting content items to scrapbook pages`);
@@ -157,8 +163,24 @@ export class ScrapbookHtmlGenerator {
       throw dbError; // Re-throw to fail the generation
     }
     
-    console.log(`✅ GENERATOR DEBUG: Scrapbook generation completed successfully`);
-    return localPath;
+      console.log(`✅ GENERATOR DEBUG: Scrapbook generation completed successfully`);
+      return localPath;
+    } catch (error) {
+      console.error(`🔧 GENERATOR DEBUG: Error generating scrapbook for year ${year}:`, error);
+      
+      // Provide more specific error messages
+      if (error.message.includes('Template file not found')) {
+        throw new Error(`Scrapbook generation failed: Template file is missing. This is likely a deployment issue. Error: ${error.message}`);
+      } else if (error.message.includes('No content found')) {
+        throw new Error(`Scrapbook generation failed: No content available for year ${year}. Please add journal sections and content items first.`);
+      } else if (error.message.includes('Failed to read template')) {
+        throw new Error(`Scrapbook generation failed: Cannot read template file. This is likely a file permissions issue. Error: ${error.message}`);
+      } else if (error.message.includes('Invalid year parameter')) {
+        throw new Error(`Scrapbook generation failed: ${error.message}`);
+      } else {
+        throw new Error(`Scrapbook generation failed for year ${year}: ${error.message}`);
+      }
+    }
   }
 
   /**
@@ -427,17 +449,43 @@ export class ScrapbookHtmlGenerator {
   private async generateHtmlFromTemplate(data: ScrapbookData): Promise<string> {
     console.log(`🔧 TEMPLATE DEBUG: Attempting to read template from: ${this.templatePath}`);
     
-    // Check if template file exists
+    // Check if template file exists with detailed error info
     try {
       await fs.promises.access(this.templatePath);
       console.log(`🔧 TEMPLATE DEBUG: Template file exists`);
     } catch (error) {
       console.error(`🔧 TEMPLATE DEBUG: Template file does not exist: ${error}`);
-      throw new Error(`Template file not found at: ${this.templatePath}`);
+      
+      // List all files in possible directories for debugging
+      const possibleDirs = [
+        path.join(__dirname, '../templates'),
+        path.join(process.cwd(), 'src/templates'),
+        path.join(process.cwd(), 'dist/templates'),
+        path.join(__dirname, '../../src/templates'),
+        path.join(__dirname, '../../dist/templates')
+      ];
+      
+      for (const dir of possibleDirs) {
+        try {
+          const files = await fs.promises.readdir(dir);
+          console.log(`🔧 TEMPLATE DEBUG: Files in ${dir}:`, files);
+        } catch (dirError) {
+          console.log(`🔧 TEMPLATE DEBUG: Directory ${dir} does not exist or is not readable`);
+        }
+      }
+      
+      throw new Error(`Template file not found at: ${this.templatePath}. Checked multiple possible locations.`);
     }
     
-    // Read the simple.html template
-    const template = await fs.promises.readFile(this.templatePath, 'utf8');
+    // Read the template file with better error handling
+    let template: string;
+    try {
+      template = await fs.promises.readFile(this.templatePath, 'utf8');
+      console.log(`🔧 TEMPLATE DEBUG: Successfully read template file (${template.length} characters)`);
+    } catch (error) {
+      console.error(`🔧 TEMPLATE DEBUG: Failed to read template file: ${error}`);
+      throw new Error(`Failed to read template file at ${this.templatePath}: ${error.message}`);
+    }
     
     // Replace the title
     let html = template.replace('Simple Scrapbook', data.title);
