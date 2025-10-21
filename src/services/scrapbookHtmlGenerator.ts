@@ -54,7 +54,7 @@ export class ScrapbookHtmlGenerator {
       }
     }
     
-    this.templatePath = templatePath;
+    this.templatePath = templatePath!;
     this.outputDir = path.join(__dirname, '../../public/scrapbooks');
     console.log(`🔧 TEMPLATE DEBUG: __dirname = ${__dirname}`);
     console.log(`🔧 TEMPLATE DEBUG: process.cwd() = ${process.cwd()}`);
@@ -168,17 +168,19 @@ export class ScrapbookHtmlGenerator {
     } catch (error) {
       console.error(`🔧 GENERATOR DEBUG: Error generating scrapbook for year ${year}:`, error);
       
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
       // Provide more specific error messages
-      if (error.message.includes('Template file not found')) {
-        throw new Error(`Scrapbook generation failed: Template file is missing. This is likely a deployment issue. Error: ${error.message}`);
-      } else if (error.message.includes('No content found')) {
+      if (errorMessage.includes('Template file not found')) {
+        throw new Error(`Scrapbook generation failed: Template file is missing. This is likely a deployment issue. Error: ${errorMessage}`);
+      } else if (errorMessage.includes('No content found')) {
         throw new Error(`Scrapbook generation failed: No content available for year ${year}. Please add journal sections and content items first.`);
-      } else if (error.message.includes('Failed to read template')) {
-        throw new Error(`Scrapbook generation failed: Cannot read template file. This is likely a file permissions issue. Error: ${error.message}`);
-      } else if (error.message.includes('Invalid year parameter')) {
-        throw new Error(`Scrapbook generation failed: ${error.message}`);
+      } else if (errorMessage.includes('Failed to read template')) {
+        throw new Error(`Scrapbook generation failed: Cannot read template file. This is likely a file permissions issue. Error: ${errorMessage}`);
+      } else if (errorMessage.includes('Invalid year parameter')) {
+        throw new Error(`Scrapbook generation failed: ${errorMessage}`);
       } else {
-        throw new Error(`Scrapbook generation failed for year ${year}: ${error.message}`);
+        throw new Error(`Scrapbook generation failed for year ${year}: ${errorMessage}`);
       }
     }
   }
@@ -484,7 +486,8 @@ export class ScrapbookHtmlGenerator {
       console.log(`🔧 TEMPLATE DEBUG: Successfully read template file (${template.length} characters)`);
     } catch (error) {
       console.error(`🔧 TEMPLATE DEBUG: Failed to read template file: ${error}`);
-      throw new Error(`Failed to read template file at ${this.templatePath}: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to read template file at ${this.templatePath}: ${errorMessage}`);
     }
     
     // Replace the title
