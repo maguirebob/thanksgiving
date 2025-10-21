@@ -26,16 +26,20 @@ const router = Router();
  */
 router.post('/generate/:year', async (req, res) => {
   try {
+    console.log(`📖 SCRAPBOOK DEBUG: Route handler started`);
     const year = parseInt(req.params.year);
     console.log(`📖 SCRAPBOOK DEBUG: Starting HTML generation for year ${year}`);
+    console.log(`📖 SCRAPBOOK DEBUG: req.params.year = ${req.params.year}`);
+    console.log(`📖 SCRAPBOOK DEBUG: parsed year = ${year}`);
     
     if (isNaN(year)) {
       console.log(`❌ SCRAPBOOK DEBUG: Invalid year parameter: ${req.params.year}`);
       return res.status(400).json({ error: 'Invalid year parameter' });
     }
 
-    console.log(`🔧 SCRAPBOOK DEBUG: Creating ScrapbookHtmlGenerator instance`);
+    console.log(`🔧 SCRAPBOOK DEBUG: About to create ScrapbookHtmlGenerator instance`);
     const generator = new ScrapbookHtmlGenerator();
+    console.log(`🔧 SCRAPBOOK DEBUG: ScrapbookHtmlGenerator instance created successfully`);
     
     console.log(`⚙️ SCRAPBOOK DEBUG: Calling generator.generateScrapbook(${year})`);
     const outputPath = await generator.generateScrapbook(year);
