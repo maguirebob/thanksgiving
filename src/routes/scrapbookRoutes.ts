@@ -85,22 +85,6 @@ router.post('/convert-from-journal/:year', async (req, res) => {
       return res.status(400).json({ error: 'Invalid year parameter' });
     }
 
-    
-    // First, let's check what sections exist for this year (regardless of published status)
-    const allSections = await prisma.journalSection.findMany({
-      where: { 
-        event: {
-          event_date: {
-            gte: new Date(year, 0, 1),
-            lt: new Date(year + 1, 0, 1)
-          }
-        }
-      },
-      include: {
-        event: true
-      }
-    });
-    
     // Get all published journal sections for the year
     const sections = await prisma.journalSection.findMany({
       where: { 
