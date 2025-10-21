@@ -2,24 +2,6 @@ import { Router } from 'express';
 import { ScrapbookHtmlGenerator } from '../services/scrapbookHtmlGenerator';
 import prisma from '../lib/prisma';
 
-console.log('🔧 SCRAPBOOK ROUTES: Module loaded successfully');
-
-// Debug configuration
-const DEBUG_SCRAPBOOK = process.env['DEBUG_SCRAPBOOK'] === 'true' || process.env['NODE_ENV'] === 'development';
-
-const debugLog = (level: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR', message: string, data?: any) => {
-  if (!DEBUG_SCRAPBOOK && level === 'DEBUG') return;
-  
-  const timestamp = new Date().toISOString();
-  const prefix = `[${timestamp}] SCRAPBOOK-${level}:`;
-  
-  if (data) {
-    console.log(`${prefix} ${message}`, data);
-  } else {
-    console.log(`${prefix} ${message}`);
-  }
-};
-
 const router = Router();
 
 /**
@@ -28,34 +10,18 @@ const router = Router();
  */
 router.post('/generate/:year', async (req, res) => {
   try {
-    console.log(`📖 SCRAPBOOK DEBUG: Route handler started`);
     const year = parseInt(req.params.year);
-    console.log(`📖 SCRAPBOOK DEBUG: Starting HTML generation for year ${year}`);
-    console.log(`📖 SCRAPBOOK DEBUG: req.params.year = ${req.params.year}`);
-    console.log(`📖 SCRAPBOOK DEBUG: parsed year = ${year}`);
     
     if (isNaN(year)) {
-      console.log(`❌ SCRAPBOOK DEBUG: Invalid year parameter: ${req.params.year}`);
       return res.status(400).json({ error: 'Invalid year parameter' });
     }
 
-    console.log(`🔧 SCRAPBOOK DEBUG: About to create ScrapbookHtmlGenerator instance`);
     const generator = new ScrapbookHtmlGenerator();
-    console.log(`🔧 SCRAPBOOK DEBUG: ScrapbookHtmlGenerator instance created successfully`);
-    
-    console.log(`⚙️ SCRAPBOOK DEBUG: Calling generator.generateScrapbook(${year})`);
     const outputPath = await generator.generateScrapbook(year);
-    
-    console.log(`📁 SCRAPBOOK DEBUG: Generated file at: ${outputPath}`);
     
     // Extract just the filename from the full path
     const filename = outputPath.split('/').pop();
-    console.log(`📄 SCRAPBOOK DEBUG: Filename: ${filename}`);
-    
     const url = `/scrapbooks/${filename}`;
-    console.log(`🌐 SCRAPBOOK DEBUG: URL: ${url}`);
-    
-    console.log(`✅ SCRAPBOOK DEBUG: HTML generation completed successfully`);
     
     return res.json({ 
       success: true, 
@@ -65,7 +31,7 @@ router.post('/generate/:year', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('❌ SCRAPBOOK DEBUG: Error generating scrapbook:', error);
+    console.error('Error generating scrapbook:', error);
     return res.status(500).json({ 
       error: 'Failed to generate scrapbook',
       details: error instanceof Error ? error.message : 'Unknown error'
@@ -114,15 +80,11 @@ router.get('/list', async (_req, res) => {
 router.post('/convert-from-journal/:year', async (req, res) => {
   try {
     const year = parseInt(req.params.year);
-    debugLog('INFO', `Starting conversion for year ${year}`);
     
     if (isNaN(year)) {
-      debugLog('ERROR', `Invalid year parameter: ${req.params.year}`);
       return res.status(400).json({ error: 'Invalid year parameter' });
     }
 
-    debugLog('DEBUG', `Looking for published journal sections for year ${year}`);
-    debugLog('DEBUG', `Date range: ${new Date(year, 0, 1).toISOString()} to ${new Date(year + 1, 0, 1).toISOString()}`);
     
     // First, let's check what sections exist for this year (regardless of published status)
     const allSections = await prisma.journalSection.findMany({
@@ -137,10 +99,6 @@ router.post('/convert-from-journal/:year', async (req, res) => {
       include: {
         event: true
       }
-    });
-    debugLog('DEBUG', `Found ${allSections.length} total sections for year ${year}`);
-    allSections.forEach(section => {
-      debugLog('DEBUG', `Section ${section.section_id} - Published: ${section.is_published}, Event Date: ${section.event?.event_date}`);
     });
     
     // Get all published journal sections for the year
@@ -163,11 +121,7 @@ router.post('/convert-from-journal/:year', async (req, res) => {
       orderBy: { section_order: 'asc' }
     });
 
-    debugLog('INFO', `Found ${sections.length} published sections for year ${year}`);
-    
     if (sections.length === 0) {
-      debugLog('WARN', `No published journal sections found for year ${year}`);
-      debugLog('ERROR', `Conversion stopped - no published sections available for year ${year}`);
       return res.status(400).json({ 
         success: false,
         message: `No published journal sections found for year ${year}. Please publish your journal sections first.`,
@@ -176,7 +130,6 @@ router.post('/convert-from-journal/:year', async (req, res) => {
       });
     }
 
-    debugLog('INFO', `Proceeding with conversion for ${sections.length} published sections`);
     console.log(`🗑️ SCRAPBOOK DEBUG: Clearing existing scrapbook content for year ${year}`);
     
     // Clear existing scrapbook content for this year
@@ -237,6 +190,9 @@ router.post('/convert-from-journal/:year', async (req, res) => {
         } else if (item.content_type === 'text') {
           contentType = 'text-paragraph';
           contentReference = item.custom_text || '';
+        } else if (item.content_type === 'heading') {
+          contentType = 'heading';
+          contentReference = item.custom_text || '';
         }
 
         if (contentType && contentReference) {
@@ -264,7 +220,6 @@ router.post('/convert-from-journal/:year', async (req, res) => {
       });
     }
 
-    debugLog('INFO', `Conversion completed successfully for year ${year}`);
     console.log(`✅ SCRAPBOOK DEBUG: Successfully converted ${scrapbookContent.length} content items`);
     
     return res.json({ 
