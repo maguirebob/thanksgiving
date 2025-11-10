@@ -2,6 +2,10 @@
 
 All notable changes to the Thanksgiving Menu Collection will be documented in this file.
 
+## [3.1.25] - 2025-11-10
+
+- Fix username case-sensitivity
+- Made username login case-insensitive using Prisma mode: 'insensitive'. Users can now log in with any case variation of their username (e.g., 'admin', 'Admin', 'ADMIN' all work).
 ## [3.1.24] - 2025-10-21
 
 - Fixed text page border layout and restored Patrick Hand font
