@@ -17,9 +17,9 @@ const cleanupTestData = async (prisma: PrismaClient, testRecordIds?: {
     throw new Error('❌ SAFETY VIOLATION: cleanupTestData can only run in test environment');
   }
   
-  // SAFETY CHECK: Verify we're using test or dev database
-  if (!process.env['DATABASE_URL']?.includes('thanksgiving_test') && !process.env['DATABASE_URL']?.includes('bobmaguire') && !process.env['DATABASE_URL']?.includes('metro.proxy.rlwy.net')) {
-    throw new Error('❌ SAFETY VIOLATION: cleanupTestData can only run against test or dev database');
+  // SAFETY CHECK: Verify we're using dev database (local only - no Railway in dev)
+  if (!process.env['DATABASE_URL']?.includes('localhost') && !process.env['DATABASE_URL']?.includes('127.0.0.1') && !process.env['DATABASE_URL']?.includes('bobmaguire')) {
+    throw new Error('❌ SAFETY VIOLATION: cleanupTestData can only run against local dev database');
   }
   
   console.log('🧹 Cleaning up ONLY test records we created');

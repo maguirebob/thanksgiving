@@ -2,18 +2,22 @@ import { PrismaClient } from '@prisma/client';
 
 // Global test setup
 beforeAll(async () => {
-  // Force test environment variables - Use RAILWAY TEST database for smoke tests
+  // Use dev environment for tests - DATABASE_URL should come from .env file
   process.env['NODE_ENV'] = 'test';
-  process.env['DATABASE_URL'] = 'postgresql://postgres:KSaqSfPzavQLaSSmQcQvgCGVNCSQYzuJ@metro.proxy.rlwy.net:24517/railway';
+  
+  // Verify DATABASE_URL is set (should be from .env for dev environment)
+  if (!process.env['DATABASE_URL']) {
+    throw new Error('❌ DATABASE_URL not set. Make sure .env file exists with DATABASE_URL for dev database.');
+  }
   
   // Verify we're actually connected to the dev database
   const prisma = new PrismaClient();
   try {
     await prisma.$connect();
-    console.log('✅ Connected to RAILWAY TEST database for smoke tests:', process.env['DATABASE_URL']);
+    console.log('✅ Connected to DEV database for tests:', process.env['DATABASE_URL']);
   } catch (error) {
-    console.error('❌ FAILED to connect to Railway test database:', error);
-    throw new Error('Cannot run tests - Railway test database not available');
+    console.error('❌ FAILED to connect to dev database:', error);
+    throw new Error('Cannot run tests - dev database not available. Check DATABASE_URL in .env file.');
   } finally {
     await prisma.$disconnect();
   }
@@ -78,9 +82,9 @@ export const testUtils = {
       throw new Error('❌ SAFETY VIOLATION: cleanupTestData can only run in test environment');
     }
     
-    // SAFETY CHECK: Verify we're using test or dev database (for smoke tests)
-    if (!process.env['DATABASE_URL']?.includes('thanksgiving_test') && !process.env['DATABASE_URL']?.includes('memories_dev') && !process.env['DATABASE_URL']?.includes('bobmaguire') && !process.env['DATABASE_URL']?.includes('metro.proxy.rlwy.net')) {
-      throw new Error('❌ SAFETY VIOLATION: cleanupTestData can only run against test or dev database');
+    // SAFETY CHECK: Verify we're using dev database (local only - no Railway in dev)
+    if (!process.env['DATABASE_URL']?.includes('localhost') && !process.env['DATABASE_URL']?.includes('127.0.0.1') && !process.env['DATABASE_URL']?.includes('memories_dev') && !process.env['DATABASE_URL']?.includes('bobmaguire')) {
+      throw new Error('❌ SAFETY VIOLATION: cleanupTestData can only run against local dev database');
     }
     
     console.log('🧹 Cleaning up ONLY test records we created');

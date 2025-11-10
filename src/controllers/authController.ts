@@ -23,12 +23,22 @@ export class AuthController {
         return res.redirect('/auth/login?error=Username and password are required');
       }
 
-      // Find user by username or email
+      // Find user by username or email (case-insensitive)
       const user = await prisma.user.findFirst({
         where: {
           OR: [
-            { username: username },
-            { email: username }
+            { 
+              username: {
+                equals: username,
+                mode: 'insensitive' as const
+              }
+            },
+            { 
+              email: {
+                equals: username,
+                mode: 'insensitive' as const
+              }
+            }
           ]
         }
       });

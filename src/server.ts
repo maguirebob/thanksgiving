@@ -805,11 +805,14 @@ export { app };
 
 const PORT = config.getPort();
 
-app.listen(PORT, '0.0.0.0', () => {
-  logger.server(`Server is running on port ${PORT}`);
-  logger.info(`Environment: ${config.getConfig().nodeEnv}`);
-  logger.info(`Access URL: http://0.0.0.0:${PORT}`);
-});
+// Only start the server if not in test environment
+if (process.env['NODE_ENV'] !== 'test') {
+  app.listen(PORT, '0.0.0.0', () => {
+    logger.server(`Server is running on port ${PORT}`);
+    logger.info(`Environment: ${config.getConfig().nodeEnv}`);
+    logger.info(`Access URL: http://0.0.0.0:${PORT}`);
+  });
+}
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
