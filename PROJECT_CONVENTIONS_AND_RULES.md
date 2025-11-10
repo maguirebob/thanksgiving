@@ -145,6 +145,8 @@ npm run version:patch "Short description" "Detailed explanation" "Additional con
 - **Integration tests** for API endpoints with proper authentication
 - **Unit tests** for individual functions and components
 - **End-to-end tests** for complete user workflows
+- **Always run the server** - Integration tests should start the actual server and test via HTTP requests, using the same technology stack as production code
+- **Use real HTTP requests** - Don't mock controllers or bypass the HTTP layer; test the full request/response cycle
 
 ### Test Environment Management
 - **Separate test database** from development and production

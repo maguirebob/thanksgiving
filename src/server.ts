@@ -259,7 +259,7 @@ app.get('/health', (_req, res) => {
       status: 'OK', 
       timestamp: new Date().toISOString(),
       environment: process.env['NODE_ENV'] || 'unknown',
-      version: '3.1.24'
+      version: '3.1.25'
     });
   } catch (error) {
     logger.error('Health check error:', error);
@@ -276,7 +276,7 @@ app.get('/api/v1/version/display', (_req, res) => {
   res.json({
     success: true,
     data: {
-      version: '3.1.24',
+      version: '3.1.25',
       environment: config.getConfig().nodeEnv,
       buildDate: new Date().toISOString()
     }
@@ -805,11 +805,14 @@ export { app };
 
 const PORT = config.getPort();
 
-app.listen(PORT, '0.0.0.0', () => {
-  logger.server(`Server is running on port ${PORT}`);
-  logger.info(`Environment: ${config.getConfig().nodeEnv}`);
-  logger.info(`Access URL: http://0.0.0.0:${PORT}`);
-});
+// Only start the server if not in test environment
+if (process.env['NODE_ENV'] !== 'test') {
+  app.listen(PORT, '0.0.0.0', () => {
+    logger.server(`Server is running on port ${PORT}`);
+    logger.info(`Environment: ${config.getConfig().nodeEnv}`);
+    logger.info(`Access URL: http://0.0.0.0:${PORT}`);
+  });
+}
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
