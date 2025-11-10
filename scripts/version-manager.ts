@@ -151,6 +151,11 @@ class VersionManager {
       }
       
       const latestSchema = latestVersionMatch[latestVersionMatch.length - 1];
+      if (!latestSchema) {
+        console.log('⚠️ Could not find latest schema version to copy');
+        return;
+      }
+      
       const latestVersion = latestSchema.match(/'(\d+\.\d+\.\d+)':/)?.[1];
       
       if (!latestVersion) {
